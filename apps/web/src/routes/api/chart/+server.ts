@@ -69,7 +69,10 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     const chart = computeNatalChart(birth, options);
 
     setHeaders({ 'cache-control': 'public, max-age=86400' });
-    return json({ chart, place: place.label ? { label: place.label } : undefined });
+    return json({
+      chart,
+      place: place.label ? { label: place.label, refined: place.refined ?? false } : undefined,
+    });
   } catch (cause) {
     // Gli errori già formati da `error()` hanno la propria risposta: si rilanciano.
     if (isHttpError(cause)) throw cause;
@@ -82,8 +85,58 @@ interface ResolvedPlace {
   longitude: number;
   timezone: string;
   label?: string;
+  /** `true` se le coordinate sono state fornite da chi chiama, non dal dataset. */
+  refined?: boolean;
 }
 
+/**
+ * Legge le coordinate esplicite, se presenti.
+ *
+ * Un valore malformato è un errore, non un motivo per ripiegare in silenzio
+ * sul centroide: chi le passa lo fa proprio perché il centroide non gli basta.
+ */
+function readCoordinateOverrides(parameters: URLSearchParams): {
+  latitude?: number;
+  longitude?: number;
+} {
+  const overrides: { latitude?: number; longitude?: number } = {};
+
+  for (const [nome, limite] of [
+    ['latitude', 90],
+    ['longitude', 180],
+  ] as const) {
+    const grezzo = parameters.get(nome);
+    if (grezzo === null) continue;
+
+    const valore = Number(grezzo);
+    if (!Number.isFinite(valore) || Math.abs(valore) > limite) {
+      throw error(400, {
+        message: `Valore di "${nome}" non valido: atteso un numero fra -${limite} e ${limite}.`,
+        code: 'COORDINATE_NON_VALIDE',
+      });
+    }
+    overrides[nome] = valore;
+  }
+
+  return overrides;
+}
+
+/**
+ * Ricava il luogo dai parametri.
+ *
+ * `locationId` e le coordinate esplicite non sono alternative rigide: si
+ * possono combinare, e allora la località fornisce **fuso orario e nome**
+ * mentre le coordinate vengono da chi chiama. È il caso di chi conosce il
+ * punto esatto di nascita — un ospedale in periferia, una frazione fuori
+ * dataset — o di chi vuole riprodurre il risultato di un altro programma:
+ * le case dipendono dalle coordinate, e due centroidi diversi della stessa
+ * città danno cuspidi diverse.
+ *
+ * Il fuso orario resta legato alla località di proposito. È il dato in cui
+ * sbagliare costa di più — un'ora sposta l'Ascendente di quindici gradi — e
+ * un valore errato ma valido (`Europe/London` per `Europe/Rome`) non è
+ * intercettabile da nessun controllo.
+ */
 function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
   const locationId = Number(parameters.get('locationId'));
 
@@ -95,11 +148,15 @@ function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
         code: 'LOCALITA_SCONOSCIUTA',
       });
     }
+
+    const overrides = readCoordinateOverrides(parameters);
+
     return {
-      latitude: location.latitude,
-      longitude: location.longitude,
+      latitude: overrides.latitude ?? location.latitude,
+      longitude: overrides.longitude ?? location.longitude,
       timezone: location.timezone,
       label: describeLocation(location),
+      refined: overrides.latitude !== undefined || overrides.longitude !== undefined,
     };
   }
 

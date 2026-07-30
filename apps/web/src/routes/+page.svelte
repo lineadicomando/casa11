@@ -4,6 +4,12 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import {
+    distanceKm,
+    formatCoordinate,
+    formatCoordinateDMS,
+    parseCoordinate,
+  } from '$lib/coordinates';
+  import {
     ASPECT_GLYPH,
     ASPECT_MAJOR,
     BODY_GLYPH,
@@ -32,13 +38,52 @@
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
 
+  // Coordinate modificabili: la località resta la fonte del fuso orario, le
+  // coordinate diventano correggibili. Chi conosce il punto esatto di nascita,
+  // o vuole riprodurre il risultato di un altro programma, ne ha bisogno —
+  // il centroide di una città può distare chilometri, e le case dipendono
+  // dalle coordinate.
+  let refineCoordinates = $state(false);
+  let latitudeInput = $state('');
+  let longitudeInput = $state('');
+
+  const parsedLatitude = $derived(parseCoordinate(latitudeInput, 'latitudine'));
+  const parsedLongitude = $derived(parseCoordinate(longitudeInput, 'longitudine'));
+  const coordinatesValid = $derived(parsedLatitude !== null && parsedLongitude !== null);
+
+  const displacementKm = $derived(
+    location && coordinatesValid
+      ? distanceKm(location.latitude, location.longitude, parsedLatitude!, parsedLongitude!)
+      : 0,
+  );
+
+  function selectLocation(value: Location | null): void {
+    location = value;
+    // Le coordinate ripartono sempre da quelle della località scelta: lasciare
+    // in campo quelle precedenti produrrebbe un tema con il fuso di una città
+    // e le coordinate di un'altra.
+    latitudeInput = value ? formatCoordinate(value.latitude) : '';
+    longitudeInput = value ? formatCoordinate(value.longitude) : '';
+  }
+
+  function resetCoordinates(): void {
+    if (!location) return;
+    latitudeInput = formatCoordinate(location.latitude);
+    longitudeInput = formatCoordinate(location.longitude);
+  }
+
   let chart = $state<NatalChart | null>(null);
   let placeLabel = $state<string | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   let highlighted = $state<string | null>(null);
 
-  const canSubmit = $derived(date !== '' && location !== null && (timeUnknown || time !== ''));
+  const canSubmit = $derived(
+    date !== '' &&
+      location !== null &&
+      (timeUnknown || time !== '') &&
+      (!refineCoordinates || coordinatesValid),
+  );
 
   async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -54,6 +99,10 @@
       minorAspects: String(minorAspects),
     });
     if (!timeUnknown && time) parameters.set('time', time);
+    if (refineCoordinates && coordinatesValid) {
+      parameters.set('latitude', String(parsedLatitude));
+      parameters.set('longitude', String(parsedLongitude));
+    }
 
     try {
       const response = await fetch(`/api/chart?${parameters}`);
@@ -104,7 +153,7 @@
       </label>
     </div>
 
-    <LocationSearch selected={location} onselect={(value) => (location = value)} />
+    <LocationSearch selected={location} onselect={selectLocation} />
 
     <div>
       <label for="case">Sistema di case</label>
@@ -119,6 +168,74 @@
       </label>
     </div>
   </div>
+
+  {#if location}
+    <label class="interruttore coordinate-toggle">
+      <input type="checkbox" bind:checked={refineCoordinates} />
+      <span>Correggi le coordinate</span>
+    </label>
+  {/if}
+
+  {#if location && refineCoordinates}
+    <div class="coordinate">
+      <div>
+        <label for="lat">Latitudine</label>
+        <input
+          id="lat"
+          type="text"
+          bind:value={latitudeInput}
+          class:non-valido={latitudeInput !== '' && parsedLatitude === null}
+          placeholder="38.1333 oppure 38°08'N"
+          inputmode="text"
+          autocomplete="off"
+        />
+      </div>
+      <div>
+        <label for="lon">Longitudine</label>
+        <input
+          id="lon"
+          type="text"
+          bind:value={longitudeInput}
+          class:non-valido={longitudeInput !== '' && parsedLongitude === null}
+          placeholder="13.3333 oppure 13°20'E"
+          inputmode="text"
+          autocomplete="off"
+        />
+      </div>
+      <div class="coordinate-stato">
+        {#if !coordinatesValid}
+          <p class="errore">
+            Coordinate non interpretabili. Sono ammessi il formato decimale
+            (38.1333, con punto o virgola) e quello sessagesimale (38°08'N).
+            Longitudine positiva a Est.
+          </p>
+        {:else}
+          <p>
+            {formatCoordinateDMS(parsedLatitude!, 'latitudine')}
+            {formatCoordinateDMS(parsedLongitude!, 'longitudine')}
+            {#if displacementKm >= 0.05}
+              · <strong class:lontano={displacementKm > 100}
+                >{displacementKm < 10
+                  ? displacementKm.toFixed(1)
+                  : Math.round(displacementKm)} km</strong
+              >
+              da {location.name}
+            {/if}
+          </p>
+          {#if displacementKm > 100}
+            <p class="errore">
+              Distanza molto elevata dalla località scelta: controlla il segno
+              della longitudine (positiva a Est) e il fuso orario, che resta
+              quello di {location.name}.
+            </p>
+          {/if}
+          <button type="button" class="ripristina" onclick={resetCoordinates}>
+            Ripristina quelle di {location.name}
+          </button>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
   <button type="submit" class="invia" disabled={!canSubmit || loading}>
     {loading ? 'Calcolo…' : 'Calcola il tema'}
@@ -304,6 +421,51 @@
   .interruttore input {
     width: auto;
     margin: 0;
+  }
+
+  .coordinate-toggle {
+    margin-top: 1.25rem;
+  }
+
+  .coordinate {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1rem;
+    align-items: start;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: var(--sfondo);
+    border: 1px solid var(--linea);
+    border-radius: var(--raggio);
+  }
+
+  .coordinate-stato {
+    font-size: 0.82rem;
+    color: var(--testo-tenue);
+    align-self: end;
+  }
+
+  .coordinate-stato p {
+    margin: 0 0 0.35rem;
+  }
+
+  .coordinate-stato .lontano {
+    color: var(--accento);
+  }
+
+  input.non-valido {
+    border-color: var(--accento);
+  }
+
+  .ripristina {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--accento);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
   }
 
   .invia {

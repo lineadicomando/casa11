@@ -141,9 +141,8 @@ memoria. L'importazione completa richiede meno di un minuto.
 
 ## Accuratezza
 
-Il motore è confrontato con **Astro-Seek** su un tema reale (Palermo, 2 giugno
-1978, 15:15 CEST), e il confronto è un test della suite — non una verifica
-fatta una volta e dimenticata:
+Il motore è stato confrontato con un programma astrologico affermato su un
+tema reale, verificando posizioni, case, conversione oraria e punti calcolati:
 
 | | Scarto dal riferimento |
 |---|---|
@@ -157,11 +156,48 @@ Un primo d'arco è sotto la soglia in cui qualcosa cambia: nessuna orbita,
 cuspide o interpretazione ne risente.
 
 **Le case dipendono dalle coordinate.** Due programmi che partono da punti
-diversi della stessa città danno cuspidi diverse: il centroide GeoNames di
-Palermo dista un chilometro e mezzo da quello usato dalla fonte, e da solo
-produce 2-3 primi di scarto. Il test usa le coordinate dichiarate dalla fonte,
-altrimenti misurerebbe la differenza fra due centroidi invece della
-correttezza del calcolo.
+diversi della stessa città danno cuspidi diverse: fra il centroide GeoNames di
+una città e quello usato da un altro programma possono esserci chilometri, e
+bastano a produrre qualche primo di scarto sulle cuspidi. Per un confronto che
+misuri il calcolo invece della differenza fra due centroidi, vanno usate le
+stesse coordinate — vedi *Coordinate precise* qui sotto.
+
+## Coordinate precise
+
+La ricerca della città restituisce il centroide comunale. Non sempre basta:
+
+- si vuole **riprodurre** il risultato di un altro programma, che parte da un
+  punto diverso
+- si conosce il **luogo esatto** di nascita — un ospedale in periferia sposta
+  l'Ascendente di qualche primo
+- il luogo **non è nel dataset**, che copre i centri sopra i 500 abitanti
+
+L'interfaccia permette di correggere le coordinate dopo aver scelto la
+località, accettando sia il formato decimale (`38.1333`, con punto o virgola)
+sia quello sessagesimale (`38°08'N`) — quest'ultimo è la forma in cui le danno
+i documenti e gli altri programmi. Accanto compare la distanza dal centroide,
+che rende evidente l'errore classico: una longitudine inserita a Ovest invece
+che a Est produce coordinate perfettamente valide e un tema del tutto
+sbagliato, ma anche duemila chilometri di scarto.
+
+**Il fuso orario resta quello della località, e non è modificabile.** È una
+scelta deliberata: è il dato in cui sbagliare costa di più — un'ora sposta
+l'Ascendente di quindici gradi — e un valore errato ma valido (`Europe/London`
+al posto di `Europe/Rome`) non è intercettabile da nessun controllo. Per un
+luogo fuori dataset conviene scegliere il comune più vicino, che dà il fuso
+corretto, e poi correggere le coordinate.
+
+Via API le due forme si combinano allo stesso modo:
+
+```
+GET /api/chart?date=1978-06-02&time=15:15&locationId=2523920
+GET /api/chart?date=1978-06-02&time=15:15&locationId=2523920&latitude=38.1333&longitude=13.3333
+```
+
+Con `locationId` da solo si usa il centroide; aggiungendo le coordinate,
+la località fornisce fuso orario e nome mentre il punto lo dà chi chiama.
+Restano accettate anche `latitude` + `longitude` + `timezone` senza
+`locationId`, per i casi in cui nessuna località vicina abbia il fuso giusto.
 
 **Parte di Fortuna.** La formula si inverte nei temi notturni, secondo la
 tradizione ellenistica e medievale. Parte dei programmi moderni usa sempre la
