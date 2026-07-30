@@ -7,6 +7,7 @@
     ASPECT_GLYPH,
     ASPECT_MAJOR,
     BODY_GLYPH,
+    POINT_GLYPH,
     SIGN_GLYPH,
     SIGN_LABEL,
     signOfLongitude,
@@ -143,6 +144,7 @@
       <p class="meta">
         {chart.input.date}{chart.time.timeKnown ? ` · ${chart.input.time}` : ' · ora ignota'} ·
         {chart.input.timezone} · UT {chart.time.utc.replace('T', ' ').replace('Z', '')} ·
+        TSL {chart.siderealTime.formatted}{chart.sect ? ` · carta ${chart.sect}` : ''} ·
         effemeridi {chart.ephemerisMode}
       </p>
     </div>
@@ -197,6 +199,18 @@
                   <td class="numerico">{body.house ?? '—'}</td>
                 </tr>
               {/each}
+              {#if chart.partOfFortune}
+                <tr class="punto">
+                  <td class="glifo">{POINT_GLYPH.fortuna}</td>
+                  <td>Parte di Fortuna</td>
+                  <td>
+                    {formatDegrees(chart.partOfFortune.signDegree)}
+                    <span class="glifo-piccolo">{SIGN_GLYPH[chart.partOfFortune.sign]}</span>
+                    <span class="tenue">{SIGN_LABEL[chart.partOfFortune.sign]}</span>
+                  </td>
+                  <td class="numerico">{chart.partOfFortune.house ?? '—'}</td>
+                </tr>
+              {/if}
             </tbody>
           </table>
         </section>
@@ -425,6 +439,13 @@
 
   tr.minore td {
     color: var(--testo-tenue);
+  }
+
+  /* La Parte di Fortuna non è un corpo celeste: la si distingue senza
+     separarla dalla tabella, dove si legge insieme alle altre posizioni. */
+  tr.punto td {
+    border-top: 1px solid var(--linea-forte);
+    font-style: italic;
   }
 
   .glifo {

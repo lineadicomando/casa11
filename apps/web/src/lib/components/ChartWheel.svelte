@@ -5,6 +5,7 @@
     BODY_GLYPH,
     ELEMENT_COLOR,
     SIGN_ELEMENT,
+    POINT_GLYPH,
     SIGN_GLYPH,
     ZODIAC_ORDER,
   } from '$lib/glyphs';
@@ -63,8 +64,41 @@
    */
   const MIN_SEPARATION = 7;
 
+  interface WheelPoint {
+    id: string;
+    glyph: string;
+    longitude: number;
+    retrograde: boolean;
+    label: string;
+  }
+
+  /** Corpi e punti calcolati insieme: la spaziatura deve tenerne conto di tutti. */
+  const wheelPoints = $derived.by<WheelPoint[]>(() => {
+    const points: WheelPoint[] = chart.bodies.map((body) => ({
+      id: body.id,
+      glyph: BODY_GLYPH[body.id],
+      longitude: body.longitude,
+      retrograde: body.retrograde,
+      label: bodyLabel(body),
+    }));
+
+    if (chart.partOfFortune) {
+      const house =
+        chart.partOfFortune.house !== undefined ? `, casa ${chart.partOfFortune.house}` : '';
+      points.push({
+        id: 'fortuna',
+        glyph: POINT_GLYPH.fortuna,
+        longitude: chart.partOfFortune.longitude,
+        retrograde: false,
+        label: `Parte di Fortuna a ${chart.partOfFortune.signDegree.toFixed(0)} gradi ${chart.partOfFortune.sign}${house}`,
+      });
+    }
+
+    return points;
+  });
+
   const placedBodies = $derived.by(() => {
-    const sorted = [...chart.bodies].sort((a, b) => a.longitude - b.longitude);
+    const sorted = [...wheelPoints].sort((a, b) => a.longitude - b.longitude);
     const display = sorted.map((body) => ({ body, display: body.longitude }));
 
     // Alcune passate di rilassamento: spinge via i vicini troppo stretti.
@@ -234,8 +268,8 @@
         text-anchor="middle"
         dominant-baseline="central"
       >
-        {BODY_GLYPH[body.id]}
-        <title>{bodyLabel(body)}</title>
+        {body.glyph}
+        <title>{body.label}</title>
       </text>
       {#if body.retrograde}
         {@const mark = toXY(display, R_PLANET - 22)}

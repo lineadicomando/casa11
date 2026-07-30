@@ -88,6 +88,15 @@ export interface ChartOptions {
   minorAspects?: boolean;
   /** Corpi da calcolare. Default: tutti tranne Chirone e Lilith. */
   bodies?: BodyId[];
+  /**
+   * Formula della Parte di Fortuna.
+   *
+   * `settore` (default) inverte Sole e Luna nei temi notturni, secondo la
+   * tradizione ellenistica e medievale. `diurna` usa sempre ASC + Luna − Sole:
+   * è la semplificazione adottata da parte dei programmi moderni, utile solo
+   * per confrontare i risultati con essi.
+   */
+  partOfFortuneFormula?: 'settore' | 'diurna';
   /** Percorso della cartella con i file `.se1`. Default: variabile d'ambiente o `<pkg>/ephe`. */
   ephemerisPath?: string;
 }
@@ -123,6 +132,37 @@ export interface CelestialBody {
   signDegree: number;
   /** Casa occupata, 1-12. Assente se l'ora di nascita è ignota. */
   house?: number;
+}
+
+/**
+ * Un punto calcolato: non un corpo celeste ma una posizione derivata da altri
+ * elementi del tema. Non ha moto proprio, quindi non ha velocità né
+ * retrogradazione.
+ */
+export interface ChartPoint {
+  longitude: number;
+  sign: ZodiacSign;
+  /** Posizione all'interno del segno, [0, 30). */
+  signDegree: number;
+  /** Casa occupata, 1-12. */
+  house?: number;
+}
+
+/**
+ * Settore del tema: diurno se il Sole è sopra l'orizzonte al momento della
+ * nascita, notturno altrimenti.
+ *
+ * Determina la formula della Parte di Fortuna ed è un dato interpretativo di
+ * per sé nell'astrologia tradizionale.
+ */
+export type Sect = 'diurna' | 'notturna';
+
+/** Tempo siderale locale: la posizione del cielo rispetto al luogo. */
+export interface SiderealTime {
+  /** Ore decimali, [0, 24). */
+  hours: number;
+  /** Formato `HH:mm:ss`. */
+  formatted: string;
 }
 
 export interface House {
@@ -164,6 +204,20 @@ export interface NatalChart {
   houses: House[];
   /** Assente se l'ora di nascita è ignota. */
   angles?: Angles;
+  /**
+   * Parte di Fortuna. Assente se l'ora di nascita è ignota: dipende
+   * dall'Ascendente.
+   */
+  partOfFortune?: ChartPoint;
+  /** Settore diurno o notturno. Assente se l'ora di nascita è ignota. */
+  sect?: Sect;
+  /**
+   * Tempo siderale locale all'istante di nascita.
+   *
+   * Serve a verificare a colpo d'occhio che la conversione oraria sia
+   * avvenuta correttamente: è il dato da cui discendono Ascendente e case.
+   */
+  siderealTime: SiderealTime;
   aspects: Aspect[];
   /**
    * Avvertimenti non bloccanti: ora ambigua o inesistente per il cambio

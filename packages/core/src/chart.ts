@@ -3,6 +3,8 @@ import { DEFAULT_BODIES } from './constants.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
 import { ChartError } from './errors.js';
 import { computeHouses, houseOf } from './houses.js';
+import { chartSect, computePartOfFortune } from './points.js';
+import { localSiderealTime } from './sidereal.js';
 import { resolveTime } from './time.js';
 import type { BirthData, ChartOptions, NatalChart } from './types.js';
 
@@ -43,6 +45,7 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
     ephemerisMode: context.mode,
     bodies,
     houses: [],
+    siderealTime: localSiderealTime(time.julianDayUT, birth.longitude),
     aspects: computeAspects(bodies, { minorAspects: options.minorAspects ?? false }),
     warnings,
   };
@@ -63,6 +66,31 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
 
     for (const body of chart.bodies) {
       body.house = houseOf(body.longitude, houseResult.houses);
+    }
+
+    // La Parte di Fortuna dipende dall'Ascendente e dai due luminari: senza
+    // uno dei tre non è calcolabile, e l'assenza va segnalata invece di
+    // restituire un punto arbitrario.
+    const sun = chart.bodies.find((body) => body.id === 'sole');
+    const moon = chart.bodies.find((body) => body.id === 'luna');
+
+    if (sun && moon) {
+      const sect = chartSect(sun.longitude, houseResult.angles.descendant);
+      const fortune = computePartOfFortune(
+        houseResult.angles.ascendant,
+        sun.longitude,
+        moon.longitude,
+        sect,
+        options.partOfFortuneFormula ?? 'settore',
+      );
+      fortune.house = houseOf(fortune.longitude, houseResult.houses);
+
+      chart.sect = sect;
+      chart.partOfFortune = fortune;
+    } else {
+      warnings.push(
+        'Parte di Fortuna non calcolabile: richiede Sole e Luna fra i corpi calcolati.',
+      );
     }
   }
 

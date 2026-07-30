@@ -21,12 +21,24 @@ export function formatChartCompact(chart: NatalChart): string {
   lines.push(
     `Case: ${chart.houseSystem} | Effemeridi: ${chart.ephemerisMode} | UT: ${time.utc}`,
   );
+  lines.push(
+    `Tempo siderale locale: ${chart.siderealTime.formatted}` +
+      (chart.sect ? ` | Settore: ${chart.sect}` : ''),
+  );
 
   lines.push('', 'CORPI');
   for (const body of chart.bodies) {
     const retro = body.retrograde ? ' R' : '  ';
     const house = body.house !== undefined ? ` casa ${String(body.house).padStart(2)}` : '';
     lines.push(`${body.name.padEnd(11)} ${formatZodiacal(body.longitude).padEnd(11)}${retro}${house}`);
+  }
+
+  if (chart.partOfFortune) {
+    const house =
+      chart.partOfFortune.house !== undefined ? ` casa ${chart.partOfFortune.house}` : '';
+    lines.push(
+      `${'Fortuna'.padEnd(11)} ${formatZodiacal(chart.partOfFortune.longitude).padEnd(11)}  ${house}`,
+    );
   }
 
   if (chart.angles) {

@@ -94,6 +94,9 @@ chart.bodies;    // posizioni, segno, casa, retrogradazione, velocità
 chart.houses;    // 12 cuspidi
 chart.angles;    // ASC, MC, DSC, IC, Vertex
 chart.aspects;   // matrice degli aspetti con orbita e direzione
+chart.partOfFortune;  // ASC + Luna − Sole, invertita nei temi notturni
+chart.sect;           // 'diurna' | 'notturna'
+chart.siderealTime;   // tempo siderale locale, { hours, formatted }
 chart.warnings;  // ora ambigua, effemeridi ripiegate, corpi mancanti
 
 formatChartCompact(chart);  // resa tabellare, ~1/8 dei token del JSON
@@ -135,6 +138,39 @@ searchLocations('roma', { lang: 'en' });  // → Rome, Lazio, Italy
 Il file `alternateNames.zip` pesa 200 MB e decompresso supera i 700 MB: viene
 letto in streaming e filtrato alla sola lingua italiana, mai caricato in
 memoria. L'importazione completa richiede meno di un minuto.
+
+## Accuratezza
+
+Il motore è confrontato con **Astro-Seek** su un tema reale (Palermo, 2 giugno
+1978, 15:15 CEST), e il confronto è un test della suite — non una verifica
+fatta una volta e dimenticata:
+
+| | Scarto dal riferimento |
+|---|---|
+| Posizioni planetarie | ≤ 1 primo d'arco, segno e casa compresi |
+| Cuspidi delle case | ≤ 1 primo d'arco, a parità di coordinate |
+| Tempo Universale | esatto (ora legale del 1978 applicata) |
+| Tempo siderale locale | 1 secondo |
+| Parte di Fortuna | esatta |
+
+Un primo d'arco è sotto la soglia in cui qualcosa cambia: nessuna orbita,
+cuspide o interpretazione ne risente.
+
+**Le case dipendono dalle coordinate.** Due programmi che partono da punti
+diversi della stessa città danno cuspidi diverse: il centroide GeoNames di
+Palermo dista un chilometro e mezzo da quello usato dalla fonte, e da solo
+produce 2-3 primi di scarto. Il test usa le coordinate dichiarate dalla fonte,
+altrimenti misurerebbe la differenza fra due centroidi invece della
+correttezza del calcolo.
+
+**Parte di Fortuna.** La formula si inverte nei temi notturni, secondo la
+tradizione ellenistica e medievale. Parte dei programmi moderni usa sempre la
+forma diurna: su un tema notturno le due convenzioni divergono anche di oltre
+cento gradi. Per riprodurre il risultato di un altro programma:
+
+```ts
+computeNatalChart(nascita, { partOfFortuneFormula: 'diurna' });
+```
 
 ## Il punto delicato: i fusi orari
 

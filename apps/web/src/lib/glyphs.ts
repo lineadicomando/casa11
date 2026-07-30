@@ -48,6 +48,11 @@ export const BODY_GLYPH: Readonly<Record<BodyId, string>> = {
   chirone: '⚷',
 };
 
+/** Punti calcolati, non corpi celesti. */
+export const POINT_GLYPH = {
+  fortuna: '⊗',
+} as const;
+
 export const SIGN_GLYPH: Readonly<Record<ZodiacSign, string>> = {
   ariete: '♈',
   toro: '♉',
