@@ -273,8 +273,17 @@ function formatLocations(results: Location[], query: string): string {
   return lines.join('\n');
 }
 
+/**
+ * Compone l'etichetta di una località.
+ *
+ * Nelle città-stato regione e città coincidono ("Berlino, Berlino, Germania"):
+ * la ripetizione non aggiunge nulla e si omette.
+ */
 function describeLocation(location: Location): string {
-  return [location.name, location.region, location.country].filter(Boolean).join(', ');
+  const parts = [location.name];
+  if (location.region && location.region !== location.name) parts.push(location.region);
+  parts.push(location.country);
+  return parts.join(', ');
 }
 
 function describeError(error: unknown): string {

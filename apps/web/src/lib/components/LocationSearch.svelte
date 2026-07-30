@@ -17,8 +17,12 @@
 
   let timer: ReturnType<typeof setTimeout> | undefined;
 
+  // Nelle città-stato regione e città coincidono ("Berlino, Berlino"): si omette.
   function describe(location: Location): string {
-    return [location.name, location.region, location.country].filter(Boolean).join(', ');
+    const parts = [location.name];
+    if (location.region && location.region !== location.name) parts.push(location.region);
+    parts.push(location.country);
+    return parts.join(', ');
   }
 
   async function search(text: string): Promise<void> {
@@ -159,7 +163,12 @@
     z-index: 10;
     top: 100%;
     left: 0;
-    right: 0;
+    /* I nomi italiani sono più lunghi degli esonimi internazionali
+       ("Monaco di Baviera" contro "Munich"): l'elenco può sporgere dal campo
+       invece di mandare a capo ogni voce. */
+    min-width: 100%;
+    width: max-content;
+    max-width: min(30rem, 88vw);
     margin: 0.25rem 0 0;
     padding: 0;
     list-style: none;
@@ -172,12 +181,9 @@
   }
 
   .risultati button {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 1rem;
+    display: block;
     width: 100%;
-    padding: 0.5rem 0.7rem;
+    padding: 0.45rem 0.7rem;
     background: none;
     border: none;
     text-align: left;
@@ -190,11 +196,16 @@
   }
 
   .nome {
+    display: block;
     font-size: 0.92rem;
+    line-height: 1.3;
   }
 
+  /* Il fuso orario sotto il nome, non accanto: è il dato che disambigua
+     due omonimi, deve restare leggibile senza competere per lo spazio. */
   .dettaglio {
-    font-size: 0.75rem;
+    display: block;
+    font-size: 0.72rem;
     color: var(--testo-tenue);
     white-space: nowrap;
   }

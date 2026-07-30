@@ -1,8 +1,9 @@
 import { normalizeName, openDatabase } from './database.js';
-import { GeoError, type Location, type SearchOptions } from './types.js';
+import { GeoError, type LocaleCode, type Location, type SearchOptions } from './types.js';
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
+const DEFAULT_LANG: LocaleCode = 'it';
 
 interface LocationRow {
   id: number;
@@ -18,11 +19,31 @@ interface LocationRow {
 }
 
 /**
+ * Espressioni di selezione dei nomi nella lingua richiesta.
+ *
+ * Con `it` si preferisce la variante italiana e si ricade sull'inglese quando
+ * manca: i centri minori raramente hanno un esonimo, e mostrare un campo vuoto
+ * sarebbe peggio del nome internazionale.
+ */
+function nameColumns(lang: LocaleCode): string {
+  if (lang === 'en') {
+    return 'l.name_en AS name, l.country_en AS country, l.region_en AS region';
+  }
+  return `COALESCE(l.name_it, l.name_en) AS name,
+          COALESCE(l.country_it, l.country_en) AS country,
+          COALESCE(l.region_it, l.region_en) AS region`;
+}
+
+/**
  * Cerca località per nome, restituendo i candidati ordinati per rilevanza.
  *
  * La disambiguazione è **esplicita**: la funzione non sceglie per te fra le
  * decine di "Roma" del mondo, restituisce l'elenco. È la premessa per l'uso
  * da agente — indovinare qui produce temi natali sbagliati in silenzio.
+ *
+ * La ricerca avviene su tutti i nomi conosciuti del luogo, in qualunque
+ * lingua, indipendentemente da `lang`: si può cercare "Munich" e ricevere
+ * "Monaco di Baviera".
  *
  * Ordinamento: prima le corrispondenze esatte, poi per popolazione decrescente.
  */
@@ -36,7 +57,7 @@ export function searchLocations(query: string, options: SearchOptions = {}): Loc
   const database = openDatabase(options.databasePath);
 
   try {
-    const conditions = ['n.search_name LIKE ? ESCAPE \'\\\''];
+    const conditions = ["n.search_name LIKE ? ESCAPE '\\'"];
     const parameters: (string | number)[] = [`${escapeLike(normalized)}%`];
 
     if (options.countryCode) {
@@ -47,14 +68,14 @@ export function searchLocations(query: string, options: SearchOptions = {}): Loc
     // `MAX(...)` sul flag di corrispondenza esatta: una località può avere più
     // nomi alternativi, ci interessa il migliore fra questi.
     const statement = database.prepare(`
-      SELECT l.id, l.name, l.country_code, l.country, l.region,
-             l.latitude, l.longitude, l.timezone, l.population,
+      SELECT l.id, ${nameColumns(options.lang ?? DEFAULT_LANG)},
+             l.country_code, l.latitude, l.longitude, l.timezone, l.population,
              MAX(CASE WHEN n.search_name = ? THEN 1 ELSE 0 END) AS exact
       FROM location_names n
       JOIN locations l ON l.id = n.location_id
       WHERE ${conditions.join(' AND ')}
       GROUP BY l.id
-      ORDER BY exact DESC, l.population DESC, l.name ASC
+      ORDER BY exact DESC, l.population DESC, name ASC
       LIMIT ?
     `);
 
@@ -71,9 +92,9 @@ export function getLocation(id: number, options: SearchOptions = {}): Location |
   try {
     const row = database
       .prepare(
-        `SELECT id, name, country_code, country, region,
-                latitude, longitude, timezone, population, 1 AS exact
-         FROM locations WHERE id = ?`,
+        `SELECT l.id, ${nameColumns(options.lang ?? DEFAULT_LANG)},
+                l.country_code, l.latitude, l.longitude, l.timezone, l.population, 1 AS exact
+         FROM locations l WHERE l.id = ?`,
       )
       .get(id) as unknown as LocationRow | undefined;
     return row ? toLocation(row) : undefined;

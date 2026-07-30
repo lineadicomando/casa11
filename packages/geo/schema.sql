@@ -7,13 +7,22 @@
 -- `search_name` contiene il nome normalizzato (minuscolo, senza segni
 -- diacritici). La normalizzazione applicata in importazione e quella applicata
 -- in ricerca devono coincidere: vedi `normalizeName` in src/database.ts.
+--
+-- I nomi sono memorizzati in due lingue. GeoNames usa come nome primario
+-- l'esonimo internazionale ("Rome", "Munich"), inadatto a un'interfaccia
+-- italiana; le colonne `*_it` contengono la variante italiana quando esiste.
+-- La risoluzione avviene in query con COALESCE, così un consumatore che
+-- preferisce l'inglese non paga nulla.
 
 CREATE TABLE IF NOT EXISTS locations (
   id           INTEGER PRIMARY KEY,
-  name         TEXT    NOT NULL,
+  name_en      TEXT    NOT NULL,
+  name_it      TEXT,
   country_code TEXT    NOT NULL,
-  country      TEXT    NOT NULL,
-  region       TEXT,
+  country_en   TEXT    NOT NULL,
+  country_it   TEXT,
+  region_en    TEXT,
+  region_it    TEXT,
   latitude     REAL    NOT NULL,
   longitude    REAL    NOT NULL,
   timezone     TEXT    NOT NULL,

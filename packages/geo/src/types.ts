@@ -6,13 +6,13 @@
 export interface Location {
   /** Identificatore GeoNames, stabile fra le versioni del dataset. */
   id: number;
-  /** Nome nella grafia locale, es. `Roma`. */
+  /** Nome nella lingua richiesta, es. `Roma` con `lang: 'it'`, `Rome` con `'en'`. */
   name: string;
   /** Codice ISO 3166-1 alpha-2, es. `IT`. */
   countryCode: string;
-  /** Nome esteso del paese, es. `Italy`. */
+  /** Nome esteso del paese nella lingua richiesta, es. `Italia`. */
   country: string;
-  /** Suddivisione di primo livello, es. `Latium`. Assente se non mappata. */
+  /** Suddivisione di primo livello, es. `Lazio`. Assente se non mappata. */
   region?: string;
   /** Latitudine in gradi decimali, positiva a Nord. */
   latitude: number;
@@ -24,11 +24,21 @@ export interface Location {
   population: number;
 }
 
+/**
+ * Lingua dei nomi restituiti.
+ *
+ * `it` ricade sull'inglese quando la variante italiana non esiste — cosa
+ * frequente per i centri minori, che non hanno un esonimo.
+ */
+export type LocaleCode = 'it' | 'en';
+
 export interface SearchOptions {
   /** Numero massimo di risultati. Default 10, massimo 50. */
   limit?: number;
   /** Restringe la ricerca a un paese (ISO 3166-1 alpha-2, es. `IT`). */
   countryCode?: string;
+  /** Lingua dei nomi restituiti. Default `it`. */
+  lang?: LocaleCode;
   /** Percorso del database SQLite. Default: variabile d'ambiente o `<pkg>/data/geonames.db`. */
   databasePath?: string;
 }

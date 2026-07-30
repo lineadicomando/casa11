@@ -34,7 +34,7 @@ Monorepo con **npm workspaces**. Node ≥ 22.
 ```sh
 npm install
 npm run ephe:download -w @undicesimacasa/core   # opzionale, ~2 MB
-npm run geo:import   -w @undicesimacasa/geo     # necessario per la ricerca località, ~14 MB
+npm run geo:import   -w @undicesimacasa/geo     # necessario per la ricerca località, ~205 MB
 npm test
 ```
 
@@ -101,6 +101,40 @@ formatChartCompact(chart);  // resa tabellare, ~1/8 dei token del JSON
 
 Sistemi di case: `placidus`, `koch`, `segni-interi`, `equale`, `regiomontano`,
 `campano`, `porfirio`, `topocentrico`, `alcabizio`.
+
+## Le località
+
+Il dataset GeoNames è importato in un database SQLite locale: 235.073 località,
+1,2 milioni di nomi cercabili, nessuna chiamata di rete a runtime. Il fuso
+orario IANA arriva dal dataset stesso, quindi una ricerca restituisce già tutto
+ciò che serve al calcolo.
+
+**I nomi sono in italiano.** GeoNames usa come nome primario l'esonimo
+internazionale — "Rome", "Munich", "Naples" — inadatto a un'interfaccia
+italiana. L'importazione preleva le varianti italiane da `alternateNames.zip`
+e le applica a città, regioni e paesi:
+
+| Prima | Dopo |
+|---|---|
+| Rome, Lazio, Italy | Roma, Lazio, Italia |
+| Munich, Bavaria, Germany | Monaco di Baviera, Baviera, Germania |
+| London, England, United Kingdom | Londra, Inghilterra, Regno Unito |
+
+Circa il 9% delle località ha un esonimo italiano: le altre ricadono sul nome
+locale, che è il comportamento giusto (Bergamo resta Bergamo). Paesi tradotti
+246 su 246, regioni 2.201 su 3.703.
+
+La **ricerca** resta indipendente dalla lingua: si può digitare "Munich" e
+ricevere "Monaco di Baviera", o viceversa. Chi preferisce i nomi
+internazionali passa `lang: 'en'`:
+
+```ts
+searchLocations('roma', { lang: 'en' });  // → Rome, Lazio, Italy
+```
+
+Il file `alternateNames.zip` pesa 200 MB e decompresso supera i 700 MB: viene
+letto in streaming e filtrato alla sola lingua italiana, mai caricato in
+memoria. L'importazione completa richiede meno di un minuto.
 
 ## Il punto delicato: i fusi orari
 

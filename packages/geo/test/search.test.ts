@@ -9,18 +9,37 @@ import { GeoError } from '../src/types.js';
 
 /**
  * I test usano un database costruito al volo invece del dataset GeoNames
- * completo (85 MB, non versionato): restano rapidi e riproducibili in CI.
+ * completo (90 MB, non versionato): restano rapidi e riproducibili in CI.
  */
 let directory: string;
 let databasePath: string;
 
-const FIXTURES = [
+interface Fixture {
+  id: number;
+  nameEn: string;
+  nameIt: string | null;
+  countryCode: string;
+  countryEn: string;
+  countryIt: string | null;
+  regionEn: string | null;
+  regionIt: string | null;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  population: number;
+  names: string[];
+}
+
+const FIXTURES: Fixture[] = [
   {
     id: 3169070,
-    name: 'Rome',
+    nameEn: 'Rome',
+    nameIt: 'Roma',
     countryCode: 'IT',
-    country: 'Italy',
-    region: 'Lazio',
+    countryEn: 'Italy',
+    countryIt: 'Italia',
+    regionEn: 'Lazio',
+    regionIt: 'Lazio',
     latitude: 41.8919,
     longitude: 12.5113,
     timezone: 'Europe/Rome',
@@ -29,10 +48,14 @@ const FIXTURES = [
   },
   {
     id: 4219762,
-    name: 'Rome',
+    nameEn: 'Rome',
+    // Le città senza esonimo italiano restano al nome internazionale.
+    nameIt: null,
     countryCode: 'US',
-    country: 'United States',
-    region: 'Georgia',
+    countryEn: 'United States',
+    countryIt: 'Stati Uniti',
+    regionEn: 'Georgia',
+    regionIt: 'Georgia',
     latitude: 34.257,
     longitude: -85.1647,
     timezone: 'America/New_York',
@@ -41,10 +64,13 @@ const FIXTURES = [
   },
   {
     id: 2867714,
-    name: 'Munich',
+    nameEn: 'Munich',
+    nameIt: 'Monaco di Baviera',
     countryCode: 'DE',
-    country: 'Germany',
-    region: 'Bavaria',
+    countryEn: 'Germany',
+    countryIt: 'Germania',
+    regionEn: 'Bavaria',
+    regionIt: 'Baviera',
     latitude: 48.1374,
     longitude: 11.5755,
     timezone: 'Europe/Berlin',
@@ -53,10 +79,13 @@ const FIXTURES = [
   },
   {
     id: 2657896,
-    name: 'Zürich',
+    nameEn: 'Zürich',
+    nameIt: 'Zurigo',
     countryCode: 'CH',
-    country: 'Switzerland',
-    region: 'Zurich',
+    countryEn: 'Switzerland',
+    countryIt: 'Svizzera',
+    regionEn: 'Zurich',
+    regionIt: 'Zurigo',
     latitude: 47.3667,
     longitude: 8.55,
     timezone: 'Europe/Zurich',
@@ -73,9 +102,9 @@ beforeAll(() => {
   database.exec(loadSchema());
 
   const insertLocation = database.prepare(
-    `INSERT INTO locations (id, name, country_code, country, region,
-                            latitude, longitude, timezone, population)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO locations (id, name_en, name_it, country_code, country_en, country_it,
+                            region_en, region_it, latitude, longitude, timezone, population)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insertName = database.prepare(
     'INSERT INTO location_names (location_id, search_name) VALUES (?, ?)',
@@ -84,10 +113,13 @@ beforeAll(() => {
   for (const fixture of FIXTURES) {
     insertLocation.run(
       fixture.id,
-      fixture.name,
+      fixture.nameEn,
+      fixture.nameIt,
       fixture.countryCode,
-      fixture.country,
-      fixture.region,
+      fixture.countryEn,
+      fixture.countryIt,
+      fixture.regionEn,
+      fixture.regionIt,
       fixture.latitude,
       fixture.longitude,
       fixture.timezone,
@@ -139,8 +171,8 @@ describe('searchLocations', () => {
   });
 
   it('trova per esonimo', () => {
-    expect(searchLocations('Monaco di Baviera', { databasePath })[0]?.name).toBe('Munich');
-    expect(searchLocations('Zurigo', { databasePath })[0]?.name).toBe('Zürich');
+    expect(searchLocations('Monaco di Baviera', { databasePath })[0]?.id).toBe(2867714);
+    expect(searchLocations('Zurigo', { databasePath })[0]?.id).toBe(2657896);
     expect(searchLocations('Roma', { databasePath })[0]?.countryCode).toBe('IT');
   });
 
@@ -191,12 +223,60 @@ describe('searchLocations', () => {
   });
 });
 
+describe('lingua dei nomi restituiti', () => {
+  it('usa l\'italiano come impostazione predefinita', () => {
+    const [rome] = searchLocations('Roma', { databasePath, countryCode: 'IT' });
+
+    expect(rome?.name).toBe('Roma');
+    expect(rome?.country).toBe('Italia');
+  });
+
+  it('restituisce i nomi internazionali con lang inglese', () => {
+    const [rome] = searchLocations('Roma', { databasePath, countryCode: 'IT', lang: 'en' });
+
+    expect(rome?.name).toBe('Rome');
+    expect(rome?.country).toBe('Italy');
+    expect(rome?.region).toBe('Lazio');
+  });
+
+  it('traduce anche le località straniere', () => {
+    const [munich] = searchLocations('Munich', { databasePath });
+
+    expect(munich?.name).toBe('Monaco di Baviera');
+    expect(munich?.region).toBe('Baviera');
+    expect(munich?.country).toBe('Germania');
+  });
+
+  it('ricade sul nome internazionale quando manca la variante italiana', () => {
+    // La maggior parte dei centri non ha un esonimo: mostrare un campo vuoto
+    // sarebbe peggio del nome internazionale.
+    const [romeUs] = searchLocations('Rome', { databasePath, countryCode: 'US' });
+
+    expect(romeUs?.name).toBe('Rome');
+    expect(romeUs?.country).toBe('Stati Uniti');
+  });
+
+  it('cerca su tutte le lingue a prescindere da lang', () => {
+    // Si deve poter digitare "Munich" e ricevere "Monaco di Baviera".
+    expect(searchLocations('Munich', { databasePath, lang: 'it' })[0]?.name).toBe(
+      'Monaco di Baviera',
+    );
+    expect(searchLocations('Monaco di Baviera', { databasePath, lang: 'en' })[0]?.name).toBe(
+      'Munich',
+    );
+  });
+});
+
 describe('getLocation', () => {
   it('restituisce la località dal suo identificatore GeoNames', () => {
     const location = getLocation(3169070, { databasePath });
 
-    expect(location?.name).toBe('Rome');
+    expect(location?.name).toBe('Roma');
     expect(location?.timezone).toBe('Europe/Rome');
+  });
+
+  it('rispetta la lingua richiesta', () => {
+    expect(getLocation(3169070, { databasePath, lang: 'en' })?.name).toBe('Rome');
   });
 
   it('restituisce undefined per un identificatore sconosciuto', () => {

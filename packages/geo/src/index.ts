@@ -9,4 +9,10 @@
 
 export { searchLocations, getLocation, databaseInfo } from './search.js';
 export { defaultDatabasePath, normalizeName, loadSchema, openDatabase } from './database.js';
-export { GeoError, type GeoErrorCode, type Location, type SearchOptions } from './types.js';
+export {
+  GeoError,
+  type GeoErrorCode,
+  type LocaleCode,
+  type Location,
+  type SearchOptions,
+} from './types.js';

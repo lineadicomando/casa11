@@ -4,7 +4,7 @@ import {
   type ChartOptions,
   type HouseSystem,
 } from '@undicesimacasa/core';
-import { getLocation } from '@undicesimacasa/geo';
+import { getLocation, type Location } from '@undicesimacasa/geo';
 import { error, json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import type { RequestHandler } from './$types';
@@ -99,7 +99,7 @@ function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
       latitude: location.latitude,
       longitude: location.longitude,
       timezone: location.timezone,
-      label: [location.name, location.region, location.country].filter(Boolean).join(', '),
+      label: describeLocation(location),
     };
   }
 
@@ -117,6 +117,19 @@ function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
   }
 
   return { latitude, longitude, timezone };
+}
+
+/**
+ * Compone l'etichetta di una località.
+ *
+ * Nelle città-stato regione e città coincidono ("Berlino, Berlino, Germania"):
+ * la ripetizione non aggiunge nulla e si omette.
+ */
+function describeLocation(location: Location): string {
+  const parts = [location.name];
+  if (location.region && location.region !== location.name) parts.push(location.region);
+  parts.push(location.country);
+  return parts.join(', ');
 }
 
 function isHttpError(cause: unknown): cause is { status: number; body: unknown } {

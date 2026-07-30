@@ -27,11 +27,14 @@ beforeAll(async () => {
   database.exec(loadSchema());
   database
     .prepare(
-      `INSERT INTO locations (id, name, country_code, country, region,
-                              latitude, longitude, timezone, population)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO locations (id, name_en, name_it, country_code, country_en, country_it,
+                              region_en, region_it, latitude, longitude, timezone, population)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .run(ROMA_ID, 'Rome', 'IT', 'Italy', 'Lazio', 41.8919, 12.5113, 'Europe/Rome', 2_318_895);
+    .run(
+      ROMA_ID, 'Rome', 'Roma', 'IT', 'Italy', 'Italia', 'Lazio', 'Lazio',
+      41.8919, 12.5113, 'Europe/Rome', 2_318_895,
+    );
   database
     .prepare('INSERT INTO location_names (location_id, search_name) VALUES (?, ?)')
     .run(ROMA_ID, normalizeName('Roma'));
@@ -45,8 +48,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await client.close();
-  rmSync(directory, { recursive: true, force: true });
+  // `client` resta undefined se beforeAll fallisce: senza guardia l'errore
+  // di pulizia maschera quello vero.
+  await client?.close();
+  if (directory) rmSync(directory, { recursive: true, force: true });
 });
 
 /** Estrae il testo dal risultato di un tool, qualunque sia il tipo di blocco. */
@@ -99,7 +104,7 @@ describe('search_location', () => {
 
     expect(text).toContain(`location_id ${ROMA_ID}`);
     expect(text).toContain('Europe/Rome');
-    expect(text).toContain('Rome, Lazio, Italy');
+    expect(text).toContain('Roma, Lazio, Italia');
   });
 
   it('spiega cosa fare quando non trova nulla, senza segnalare errore', async () => {
@@ -122,7 +127,7 @@ describe('compute_natal_chart', () => {
     const text = textOf(result);
 
     expect(result.isError).toBeFalsy();
-    expect(text).toContain('Luogo: Rome, Lazio, Italy');
+    expect(text).toContain('Luogo: Roma, Lazio, Italia');
     expect(text).toContain('TEMA NATALE');
     expect(text).toContain('ASSI');
   });
