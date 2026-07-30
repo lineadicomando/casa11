@@ -318,7 +318,7 @@
               {/each}
               {#if chart.partOfFortune}
                 <tr class="punto">
-                  <td class="glifo">{POINT_GLYPH.fortuna}</td>
+                  <td class="glifo glifo-punto">{POINT_GLYPH.fortuna}</td>
                   <td>Parte di Fortuna</td>
                   <td>
                     {formatDegrees(chart.partOfFortune.signDegree)}
@@ -604,15 +604,33 @@
   }
 
   /* La Parte di Fortuna non è un corpo celeste: la si distingue senza
-     separarla dalla tabella, dove si legge insieme alle altre posizioni. */
+     separarla dalla tabella, dove si legge insieme alle altre posizioni.
+     Il corsivo sta sulla riga e non sulle celle perché così è ereditato, e la
+     regola diretta sui glifi qui sotto basta ad annullarlo senza rincorrere
+     la specificità di un selettore `tr.punto td`. */
+  tr.punto {
+    font-style: italic;
+  }
+
   tr.punto td {
     border-top: 1px solid var(--linea-forte);
-    font-style: italic;
+  }
+
+  /* I glifi sono disegni, non testo: il corsivo della riga `punto` li
+     inclinerebbe soltanto, senza che il font offra una vera variante. */
+  .glifo,
+  .glifo-piccolo {
+    font-style: normal;
   }
 
   .glifo {
     font-size: 1.15rem;
     width: 1.6rem;
+  }
+
+  /* Vedi ChartWheel: ⊗ è un operatore matematico e nasce sovradimensionato. */
+  .glifo-punto {
+    font-size: 0.9rem;
   }
 
   .glifo-piccolo {

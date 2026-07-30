@@ -265,6 +265,7 @@
         x={glyph.x}
         y={glyph.y}
         class="glifo-corpo"
+        class:glifo-punto={body.id === 'fortuna'}
         text-anchor="middle"
         dominant-baseline="central"
       >
@@ -296,6 +297,15 @@
   .glifo-corpo {
     font-size: 27px;
     fill: var(--testo);
+  }
+
+  /*
+   * Il glifo della Parte di Fortuna è ⊗ (U+2297), un operatore matematico:
+   * i font di sistema lo disegnano molto più grande dei simboli astrologici
+   * (U+2600–U+26FF) a parità di font-size. Va rimpicciolito per pareggiarlo.
+   */
+  .glifo-punto {
+    font-size: 21px;
   }
 
   .retrogrado {
