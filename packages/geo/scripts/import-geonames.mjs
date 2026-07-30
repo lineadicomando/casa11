@@ -425,6 +425,12 @@ async function main() {
 
   database.exec('COMMIT');
   database.exec('ANALYZE');
+
+  // Il WAL serve solo a scrivere in fretta qui: dopo l'importazione il
+  // database non cambia più. Lasciarlo in modalità WAL lo renderebbe però
+  // inapribile da un mount in sola lettura — SQLite deve poter creare il file
+  // `-shm` anche per leggere — cioè esattamente il caso del container.
+  database.exec('PRAGMA journal_mode = DELETE;');
   database.close();
 
   const info = await stat(databasePath);
