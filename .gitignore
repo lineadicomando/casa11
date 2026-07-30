@@ -1,0 +1,21 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# File di effemeridi Swiss Ephemeris: scaricati da script, non versionati.
+# Vedi packages/core/scripts/download-ephe.mjs
+ephe/
+*.se1
+
+# Dataset GeoNames importato: artefatto rigenerabile di ~85 MB.
+# Vedi packages/geo/scripts/import-geonames.mjs
+packages/geo/data/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+.svelte-kit/
+build/

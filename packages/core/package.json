@@ -1,0 +1,38 @@
+{
+  "name": "@temanatale/core",
+  "version": "0.0.0",
+  "description": "Motore di calcolo del tema natale: effemeridi, case, aspetti, fusi orari storici",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "temanatale": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "scripts"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "cli": "tsx src/cli.ts",
+    "ephe:download": "node scripts/download-ephe.mjs"
+  },
+  "dependencies": {
+    "luxon": "^3.7.2",
+    "sweph": "^2.10.3-4"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.7.1",
+    "tsx": "^4.20.6"
+  }
+}

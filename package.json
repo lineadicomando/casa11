@@ -1,0 +1,26 @@
+{
+  "name": "temanatale",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Generazione di temi natali: motore di calcolo, API REST e server MCP",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @temanatale/core -w @temanatale/geo && npm run build -w @temanatale/mcp",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run build -w @temanatale/core -w @temanatale/geo && npm run typecheck --workspaces --if-present",
+    "prepare": "npm run build -w @temanatale/core -w @temanatale/geo"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

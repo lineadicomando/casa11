@@ -1,0 +1,206 @@
+# temanatale
+
+Generazione di temi natali: motore di calcolo astronomico, API REST e server MCP.
+
+Il progetto è diviso in un **motore puro** e in **adattatori** che lo espongono
+su superfici diverse — un'interfaccia web per le persone, un server MCP per gli
+agenti. Il calcolo è deterministico e non contiene interpretazioni: quelle
+restano a carico del consumatore.
+
+## Licenza
+
+**AGPL-3.0-or-later.** Il progetto usa [Swiss Ephemeris](https://www.astro.com/swisseph/),
+distribuita da Astrodienst con doppia licenza AGPL / commerciale. Usando la via
+AGPL, l'intera applicazione deve essere rilasciata sotto la stessa licenza: chi
+utilizza il servizio via rete ha diritto al codice sorgente. Per un uso a
+sorgente chiuso serve la licenza commerciale Astrodienst.
+
+## Struttura
+
+```
+temanatale/
+├── packages/
+│   ├── core/          motore di calcolo (nessuna dipendenza web)
+│   ├── geo/           ricerca località, dataset GeoNames locale
+│   └── mcp/           server MCP: search_location + compute_natal_chart
+└── apps/
+    └── web/           SvelteKit: interfaccia + API REST
+```
+
+Monorepo con **npm workspaces**. Node ≥ 22.
+
+## Avvio rapido
+
+```sh
+npm install
+npm run ephe:download -w @temanatale/core   # opzionale, ~2 MB
+npm run geo:import   -w @temanatale/geo     # necessario per la ricerca località, ~14 MB
+npm test
+```
+
+```sh
+npx tsx packages/core/src/cli.ts \
+  --date 1968-03-12 --time 14:30 \
+  --lat 40.8518 --lon 14.2681 --tz Europe/Rome
+```
+
+```
+TEMA NATALE — 1968-03-12 14:30 (Europe/Rome, UTC+01:00) — 40.8518N 14.2681E
+Case: placidus | Effemeridi: swisseph | UT: 1968-03-12T13:30:00Z
+
+CORPI
+Sole        22°03' Pes    casa  8
+Luna        22°53' Leo    casa  1
+...
+```
+
+Aggiungi `--json` per l'oggetto completo, `--help` per tutte le opzioni.
+
+## Le due modalità di effemeridi
+
+| Modalità | File richiesti | Precisione | Chirone |
+|---|---|---|---|
+| `swisseph` | `sepl_18.se1`, `semo_18.se1`, `seas_18.se1` (~2 MB) | secondo d'arco | sì |
+| `moshier` | nessuno | ~0,4 secondi d'arco sui pianeti principali | no |
+
+Il motore **rileva automaticamente** i file e ripiega su Moshier se assenti,
+segnalandolo in `warnings`. Il progetto è quindi utilizzabile subito dopo
+`npm install`, senza scaricare nulla. Lo scarto fra le due modalità è verificato
+dai test: sotto i 5 secondi d'arco, cioè irrilevante in astrologia.
+
+I file `.se1` **non sono versionati** (dati binari ridistribuibili): li scarica
+`packages/core/scripts/download-ephe.mjs` dal repository ufficiale Swiss Ephemeris.
+
+## Uso come libreria
+
+```ts
+import { computeNatalChart, formatChartCompact } from '@temanatale/core';
+
+const chart = computeNatalChart({
+  date: '1968-03-12',
+  time: '14:30',          // se omessa: nessuna casa, nessun asse
+  latitude: 40.8518,      // positiva a Nord
+  longitude: 14.2681,     // positiva a Est
+  timezone: 'Europe/Rome',
+}, {
+  houseSystem: 'placidus',
+  minorAspects: false,
+});
+
+chart.bodies;    // posizioni, segno, casa, retrogradazione, velocità
+chart.houses;    // 12 cuspidi
+chart.angles;    // ASC, MC, DSC, IC, Vertex
+chart.aspects;   // matrice degli aspetti con orbita e direzione
+chart.warnings;  // ora ambigua, effemeridi ripiegate, corpi mancanti
+
+formatChartCompact(chart);  // resa tabellare, ~1/8 dei token del JSON
+```
+
+Sistemi di case: `placidus`, `koch`, `segni-interi`, `equale`, `regiomontano`,
+`campano`, `porfirio`, `topocentrico`, `alcabizio`.
+
+## Il punto delicato: i fusi orari
+
+Un errore di un'ora nella conversione sposta l'Ascendente di circa 15 gradi,
+cioè mezzo segno. Il motore usa il database tzdata **storico** via Luxon, quindi
+gestisce correttamente l'ora legale di guerra, i tempi medi locali pre-1893 e i
+cambi di fuso. I casi limite sono coperti da test e segnalati in `warnings`:
+
+- ora **inesistente** (salto in avanti per l'ora legale) → si usa l'istante successivo
+- ora **ambigua** (ritorno all'ora solare, l'orario ricorre due volte) → si usa la prima occorrenza
+- ora **ignota** → carta calcolata a mezzogiorno locale, senza case né assi
+
+La conversione a giorno giuliano è implementata direttamente (algoritmo di
+Meeus) invece che delegata al modulo nativo, così da restare testabile in
+isolamento.
+
+## Progettato per essere consumato da agenti
+
+L'obiettivo dichiarato del progetto è esporre il calcolo anche via **MCP**.
+Alcune scelte del motore vengono da lì:
+
+- **calcolo e interpretazione sono separati** — l'API restituisce solo dati verificabili
+- **il fallimento è parziale, non totale** — un corpo non calcolabile produce un
+  avviso, non un errore; l'ora ignota produce una carta senza case anziché un rifiuto
+- **`formatChartCompact`** esiste per non bruciare migliaia di token di contesto
+- **gli errori hanno un `code`** (`ChartError`) mappabile su una risposta API
+
+## Applicazione web
+
+```sh
+npm run build
+npm start -w @temanatale/web        # http://localhost:3000
+npm run dev -w @temanatale/web      # sviluppo
+```
+
+Due endpoint, entrambi in GET perché un tema natale è una funzione pura dei
+suoi parametri: l'URL è condivisibile e la risposta memorizzabile.
+
+```
+GET /api/locations?q=napoli&limit=8&country=IT
+GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
+GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
+```
+
+Gli errori riportano il `code` del dominio (`FUSO_ORARIO_NON_VALIDO`,
+`LUOGO_MANCANTE`, …) con lo status appropriato: 400 per l'input, 404 per una
+località inesistente, 503 se il database delle località non è stato importato.
+
+**Il bundle del browser non contiene il motore di calcolo.** Il codice client
+importa da `@temanatale/core` solo *tipi*, mai valori: un singolo import di
+valore ne trascinerebbe l'intero grafo — effemeridi e modulo nativo compresi —
+dentro il JavaScript scaricato dall'utente.
+
+### Docker
+
+```sh
+docker build -t temanatale .
+docker run -p 3000:3000 -v ./packages/geo/data:/data:ro temanatale
+```
+
+Le effemeridi stanno nell'immagine; il dataset delle località si monta come
+volume, così l'immagine resta leggera e il dataset si aggiorna senza
+ricostruirla.
+
+## Server MCP
+
+Espone il calcolo agli agenti. Trasporto stdio:
+
+```json
+{
+  "mcpServers": {
+    "temanatale": {
+      "command": "node",
+      "args": ["/percorso/temanatale/packages/mcp/dist/stdio.js"]
+    }
+  }
+}
+```
+
+Due tool, deliberatamente separati:
+
+| Tool | Cosa fa |
+|---|---|
+| `search_location` | nome → candidati con `location_id`, coordinate, fuso IANA |
+| `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
+
+La separazione è il punto: `compute_natal_chart` non fa geocoding. Un tool
+unico dovrebbe scegliere in silenzio fra le decine di "Roma" del mondo, e uno
+sbaglio lì produce un tema plausibile e sbagliato. Così la disambiguazione
+resta una decisione esplicita, e `location_id` evita che l'agente ricopi a mano
+tre valori numerici.
+
+Il parametro `format` vale `compact` (default, tabella densa) o `json`.
+Le risorse `temanatale://riferimento/aspetti` e `.../sistemi-case` contengono
+il materiale di riferimento, caricato solo quando serve.
+
+Variabili d'ambiente: `GEONAMES_DB_PATH`, `SE_EPHE_PATH`.
+
+## Sviluppo
+
+```sh
+npm test                                  # tutti i workspace
+npm run test:watch -w @temanatale/core
+npm run typecheck
+npm run build
+```

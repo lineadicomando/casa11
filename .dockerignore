@@ -1,0 +1,9 @@
+node_modules
+**/node_modules
+**/dist
+**/build
+**/.svelte-kit
+packages/geo/data
+packages/core/ephe
+.git
+*.md

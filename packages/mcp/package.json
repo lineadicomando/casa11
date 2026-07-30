@@ -1,0 +1,37 @@
+{
+  "name": "@temanatale/mcp",
+  "version": "0.0.0",
+  "description": "Server MCP per il calcolo del tema natale",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "temanatale-mcp": "./dist/stdio.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "tsx src/stdio.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@temanatale/core": "*",
+    "@temanatale/geo": "*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  }
+}
