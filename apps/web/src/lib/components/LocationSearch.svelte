@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Location } from '@temanatale/geo';
+  import type { Location } from '@undicesimacasa/geo';
 
   interface Props {
     selected: Location | null;

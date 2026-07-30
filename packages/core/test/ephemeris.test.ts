@@ -6,7 +6,7 @@ import { initEphemeris, resetEphemerisCache } from '../src/ephemeris.js';
 import type { BirthData } from '../src/types.js';
 
 const EPHE_DIR = fileURLToPath(new URL('../ephe', import.meta.url));
-const NO_EPHE_DIR = '/tmp/temanatale-cartella-inesistente';
+const NO_EPHE_DIR = '/tmp/undicesimacasa-cartella-inesistente';
 
 /** I file `.se1` non sono versionati: i test che li richiedono si autoescludono. */
 const hasEphemerisFiles = existsSync(`${EPHE_DIR}/sepl_18.se1`);

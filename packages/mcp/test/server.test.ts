@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { loadSchema, normalizeName } from '@temanatale/geo';
+import { loadSchema, normalizeName } from '@undicesimacasa/geo';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createServer } from '../src/server.js';
 
@@ -20,7 +20,7 @@ let client: Client;
 const ROMA_ID = 3169070;
 
 beforeAll(async () => {
-  directory = mkdtempSync(join(tmpdir(), 'temanatale-mcp-'));
+  directory = mkdtempSync(join(tmpdir(), 'undicesimacasa-mcp-'));
   databasePath = join(directory, 'test.db');
 
   const database = new DatabaseSync(databasePath);
@@ -78,12 +78,12 @@ describe('superficie MCP', () => {
     const { resources } = await client.listResources();
     const uris = resources.map((resource) => resource.uri);
 
-    expect(uris).toContain('temanatale://riferimento/aspetti');
-    expect(uris).toContain('temanatale://riferimento/sistemi-case');
+    expect(uris).toContain('undicesimacasa://riferimento/aspetti');
+    expect(uris).toContain('undicesimacasa://riferimento/sistemi-case');
   });
 
   it('serve il contenuto di una risorsa', async () => {
-    const result = await client.readResource({ uri: 'temanatale://riferimento/aspetti' });
+    const result = await client.readResource({ uri: 'undicesimacasa://riferimento/aspetti' });
 
     expect(String(result.contents[0]?.text)).toContain('congiunzione');
   });

@@ -1,5 +1,5 @@
 /**
- * @temanatale/core — motore di calcolo del tema natale.
+ * @undicesimacasa/core — motore di calcolo del tema natale.
  *
  * Libreria pura: nessuna dipendenza da HTTP, framework web o MCP.
  * Gli adattatori (API REST, server MCP, interfaccia) la consumano dall'esterno.

@@ -24,14 +24,14 @@ COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/ apps/
 
-RUN npm run build -w @temanatale/core -w @temanatale/geo \
-  && npm run build -w @temanatale/mcp \
-  && npm run build -w @temanatale/web
+RUN npm run build -w @undicesimacasa/core -w @undicesimacasa/geo \
+  && npm run build -w @undicesimacasa/mcp \
+  && npm run build -w @undicesimacasa/web
 
 # Dati non versionati, scaricati in fase di build.
 # Le effemeridi (~2 MB) stanno nell'immagine; il dataset delle località
 # (~85 MB) conviene montarlo come volume — vedi GEONAMES_DB_PATH sotto.
-RUN npm run ephe:download -w @temanatale/core
+RUN npm run ephe:download -w @undicesimacasa/core
 
 # Ripulisce le dipendenze di sviluppo prima di copiare nell'immagine finale.
 RUN npm prune --omit=dev --ignore-scripts
@@ -61,7 +61,7 @@ EXPOSE 3000
 
 # Il database delle località va montato su /data: l'immagine resta leggera e
 # il dataset si aggiorna senza ricostruirla.
-#   docker run -v ./packages/geo/data:/data:ro -p 3000:3000 temanatale
+#   docker run -v ./packages/geo/data:/data:ro -p 3000:3000 undicesimacasa
 VOLUME /data
 
 CMD ["node", "apps/web/build/index.js"]

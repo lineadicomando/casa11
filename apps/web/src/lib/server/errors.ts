@@ -1,5 +1,5 @@
-import { ChartError } from '@temanatale/core';
-import { GeoError } from '@temanatale/geo';
+import { ChartError } from '@undicesimacasa/core';
+import { GeoError } from '@undicesimacasa/geo';
 import { error } from '@sveltejs/kit';
 
 /**

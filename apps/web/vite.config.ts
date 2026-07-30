@@ -14,6 +14,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [sveltekit()],
   ssr: {
-    external: ['sweph', '@temanatale/core', '@temanatale/geo'],
+    external: ['sweph', '@undicesimacasa/core', '@undicesimacasa/geo'],
   },
 });

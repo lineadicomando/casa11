@@ -5,8 +5,8 @@ import {
   type BirthData,
   type ChartOptions,
   type HouseSystem,
-} from '@temanatale/core';
-import { GeoError, getLocation, searchLocations, type Location } from '@temanatale/geo';
+} from '@undicesimacasa/core';
+import { GeoError, getLocation, searchLocations, type Location } from '@undicesimacasa/geo';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';

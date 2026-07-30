@@ -1,5 +1,5 @@
 {
-  "name": "@temanatale/mcp",
+  "name": "@undicesimacasa/mcp",
   "version": "0.0.0",
   "description": "Server MCP per il calcolo del tema natale",
   "license": "AGPL-3.0-or-later",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "temanatale-mcp": "./dist/stdio.js"
+    "undicesimacasa-mcp": "./dist/stdio.js"
   },
   "files": [
     "dist"
@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.22.0",
-    "@temanatale/core": "*",
-    "@temanatale/geo": "*",
+    "@undicesimacasa/core": "*",
+    "@undicesimacasa/geo": "*",
     "zod": "^3.25.76"
   },
   "devDependencies": {

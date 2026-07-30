@@ -1,7 +1,7 @@
-import type { AspectId, BodyId, ZodiacSign } from '@temanatale/core';
+import type { AspectId, BodyId, ZodiacSign } from '@undicesimacasa/core';
 
 /**
- * Ordine dei segni, ridichiarato qui invece di importarlo da `@temanatale/core`.
+ * Ordine dei segni, ridichiarato qui invece di importarlo da `@undicesimacasa/core`.
  *
  * Non è duplicazione gratuita: importare un *valore* dal motore di calcolo
  * ne trascinerebbe l'intero grafo nel bundle del browser — effemeridi e

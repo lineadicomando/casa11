@@ -1,4 +1,4 @@
-import { searchLocations, type SearchOptions } from '@temanatale/geo';
+import { searchLocations, type SearchOptions } from '@undicesimacasa/geo';
 import { json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import type { RequestHandler } from './$types';

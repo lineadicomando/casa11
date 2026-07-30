@@ -8,7 +8,7 @@ import type { BodyId, CelestialBody, EphemerisMode } from './types.js';
 
 /**
  * File di effemeridi minimi per il modo `swisseph`, copertura 1800-2400.
- * Scaricabili con `npm run ephe:download -w @temanatale/core`.
+ * Scaricabili con `npm run ephe:download -w @undicesimacasa/core`.
  */
 const REQUIRED_FILES = ['sepl_18.se1', 'semo_18.se1'];
 const ASTEROID_FILE = 'seas_18.se1';
@@ -66,7 +66,7 @@ export function initEphemeris(explicitPath?: string): EphemerisContext {
     warnings.push(
       `File di effemeridi non trovati in ${path}: uso le effemeridi Moshier ` +
         '(nessun file richiesto, precisione leggermente inferiore, Chirone non disponibile). ' +
-        'Esegui `npm run ephe:download -w @temanatale/core` per la precisione piena.',
+        'Esegui `npm run ephe:download -w @undicesimacasa/core` per la precisione piena.',
     );
     context = {
       mode: 'moshier',

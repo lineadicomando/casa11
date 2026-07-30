@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { HouseSystem, NatalChart } from '@temanatale/core';
-  import type { Location } from '@temanatale/geo';
+  import type { HouseSystem, NatalChart } from '@undicesimacasa/core';
+  import type { Location } from '@undicesimacasa/geo';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import {

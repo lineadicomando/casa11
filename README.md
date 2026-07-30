@@ -1,4 +1,4 @@
-# temanatale
+# undicesimacasa
 
 Generazione di temi natali: motore di calcolo astronomico, API REST e server MCP.
 
@@ -18,7 +18,7 @@ sorgente chiuso serve la licenza commerciale Astrodienst.
 ## Struttura
 
 ```
-temanatale/
+undicesimacasa/
 ├── packages/
 │   ├── core/          motore di calcolo (nessuna dipendenza web)
 │   ├── geo/           ricerca località, dataset GeoNames locale
@@ -33,14 +33,17 @@ Monorepo con **npm workspaces**. Node ≥ 22.
 
 ```sh
 npm install
-npm run ephe:download -w @temanatale/core   # opzionale, ~2 MB
-npm run geo:import   -w @temanatale/geo     # necessario per la ricerca località, ~14 MB
+npm run ephe:download -w @undicesimacasa/core   # opzionale, ~2 MB
+npm run geo:import   -w @undicesimacasa/geo     # necessario per la ricerca località, ~14 MB
 npm test
 ```
 
+La CLI si chiama `casa11` — nome corto perché è l'unica cosa che si digita
+a ogni invocazione:
+
 ```sh
-npx tsx packages/core/src/cli.ts \
-  --date 1968-03-12 --time 14:30 \
+npm run build
+npx casa11 --date 1968-03-12 --time 14:30 \
   --lat 40.8518 --lon 14.2681 --tz Europe/Rome
 ```
 
@@ -74,7 +77,7 @@ I file `.se1` **non sono versionati** (dati binari ridistribuibili): li scarica
 ## Uso come libreria
 
 ```ts
-import { computeNatalChart, formatChartCompact } from '@temanatale/core';
+import { computeNatalChart, formatChartCompact } from '@undicesimacasa/core';
 
 const chart = computeNatalChart({
   date: '1968-03-12',
@@ -129,8 +132,8 @@ Alcune scelte del motore vengono da lì:
 
 ```sh
 npm run build
-npm start -w @temanatale/web        # http://localhost:3000
-npm run dev -w @temanatale/web      # sviluppo
+npm start -w @undicesimacasa/web        # http://localhost:3000
+npm run dev -w @undicesimacasa/web      # sviluppo
 ```
 
 Due endpoint, entrambi in GET perché un tema natale è una funzione pura dei
@@ -147,15 +150,15 @@ Gli errori riportano il `code` del dominio (`FUSO_ORARIO_NON_VALIDO`,
 località inesistente, 503 se il database delle località non è stato importato.
 
 **Il bundle del browser non contiene il motore di calcolo.** Il codice client
-importa da `@temanatale/core` solo *tipi*, mai valori: un singolo import di
+importa da `@undicesimacasa/core` solo *tipi*, mai valori: un singolo import di
 valore ne trascinerebbe l'intero grafo — effemeridi e modulo nativo compresi —
 dentro il JavaScript scaricato dall'utente.
 
 ### Docker
 
 ```sh
-docker build -t temanatale .
-docker run -p 3000:3000 -v ./packages/geo/data:/data:ro temanatale
+docker build -t undicesimacasa .
+docker run -p 3000:3000 -v ./packages/geo/data:/data:ro undicesimacasa
 ```
 
 Le effemeridi stanno nell'immagine; il dataset delle località si monta come
@@ -169,13 +172,16 @@ Espone il calcolo agli agenti. Trasporto stdio:
 ```json
 {
   "mcpServers": {
-    "temanatale": {
+    "undicesimacasa": {
       "command": "node",
-      "args": ["/percorso/temanatale/packages/mcp/dist/stdio.js"]
+      "args": ["/percorso/undicesimacasa/packages/mcp/dist/stdio.js"]
     }
   }
 }
 ```
+
+Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
+il percorso assoluto.
 
 Due tool, deliberatamente separati:
 
@@ -191,7 +197,7 @@ resta una decisione esplicita, e `location_id` evita che l'agente ricopi a mano
 tre valori numerici.
 
 Il parametro `format` vale `compact` (default, tabella densa) o `json`.
-Le risorse `temanatale://riferimento/aspetti` e `.../sistemi-case` contengono
+Le risorse `undicesimacasa://riferimento/aspetti` e `.../sistemi-case` contengono
 il materiale di riferimento, caricato solo quando serve.
 
 Variabili d'ambiente: `GEONAMES_DB_PATH`, `SE_EPHE_PATH`.
@@ -200,7 +206,7 @@ Variabili d'ambiente: `GEONAMES_DB_PATH`, `SE_EPHE_PATH`.
 
 ```sh
 npm test                                  # tutti i workspace
-npm run test:watch -w @temanatale/core
+npm run test:watch -w @undicesimacasa/core
 npm run typecheck
 npm run build
 ```

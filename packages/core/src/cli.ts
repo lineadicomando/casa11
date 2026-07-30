@@ -6,9 +6,9 @@ import { formatChartCompact } from './format.js';
 import type { BirthData, ChartOptions, HouseSystem } from './types.js';
 
 const USAGE = `
-temanatale — calcolo del tema natale da riga di comando
+casa11 — calcolo del tema natale da riga di comando
 
-  temanatale --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
+  casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
 
 Opzioni
   --date <YYYY-MM-DD>   Data di nascita locale (obbligatoria)

@@ -1,5 +1,5 @@
 {
-  "name": "@temanatale/core",
+  "name": "@undicesimacasa/core",
   "version": "0.0.0",
   "description": "Motore di calcolo del tema natale: effemeridi, case, aspetti, fusi orari storici",
   "license": "AGPL-3.0-or-later",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "temanatale": "./dist/cli.js"
+    "casa11": "./dist/cli.js"
   },
   "files": [
     "dist",

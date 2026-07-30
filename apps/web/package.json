@@ -1,5 +1,5 @@
 {
-  "name": "@temanatale/web",
+  "name": "@undicesimacasa/web",
   "version": "0.0.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
@@ -13,8 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@temanatale/core": "*",
-    "@temanatale/geo": "*"
+    "@undicesimacasa/core": "*",
+    "@undicesimacasa/geo": "*"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.2.14",

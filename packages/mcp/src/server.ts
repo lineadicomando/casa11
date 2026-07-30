@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ASPECTS, HOUSE_SYSTEM_CODES } from '@temanatale/core';
+import { ASPECTS, HOUSE_SYSTEM_CODES } from '@undicesimacasa/core';
 import { registerComputeNatalChart, registerSearchLocation, type ToolContext } from './tools.js';
 
-export const SERVER_NAME = 'temanatale';
+export const SERVER_NAME = 'undicesimacasa';
 export const SERVER_VERSION = '0.0.0';
 
 /**
@@ -41,7 +41,7 @@ export function createServer(context: ToolContext = {}): McpServer {
 function registerReferenceResources(server: McpServer): void {
   server.registerResource(
     'aspetti',
-    'temanatale://riferimento/aspetti',
+    'undicesimacasa://riferimento/aspetti',
     {
       title: 'Aspetti e orbite',
       description:
@@ -62,7 +62,7 @@ function registerReferenceResources(server: McpServer): void {
 
   server.registerResource(
     'sistemi-case',
-    'temanatale://riferimento/sistemi-case',
+    'undicesimacasa://riferimento/sistemi-case',
     {
       title: 'Sistemi di domificazione',
       description:

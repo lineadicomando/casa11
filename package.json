@@ -1,5 +1,5 @@
 {
-  "name": "temanatale",
+  "name": "undicesimacasa",
   "version": "0.0.0",
   "private": true,
   "description": "Generazione di temi natali: motore di calcolo, API REST e server MCP",
@@ -13,10 +13,10 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @temanatale/core -w @temanatale/geo && npm run build -w @temanatale/mcp",
+    "build": "npm run build -w @undicesimacasa/core -w @undicesimacasa/geo && npm run build -w @undicesimacasa/mcp -w @undicesimacasa/web",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run build -w @temanatale/core -w @temanatale/geo && npm run typecheck --workspaces --if-present",
-    "prepare": "npm run build -w @temanatale/core -w @temanatale/geo"
+    "typecheck": "npm run build -w @undicesimacasa/core -w @undicesimacasa/geo && npm run typecheck --workspaces --if-present",
+    "prepare": "npm run build -w @undicesimacasa/core -w @undicesimacasa/geo"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",

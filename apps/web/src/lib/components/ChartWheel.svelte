@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CelestialBody, NatalChart } from '@temanatale/core';
+  import type { CelestialBody, NatalChart } from '@undicesimacasa/core';
   import {
     ASPECT_COLOR,
     BODY_GLYPH,

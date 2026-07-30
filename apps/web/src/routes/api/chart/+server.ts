@@ -3,8 +3,8 @@ import {
   type BirthData,
   type ChartOptions,
   type HouseSystem,
-} from '@temanatale/core';
-import { getLocation } from '@temanatale/geo';
+} from '@undicesimacasa/core';
+import { getLocation } from '@undicesimacasa/geo';
 import { error, json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import type { RequestHandler } from './$types';
