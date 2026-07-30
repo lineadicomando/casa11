@@ -7,3 +7,8 @@ packages/geo/data
 packages/core/ephe
 .git
 *.md
+.env
+.env.*
+!.env.example
+compose.yaml
+compose.*.yaml

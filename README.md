@@ -260,16 +260,70 @@ importa da `@undicesimacasa/core` solo *tipi*, mai valori: un singolo import di
 valore ne trascinerebbe l'intero grafo — effemeridi e modulo nativo compresi —
 dentro il JavaScript scaricato dall'utente.
 
-### Docker
+## Docker
+
+Un'unica immagine serve le tre superfici — web, server MCP, importazione del
+dataset — perché condividono codice e dipendenze: cambia solo il comando.
+L'orchestrazione sta in `compose.yaml`.
 
 ```sh
-docker build -t undicesimacasa .
-docker run -p 3000:3000 -v ./packages/geo/data:/data:ro undicesimacasa
+docker compose --profile setup run --rm geo-import   # una tantum, ~215 MB
+docker compose up -d                                 # localhost:3000
 ```
 
-Le effemeridi stanno nell'immagine; il dataset delle località si monta come
-volume, così l'immagine resta leggera e il dataset si aggiorna senza
+I servizi che non sono l'applicazione stanno dietro un profilo, così `up` non
+li avvia per sbaglio. Il profilo va nominato: Docker Compose lo attiva da sé
+quando il servizio è l'argomento di `run`, podman-compose no.
+
+Le effemeridi stanno nell'immagine (~2 MB); il dataset delle località (~90 MB)
+resta fuori, così l'immagine resta leggera e il dataset si aggiorna senza
 ricostruirla.
+
+**Dove vive il dataset** lo decide `GEONAMES_DATA`, l'unica variabile che
+cambia davvero qualcosa — vedi `.env.example`, da copiare in `.env`:
+
+| Valore | Effetto |
+|---|---|
+| `geonames` (predefinito) | volume gestito da Docker, popolato da `geo-import`: non serve Node sull'host |
+| `./packages/geo/data` | bind mount: riusa il dataset già importato con `npm run geo:import` |
+
+Qualsiasi percorso che inizi per `.` o `/` diventa un bind mount, ogni altro
+valore è un nome di volume. Il montaggio è in sola lettura ovunque tranne che
+in `geo-import`, e porta l'opzione `z`: senza rietichettatura SELinux un bind
+mount è irraggiungibile dal container su Fedora e RHEL, mentre altrove
+l'opzione non ha effetto.
+
+### I due profili
+
+Restano fuori da `docker compose up`, e si attivano per nome:
+
+```sh
+docker compose --profile dev up dev            # Vite in ricaricamento, :5173
+docker compose --profile mcp run --rm -T mcp   # server MCP su stdio
+```
+
+Il servizio `dev` monta i sorgenti dell'host ma conserva i `node_modules`
+dell'immagine, compilati per Debian: quelli locali contengono il binding
+nativo di `sweph` costruito per un'altra distribuzione.
+
+Il server MCP parla su stdio, quindi non è un servizio da avviare ma un
+processo che il client lancia:
+
+```json
+{
+  "mcpServers": {
+    "undicesimacasa": {
+      "command": "docker",
+      "args": ["compose", "-f", "/percorso/undicesimacasa/compose.yaml",
+               "--profile", "mcp", "run", "--rm", "-T", "mcp"]
+    }
+  }
+}
+```
+
+Il database delle località viene importato in modalità WAL e riportato a
+journal ordinario alla fine: in WAL SQLite deve poter creare un file `-shm`
+persino per leggere, e da un mount in sola lettura non può.
 
 ## Server MCP
 

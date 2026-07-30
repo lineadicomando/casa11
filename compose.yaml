@@ -1,0 +1,98 @@
+name: undicesimacasa
+
+# Le tre superfici del progetto condividono un'unica immagine: cambia il
+# comando, non il codice. L'ancora evita di ripetere build ed environment.
+x-runtime: &runtime
+  build:
+    context: .
+    target: runtime
+  image: undicesimacasa:latest
+  environment:
+    GEONAMES_DB_PATH: /data/geonames.db
+
+services:
+  # Applicazione web e API REST. http://localhost:3000
+  web:
+    <<: *runtime
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      # `z` rietichetta per SELinux (Fedora, RHEL), dove un bind mount della
+      # cartella dell'host sarebbe altrimenti irraggiungibile dal container.
+      # Sui sistemi senza SELinux l'opzione non ha alcun effetto.
+      - "${GEONAMES_DATA:-geonames}:/data:ro,z"
+    healthcheck:
+      # Nessun `curl` nell'immagine slim, e non vale la pena aggiungerlo:
+      # Node sa fare una richiesta da solo. Forma a stringa perché quella a
+      # lista (`["CMD", …]`) non è interpretata da tutte le implementazioni.
+      test: node -e 'fetch("http://127.0.0.1:3000/").then((r)=>process.exit(r.ok?0:1),()=>process.exit(1))'
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    restart: unless-stopped
+
+  # Costruisce il database delle località: scarica i dump GeoNames e li importa
+  # in SQLite. Non è un servizio ma un'operazione una tantum, da lanciare prima
+  # del primo avvio. Il profilo lo tiene fuori da `docker compose up`, e va
+  # nominato perché podman-compose non lo attiva da sé:
+  #   docker compose --profile setup run --rm geo-import
+  geo-import:
+    <<: *runtime
+    profiles: [setup]
+    command: [node, packages/geo/scripts/import-geonames.mjs]
+    volumes:
+      - "${GEONAMES_DATA:-geonames}:/data:z"
+      # I dump scaricati (~215 MB) sopravvivono al container: una nuova
+      # importazione riparte dalla cache invece che dalla rete.
+      - geonames-cache:/app/packages/geo/data/cache
+
+  # Server MCP, trasporto stdio: parla sul processo, non sulla rete. Non va
+  # avviato con `up` ma lanciato dal client MCP — vedi README.
+  mcp:
+    <<: *runtime
+    profiles: [mcp]
+    command: [node, packages/mcp/dist/stdio.js]
+    stdin_open: true
+    tty: false
+    volumes:
+      - "${GEONAMES_DATA:-geonames}:/data:ro,z"
+
+  # Sviluppo con ricaricamento: Vite serve i sorgenti dal bind mount.
+  # http://localhost:5173
+  dev:
+    build:
+      context: .
+      target: dev
+    image: undicesimacasa-dev:latest
+    profiles: [dev]
+    environment:
+      GEONAMES_DB_PATH: /data/geonames.db
+    # `dev` di SvelteKit compila i sorgenti dell'app, non quelli dei pacchetti
+    # del monorepo: core e geo vanno costruiti una volta all'avvio, altrimenti
+    # l'importazione di `dist` fallisce su un checkout pulito.
+    command:
+      - sh
+      - -c
+      - npm run build -w @undicesimacasa/core -w @undicesimacasa/geo && npm run dev -w @undicesimacasa/web -- --host 0.0.0.0 --port 5173
+    ports:
+      - "${DEV_PORT:-5173}:5173"
+    volumes:
+      - .:/app:z
+      - "${GEONAMES_DATA:-geonames}:/data:ro,z"
+      # I node_modules restano quelli dell'immagine, compilati per Debian:
+      # questi volumi impediscono al bind mount di sostituirli con quelli
+      # dell'host, che contengono binari nativi di un'altra distribuzione.
+      - /app/node_modules
+      - /app/packages/core/node_modules
+      - /app/packages/geo/node_modules
+      - /app/packages/mcp/node_modules
+      - /app/apps/web/node_modules
+
+volumes:
+  # Il database delle località, usato finché GEONAMES_DATA resta al valore
+  # predefinito: puntandolo a una cartella dell'host il montaggio diventa un
+  # bind e questo volume smette di servire. Vedi .env.example.
+  geonames:
+  # I dump GeoNames scaricati, indipendenti dalla scelta qui sopra.
+  geonames-cache:
