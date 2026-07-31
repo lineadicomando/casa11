@@ -10,6 +10,7 @@
     natalPointGlyph,
     natalPointLabel,
   } from '$lib/glyphs';
+  import { collapseNodalAxis } from '$lib/nodal-axis';
 
   /**
    * I due lati non sono intercambiabili: uno si muove e l'altro è fermo per
@@ -24,11 +25,16 @@
   }
 
   let { aspects, highlighted = $bindable(null), title = 'Aspetti al tema' }: Props = $props();
+
+  // I due nodi sono opposti per definizione: ogni loro contatto arriva in
+  // coppia e descrive un fatto solo. Vedi `lib/nodal-axis.ts`.
+  const righe = $derived(collapseNodalAxis(aspects));
+  const accorpato = $derived(righe.length < aspects.length);
 </script>
 
 <section>
-  <h3 class="titolo-sezione">{title} <span class="conteggio">{aspects.length}</span></h3>
-  {#if aspects.length === 0}
+  <h3 class="titolo-sezione">{title} <span class="conteggio">{righe.length}</span></h3>
+  {#if righe.length === 0}
     <p class="tenue">Nessun aspetto entro le orbite dei transiti, che sono strette di proposito.</p>
   {:else}
     <table>
@@ -41,7 +47,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each aspects as aspect, index (index)}
+        {#each righe as aspect, index (index)}
           <tr
             onmouseenter={() => (highlighted = aspect.transiting)}
             onmouseleave={() => (highlighted = null)}
@@ -66,6 +72,12 @@
         {/each}
       </tbody>
     </table>
+    {#if accorpato}
+      <p class="nota-asse">
+        L'asse dei Nodi compare una volta sola: un aspetto a un nodo è per
+        definizione un aspetto all'altro.
+      </p>
+    {/if}
   {/if}
 </section>
 
@@ -75,6 +87,12 @@
   }
 
   tr.minore td {
+    color: var(--testo-tenue);
+  }
+
+  .nota-asse {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
     color: var(--testo-tenue);
   }
 
