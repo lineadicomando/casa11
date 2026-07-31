@@ -7,9 +7,10 @@
  * di rete, e mostrarli in modo diverso.
  */
 
-import type { HouseSystem, NatalChart } from '@undicesimacasa/core';
+import type { HouseSystem, NatalChart, TransitChart } from '@undicesimacasa/core';
 import type { BirthInput } from './birth';
 import { refinedCoordinates } from './birth';
+import type { TransitInput } from './transit';
 
 /** Errore con un messaggio già presentabile a schermo. */
 export class RequestError extends Error {
@@ -62,6 +63,37 @@ export function chartParameters(
 
 export async function fetchChart(parameters: URLSearchParams): Promise<ChartResponse> {
   return request<ChartResponse>(`/api/chart?${parameters}`, 'Calcolo non riuscito');
+}
+
+export interface TransitsResponse extends ChartResponse {
+  transits: TransitChart;
+}
+
+/**
+ * Compone i parametri di `/api/transits`.
+ *
+ * Sono quelli del tema più l'istante: i due endpoint condividono la parte
+ * della nascita di proposito, e qui si vede perché — una funzione sola che
+ * ne chiama un'altra, invece di due elenchi da tenere allineati.
+ */
+export function transitParameters(
+  birth: BirthInput,
+  options: ChartOptionsInput,
+  transit: TransitInput,
+): URLSearchParams {
+  const parameters = chartParameters(birth, options);
+
+  parameters.set('transitDate', transit.date);
+  parameters.set('transitTimezone', transit.timezone);
+  // Un'ora vuota non si manda: al suo posto il motore usa mezzogiorno e lo
+  // dichiara fra le avvertenze, che è più onesto di un mezzogiorno implicito.
+  if (transit.time) parameters.set('transitTime', transit.time);
+
+  return parameters;
+}
+
+export async function fetchTransits(parameters: URLSearchParams): Promise<TransitsResponse> {
+  return request<TransitsResponse>(`/api/transits?${parameters}`, 'Calcolo dei transiti non riuscito');
 }
 
 async function request<T>(url: string, fallback: string): Promise<T> {

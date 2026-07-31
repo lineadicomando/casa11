@@ -15,6 +15,12 @@
     /** Corpo sotto il puntatore, condiviso con la ruota e con gli aspetti. */
     highlighted?: string | null;
     title?: string;
+    /**
+     * Intestazione della colonna delle case. Nei transiti la casa non è del
+     * corpo che si sta guardando ma del tema su cui cade, e chiamarla
+     * semplicemente «casa» lascerebbe credere a una domificazione dell'istante.
+     */
+    houseTitle?: string;
   }
 
   let {
@@ -22,6 +28,7 @@
     partOfFortune = undefined,
     highlighted = $bindable(null),
     title = 'Corpi',
+    houseTitle = 'Casa',
   }: Props = $props();
 </script>
 
@@ -33,7 +40,7 @@
         <th></th>
         <th>Corpo</th>
         <th>Posizione</th>
-        <th class="numerico">Casa</th>
+        <th class="numerico">{houseTitle}</th>
       </tr>
     </thead>
     <tbody>

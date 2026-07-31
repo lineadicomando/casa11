@@ -1,4 +1,4 @@
-import type { AspectId, BodyId, ZodiacSign } from '@undicesimacasa/core';
+import type { AspectId, BodyId, NatalPointId, ZodiacSign } from '@undicesimacasa/core';
 
 /**
  * Ordine dei segni, ridichiarato qui invece di importarlo da `@undicesimacasa/core`.
@@ -52,6 +52,68 @@ export const BODY_GLYPH: Readonly<Record<BodyId, string>> = {
 export const POINT_GLYPH = {
   fortuna: '⊗',
 } as const;
+
+export const BODY_LABEL: Readonly<Record<BodyId, string>> = {
+  sole: 'Sole',
+  luna: 'Luna',
+  mercurio: 'Mercurio',
+  venere: 'Venere',
+  marte: 'Marte',
+  giove: 'Giove',
+  saturno: 'Saturno',
+  urano: 'Urano',
+  nettuno: 'Nettuno',
+  plutone: 'Plutone',
+  'nodo-nord': 'Nodo Nord',
+  'nodo-sud': 'Nodo Sud',
+  lilith: 'Lilith',
+  chirone: 'Chirone',
+};
+
+/**
+ * I bersagli natali che non sono corpi.
+ *
+ * Gli assi non hanno un simbolo astrologico: nella colonna dei glifi ci va
+ * la sigla con cui si nominano da sempre, che è comunque più breve del nome.
+ */
+const ANGLE_GLYPH: Readonly<Record<Exclude<NatalPointId, BodyId>, string>> = {
+  ascendente: 'ASC',
+  'medio-cielo': 'MC',
+  discendente: 'DSC',
+  'fondo-cielo': 'IC',
+  fortuna: POINT_GLYPH.fortuna,
+};
+
+const ANGLE_LABEL: Readonly<Record<Exclude<NatalPointId, BodyId>, string>> = {
+  ascendente: 'Ascendente',
+  'medio-cielo': 'Medio Cielo',
+  discendente: 'Discendente',
+  'fondo-cielo': 'Fondo Cielo',
+  fortuna: 'Parte di Fortuna',
+};
+
+/** Le stesse mappe viste come parziali su tutti i bersagli possibili. */
+const ANGLE_GLYPHS: Readonly<Partial<Record<NatalPointId, string>>> = ANGLE_GLYPH;
+const ANGLE_LABELS: Readonly<Partial<Record<NatalPointId, string>>> = ANGLE_LABEL;
+
+export function natalPointGlyph(id: NatalPointId): string {
+  return ANGLE_GLYPHS[id] ?? BODY_GLYPH[id as BodyId] ?? id;
+}
+
+export function natalPointLabel(id: NatalPointId): string {
+  return ANGLE_LABELS[id] ?? BODY_LABEL[id as BodyId] ?? id;
+}
+
+/**
+ * `true` quando al posto del glifo c'è una sigla di lettere.
+ *
+ * Le sigle vanno in corpo minore: alla dimensione dei simboli astrologici
+ * sarebbero fuori scala. Si riconoscono dall'essere più lunghe di un
+ * carattere, che è la differenza fra una parola e un disegno.
+ */
+export function isNatalPointSigla(id: NatalPointId): boolean {
+  return natalPointGlyph(id).length > 1;
+}
 
 export const SIGN_GLYPH: Readonly<Record<ZodiacSign, string>> = {
   ariete: '♈',

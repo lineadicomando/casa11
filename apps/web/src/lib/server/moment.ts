@@ -9,6 +9,7 @@
 
 import type { TransitMoment } from '@undicesimacasa/core';
 import { error } from '@sveltejs/kit';
+import { isKnownTimezone, wallClock } from '$lib/clock';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}(:\d{2})?$/;
@@ -87,35 +88,11 @@ function readTimezone(parameters: URLSearchParams): string | null {
   const timezone = parameters.get('transitTimezone');
   if (timezone === null || timezone === '') return null;
 
-  try {
-    new Intl.DateTimeFormat('en-CA', { timeZone: timezone });
-  } catch {
+  if (!isKnownTimezone(timezone)) {
     throw error(400, {
       message: `Fuso orario "${timezone}" sconosciuto: atteso un identificatore IANA, es. Europe/Rome.`,
       code: 'FUSO_TRANSITO_NON_VALIDO',
     });
   }
   return timezone;
-}
-
-/** Data e ora da parete di un istante, nel fuso indicato. */
-function wallClock(now: Date, timezone: string): { date: string; time: string } {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    // `hour12: false` produce «24» a mezzanotte in parte dei motori: h23 no.
-    hourCycle: 'h23',
-  }).formatToParts(now);
-
-  const value = (type: Intl.DateTimeFormatPartTypes): string =>
-    parts.find((part) => part.type === type)?.value ?? '';
-
-  return {
-    date: `${value('year')}-${value('month')}-${value('day')}`,
-    time: `${value('hour')}:${value('minute')}`,
-  };
 }

@@ -10,7 +10,10 @@ export interface Section {
   label: string;
 }
 
-export const SECTIONS: readonly Section[] = [{ href: '/', label: 'Tema natale' }];
+export const SECTIONS: readonly Section[] = [
+  { href: '/', label: 'Tema natale' },
+  { href: '/transiti', label: 'Transiti' },
+];
 
 /**
  * `/` combacia solo con sé stessa: con un confronto per prefisso resterebbe
