@@ -61,10 +61,25 @@ export type AspectId =
 /** Modalità di calcolo effettivamente usata dal motore. */
 export type EphemerisMode = 'swisseph' | 'moshier';
 
-/** Dati di nascita in ora **locale**: la conversione a UT è fatta dal motore. */
-export interface BirthData {
+/**
+ * Un istante in ora **locale**: la conversione a Tempo Universale è fatta dal
+ * motore.
+ *
+ * Non è per forza una nascita — lo stesso istante descrive il momento di cui
+ * si vogliono i transiti — e non porta coordinate: quelle servono alle case,
+ * non alla conversione oraria.
+ */
+export interface LocalMoment {
   /** Data locale, formato ISO `YYYY-MM-DD`. */
   date: string;
+  /** Ora locale, formato `HH:mm` o `HH:mm:ss`. Se omessa vale mezzogiorno locale. */
+  time?: string;
+  /** Identificatore IANA del fuso orario, es. `Europe/Rome`. */
+  timezone: string;
+}
+
+/** Dati di nascita in ora **locale**: la conversione a UT è fatta dal motore. */
+export interface BirthData extends LocalMoment {
   /**
    * Ora locale, formato `HH:mm` o `HH:mm:ss`.
    * Se omessa la carta viene calcolata a mezzogiorno locale e le case,
@@ -75,8 +90,6 @@ export interface BirthData {
   latitude: number;
   /** Longitudine in gradi decimali, positiva a Est. */
   longitude: number;
-  /** Identificatore IANA del fuso orario, es. `Europe/Rome`. */
-  timezone: string;
   /** Altitudine in metri sul livello del mare (usata solo dal sistema topocentrico). */
   altitude?: number;
 }
@@ -244,6 +257,83 @@ export interface NatalChart {
    * Avvertimenti non bloccanti: ora ambigua o inesistente per il cambio
    * ora legale, ripiego sulle effemeridi Moshier, corpi non calcolabili,
    * sistema di case non applicabile alla latitudine.
+   */
+  warnings: string[];
+}
+
+/**
+ * Ciò che, in un tema natale, può ricevere un transito: un corpo, un asse o
+ * la Parte di Fortuna.
+ *
+ * Non è `BodyId` perché un transito sull'Ascendente è fra i più significativi
+ * che esistano, e l'Ascendente non è un corpo celeste.
+ */
+export type NatalPointId =
+  | BodyId
+  | 'ascendente'
+  | 'medio-cielo'
+  | 'discendente'
+  | 'fondo-cielo'
+  | 'fortuna';
+
+/** L'istante di cui si vogliono i transiti, in ora locale. */
+export type TransitMoment = LocalMoment;
+
+export interface TransitOptions {
+  /** Corpi in transito. Default: `DEFAULT_TRANSIT_BODIES`. */
+  bodies?: BodyId[];
+  /**
+   * Punti natali da bersagliare. Default: i corpi del tema più Ascendente e
+   * Medio Cielo. Un bersaglio assente dal tema produce un avviso, non un errore.
+   */
+  targets?: NatalPointId[];
+  /** Includi gli aspetti minori (semisestile, quinconce, semiquadrato, sesquiquadrato). */
+  minorAspects?: boolean;
+  /**
+   * Orbite per aspetto, in gradi: sostituiscono `TRANSIT_ORBS` per i soli
+   * aspetti nominati.
+   */
+  orbs?: Partial<Record<AspectId, number>>;
+  /** Percorso della cartella con i file `.se1`. Default: variabile d'ambiente o `<pkg>/ephe`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Un aspetto fra un corpo in transito e un punto del tema natale.
+ *
+ * I due lati non sono intercambiabili — uno si muove e l'altro è fermo per
+ * sempre — quindi si chiamano `transiting` e `natal` invece di `from` e `to`.
+ */
+export interface TransitAspect {
+  aspect: AspectId;
+  /** Angolo esatto dell'aspetto in gradi. */
+  angle: number;
+  transiting: BodyId;
+  natal: NatalPointId;
+  /** Scarto dall'angolo esatto, in gradi. */
+  orb: number;
+  /**
+   * `true` se l'aspetto si sta perfezionando. Dipende dal solo corpo in
+   * transito: il punto natale è fermo.
+   */
+  applying: boolean;
+  /** Il corpo in transito è retrogrado all'istante considerato. */
+  retrograde: boolean;
+}
+
+export interface TransitChart {
+  input: TransitMoment;
+  time: ResolvedTime;
+  ephemerisMode: EphemerisMode;
+  /**
+   * Posizioni all'istante del transito. `house` è la casa **natale** in cui il
+   * corpo cade, ed è assente se il tema di nascita non ha case.
+   */
+  transiting: CelestialBody[];
+  aspects: TransitAspect[];
+  /**
+   * Avvertimenti non bloccanti: ora del transito non fornita, tema natale
+   * senza case, bersagli richiesti e non disponibili, corpi non calcolabili.
    */
   warnings: string[];
 }

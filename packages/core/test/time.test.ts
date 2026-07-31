@@ -96,7 +96,9 @@ describe('resolveTime', () => {
 
     expect(time.timeKnown).toBe(false);
     expect(time.utc).toBe('1968-03-12T11:00:00Z');
-    expect(warnings.some((w) => w.includes('mezzogiorno locale'))).toBe(true);
+    // La conversione riesce e non ha nulla da segnalare: che cosa comporti
+    // l'ora mancante lo dice chi sa di che istante si tratti.
+    expect(warnings).toEqual([]);
   });
 
   it('rifiuta fusi orari sconosciuti', () => {

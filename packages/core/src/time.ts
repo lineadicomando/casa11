@@ -1,6 +1,6 @@
 import { DateTime, IANAZone } from 'luxon';
 import { ChartError } from './errors.js';
-import type { BirthData, ResolvedTime } from './types.js';
+import type { LocalMoment, ResolvedTime } from './types.js';
 
 export interface TimeResolution {
   time: ResolvedTime;
@@ -16,57 +16,56 @@ const TIME_PATTERN = /^\d{2}:\d{2}(:\d{2})?$/;
  *
  * È il punto più delicato del calcolo: un errore di un'ora qui sposta
  * l'Ascendente di circa 15 gradi.
+ *
+ * Gli avvisi riguardano la sola conversione — ora ambigua o mai esistita. Che
+ * l'ora manchi si legge in `timeKnown`, e a dire che cosa comporti è chi sa
+ * di che istante si tratti: in un tema natale sposta le case, in un quadro di
+ * transiti quasi solo la Luna.
  */
-export function resolveTime(birth: BirthData): TimeResolution {
+export function resolveTime(moment: LocalMoment): TimeResolution {
   const warnings: string[] = [];
 
-  if (!DATE_PATTERN.test(birth.date)) {
+  if (!DATE_PATTERN.test(moment.date)) {
     throw new ChartError(
       'DATA_NON_VALIDA',
-      `Data "${birth.date}" non valida: atteso il formato YYYY-MM-DD.`,
+      `Data "${moment.date}" non valida: atteso il formato YYYY-MM-DD.`,
     );
   }
-  if (birth.time !== undefined && !TIME_PATTERN.test(birth.time)) {
+  if (moment.time !== undefined && !TIME_PATTERN.test(moment.time)) {
     throw new ChartError(
       'ORA_NON_VALIDA',
-      `Ora "${birth.time}" non valida: atteso il formato HH:mm oppure HH:mm:ss.`,
+      `Ora "${moment.time}" non valida: atteso il formato HH:mm oppure HH:mm:ss.`,
     );
   }
-  if (!IANAZone.isValidZone(birth.timezone)) {
+  if (!IANAZone.isValidZone(moment.timezone)) {
     throw new ChartError(
       'FUSO_ORARIO_NON_VALIDO',
-      `Fuso orario "${birth.timezone}" sconosciuto: atteso un identificatore IANA, es. Europe/Rome.`,
+      `Fuso orario "${moment.timezone}" sconosciuto: atteso un identificatore IANA, es. Europe/Rome.`,
     );
   }
 
-  const timeKnown = birth.time !== undefined;
-  if (!timeKnown) {
-    warnings.push(
-      'Ora di nascita non fornita: la carta è calcolata a mezzogiorno locale. ' +
-        'Case, assi e posizione della Luna sono indicativi.',
-    );
-  }
+  const timeKnown = moment.time !== undefined;
 
-  const wallClock = `${birth.date}T${normalizeTime(birth.time ?? '12:00')}`;
-  const local = DateTime.fromISO(wallClock, { zone: birth.timezone });
+  const wallClock = `${moment.date}T${normalizeTime(moment.time ?? '12:00')}`;
+  const local = DateTime.fromISO(wallClock, { zone: moment.timezone });
 
   if (!local.isValid) {
     throw new ChartError(
       'DATA_NON_VALIDA',
-      `Impossibile interpretare "${wallClock}" nel fuso ${birth.timezone}: ${local.invalidReason ?? 'motivo sconosciuto'}.`,
+      `Impossibile interpretare "${wallClock}" nel fuso ${moment.timezone}: ${local.invalidReason ?? 'motivo sconosciuto'}.`,
     );
   }
 
   if (timeKnown) {
-    const interpretations = countInterpretations(wallClock, birth.timezone);
+    const interpretations = countInterpretations(wallClock, moment.timezone);
     if (interpretations === 0) {
       warnings.push(
-        `L'ora locale ${birth.time} del ${birth.date} non è mai esistita in ${birth.timezone} ` +
+        `L'ora locale ${moment.time} del ${moment.date} non è mai esistita in ${moment.timezone} ` +
           "(passaggio all'ora legale). È stata usata l'ora immediatamente successiva.",
       );
     } else if (interpretations > 1) {
       warnings.push(
-        `L'ora locale ${birth.time} del ${birth.date} è ambigua in ${birth.timezone} ` +
+        `L'ora locale ${moment.time} del ${moment.date} è ambigua in ${moment.timezone} ` +
           "(ritorno all'ora solare): ricorre due volte. È stata usata la prima occorrenza, " +
           "cioè quella ancora in ora legale.",
       );

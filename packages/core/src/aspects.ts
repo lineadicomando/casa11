@@ -6,21 +6,42 @@ import {
   type AspectDefinition,
 } from './constants.js';
 import { angularSeparation } from './math.js';
-import type { Aspect, AspectPoint, BodyId, CelestialBody, PointAspect } from './types.js';
+import type { Aspect, AspectId, AspectPoint, BodyId, CelestialBody, PointAspect } from './types.js';
 
 /** Passo temporale, in giorni, per stabilire se un aspetto è applicativo. */
 const APPLYING_PROBE_DAYS = 0.05;
 
 /**
- * I luminari per confronto diretto: `LUMINARIES` è tipizzata su `BodyId`,
- * mentre qui gli identificatori sono stringhe qualsiasi — un asse natale non
- * è un corpo celeste.
+ * Bonus predefinito: i luminari, secondo la prassi natale corrente.
+ *
+ * È una mappa e non un elenco perché gli identificatori qui sono stringhe
+ * qualsiasi — un asse natale non è un corpo celeste — e perché i transiti
+ * concedono ai due luminari bonus diversi fra loro.
  */
-const LUMINARY_IDS = new Set<string>(LUMINARIES);
+const NATAL_ORB_BONUS: Readonly<Record<string, number>> = Object.fromEntries(
+  LUMINARIES.map((id) => [id, LUMINARY_ORB_BONUS]),
+);
 
 export interface AspectOptions {
   /** Includi semisestile, quinconce, semiquadrato e sesquiquadrato. */
   minorAspects?: boolean;
+  /**
+   * Orbite per aspetto, in gradi: sostituiscono quelle di `ASPECTS` per i soli
+   * aspetti nominati. I transiti le vogliono di molto più strette.
+   */
+  orbs?: Partial<Record<AspectId, number>>;
+  /**
+   * Gradi aggiuntivi per identificatore, sommati per **ciascuno** dei due lati
+   * della coppia. Default: il bonus dei luminari.
+   */
+  orbBonuses?: Readonly<Record<string, number>>;
+}
+
+/** Le regole risolte una volta sola, invece che a ogni coppia. */
+interface AspectRules {
+  definitions: readonly AspectDefinition[];
+  orbs: Partial<Record<AspectId, number>>;
+  bonuses: Readonly<Record<string, number>>;
 }
 
 /**
@@ -33,7 +54,7 @@ export function computeAspects(
   bodies: readonly CelestialBody[],
   options: AspectOptions = {},
 ): Aspect[] {
-  const definitions = definitionsFor(options);
+  const rules = rulesFor(options);
   const aspects: Aspect[] = [];
 
   for (let i = 0; i < bodies.length; i += 1) {
@@ -43,7 +64,7 @@ export function computeAspects(
       if (!a || !b) continue;
       if (isNonAspectingPair(a.id, b.id)) continue;
 
-      const aspect = aspectBetween(a, b, definitions);
+      const aspect = aspectBetween(a, b, rules);
       if (aspect) aspects.push(aspect);
     }
   }
@@ -69,12 +90,12 @@ export function computeCrossAspects<From extends string, To extends string>(
   to: readonly AspectPoint<To>[],
   options: AspectOptions = {},
 ): PointAspect<From, To>[] {
-  const definitions = definitionsFor(options);
+  const rules = rulesFor(options);
   const aspects: PointAspect<From, To>[] = [];
 
   for (const moving of from) {
     for (const fixed of to) {
-      const aspect = aspectBetween(moving, fixed, definitions);
+      const aspect = aspectBetween(moving, fixed, rules);
       if (aspect) aspects.push(aspect);
     }
   }
@@ -91,14 +112,14 @@ export function computeCrossAspects<From extends string, To extends string>(
 function aspectBetween<From extends string, To extends string>(
   a: AspectPoint<From>,
   b: AspectPoint<To>,
-  definitions: readonly AspectDefinition[],
+  rules: AspectRules,
 ): PointAspect<From, To> | null {
   const separation = angularSeparation(a.longitude, b.longitude);
-  const maxOrbBonus = orbBonus(a.id) + orbBonus(b.id);
+  const bonus = (rules.bonuses[a.id] ?? 0) + (rules.bonuses[b.id] ?? 0);
 
-  for (const definition of definitions) {
+  for (const definition of rules.definitions) {
     const orb = Math.abs(separation - definition.angle);
-    if (orb > definition.orb + maxOrbBonus) continue;
+    if (orb > (rules.orbs[definition.id] ?? definition.orb) + bonus) continue;
 
     return {
       aspect: definition.id,
@@ -113,8 +134,12 @@ function aspectBetween<From extends string, To extends string>(
   return null;
 }
 
-function definitionsFor(options: AspectOptions): readonly AspectDefinition[] {
-  return options.minorAspects ? ASPECTS : ASPECTS.filter((a) => a.major);
+function rulesFor(options: AspectOptions): AspectRules {
+  return {
+    definitions: options.minorAspects ? ASPECTS : ASPECTS.filter((a) => a.major),
+    orbs: options.orbs ?? {},
+    bonuses: options.orbBonuses ?? NATAL_ORB_BONUS,
+  };
 }
 
 /** L'aspetto più stretto per primo: è quello che pesa di più nella lettura. */
@@ -138,10 +163,6 @@ function isApplying(a: AspectPoint, b: AspectPoint, angle: number): boolean {
     ) - angle,
   );
   return later < now;
-}
-
-function orbBonus(id: string): number {
-  return LUMINARY_IDS.has(id) ? LUMINARY_ORB_BONUS : 0;
 }
 
 function isNonAspectingPair(a: BodyId, b: BodyId): boolean {

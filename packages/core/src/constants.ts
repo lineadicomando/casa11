@@ -77,6 +77,27 @@ export const DEFAULT_BODIES: readonly BodyId[] = [
   'nodo-sud',
 ];
 
+/**
+ * Corpi in transito predefiniti: i dieci pianeti e il Nodo Nord.
+ *
+ * Il Nodo Sud è escluso perché in transito è l'opposizione esatta del Nord:
+ * ogni sua riga sarebbe una riga già presente, letta al contrario. Resta
+ * disponibile come bersaglio natale, dove invece dice qualcosa di suo.
+ */
+export const DEFAULT_TRANSIT_BODIES: readonly BodyId[] = [
+  'sole',
+  'luna',
+  'mercurio',
+  'venere',
+  'marte',
+  'giove',
+  'saturno',
+  'urano',
+  'nettuno',
+  'plutone',
+  'nodo-nord',
+];
+
 /** Codici a un carattere attesi da `sweph.houses_ex`. */
 export const HOUSE_SYSTEM_CODES: Readonly<Record<HouseSystem, string>> = {
   placidus: 'P',
@@ -117,6 +138,39 @@ export const ASPECTS: readonly AspectDefinition[] = [
  */
 export const LUMINARIES: readonly BodyId[] = ['sole', 'luna'];
 export const LUMINARY_ORB_BONUS = 2;
+
+/**
+ * Orbite dei transiti, molto più strette di quelle natali.
+ *
+ * Non è una preferenza: con l'orbita natale di 8° un transito di Saturno
+ * resterebbe «in aspetto» per mesi di fila, e il quadro del momento
+ * diventerebbe un elenco di contatti permanenti che non distingue il giorno
+ * in cui l'aspetto si perfeziona da quello prima e da quello dopo.
+ */
+export const TRANSIT_ORBS: Readonly<Record<AspectId, number>> = {
+  congiunzione: 2,
+  opposizione: 2,
+  trigono: 2,
+  quadrato: 2,
+  sestile: 1.5,
+  semisestile: 1,
+  quinconce: 1,
+  semiquadrato: 1,
+  sesquiquadrato: 1,
+};
+
+/**
+ * Gradi aggiuntivi per i luminari nei transiti, sommati per ciascun lato
+ * della coppia.
+ *
+ * Vale in entrambi i versi, non solo per il corpo in movimento: un contatto
+ * che tocca il Sole o la Luna natali conta di più, e gli si concede più
+ * spazio tanto quanto se ne concede alla Luna che passa.
+ */
+export const TRANSIT_ORB_BONUS: Readonly<Record<string, number>> = {
+  luna: 1,
+  sole: 0.5,
+};
 
 /**
  * Punti calcolati (non corpi fisici) per i quali non ha senso parlare di

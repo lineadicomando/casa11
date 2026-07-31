@@ -6,6 +6,7 @@
  */
 
 export { computeNatalChart } from './chart.js';
+export { computeTransits } from './transits.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
 export {
@@ -35,8 +36,11 @@ export {
   ASPECTS,
   BODIES,
   DEFAULT_BODIES,
+  DEFAULT_TRANSIT_BODIES,
   HOUSE_SYSTEM_CODES,
   SIGN_ABBR,
+  TRANSIT_ORB_BONUS,
+  TRANSIT_ORBS,
   ZODIAC_SIGNS,
   type AspectDefinition,
   type BodyDefinition,
@@ -55,10 +59,16 @@ export type {
   EphemerisMode,
   House,
   HouseSystem,
+  LocalMoment,
   NatalChart,
+  NatalPointId,
   PointAspect,
   ResolvedTime,
   Sect,
   SiderealTime,
+  TransitAspect,
+  TransitChart,
+  TransitMoment,
+  TransitOptions,
   ZodiacSign,
 } from './types.js';

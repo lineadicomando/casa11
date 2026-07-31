@@ -38,6 +38,13 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
 
   const warnings = [...context.warnings, ...timeWarnings, ...bodyWarnings];
 
+  if (!time.timeKnown) {
+    warnings.push(
+      'Ora di nascita non fornita: la carta è calcolata a mezzogiorno locale. ' +
+        'Case, assi e posizione della Luna sono indicativi.',
+    );
+  }
+
   const chart: NatalChart = {
     input: birth,
     time,
