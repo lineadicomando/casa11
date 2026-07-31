@@ -3,11 +3,15 @@ import {
   computeNatalChart,
   computeTransits,
   currentMoment,
+  findTransitPassages,
   formatChartCompact,
+  formatPassagesCompact,
   formatTransitsCompact,
   type BirthData,
   type ChartOptions,
   type HouseSystem,
+  type PassageOptions,
+  type PassageRange,
   type TransitMoment,
   type TransitOptions,
 } from '@undicesimacasa/core';
@@ -351,6 +355,137 @@ function transitMoment(
   const moment: TransitMoment = { date: args.transit_date, timezone };
   if (args.transit_time !== undefined) moment.time = args.transit_time;
   return moment;
+}
+
+/** Tre anni: oltre, la ricerca costa più di quanto valga il risultato. */
+const MAX_RANGE_DAYS = 1096;
+
+export function registerFindTransitPassages(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'find_transit_passages',
+    {
+      title: 'Trova quando i transiti diventano esatti',
+      description:
+        "Elenca gli istanti in cui i transiti si perfezionano nell'arco di tempo indicato. " +
+        'È la risposta a QUANDO e a QUANTE VOLTE, che compute_transits non può dare: quello ' +
+        'fotografa un momento, questo guarda un periodo. Un pianeta lento che passa in ' +
+        'retrogradazione tocca lo stesso punto natale tre volte — avanti, indietro, avanti — ' +
+        'e quelle tre righe sono UN SOLO periodo letto in tre momenti, non tre fatti distinti: ' +
+        'dillo, invece di elencarle come eventi separati. ' +
+        'OMETTI from per partire da oggi: la data corrente la mette il server. ' +
+        'La Luna è esclusa perché da sola perfeziona qualche migliaio di aspetti all\'anno. ' +
+        "Restano dati astronomici: l'istante in cui un angolo si chiude, non un evento che " +
+        'accadrà. Non trasformare una data in una previsione e non dire che cosa succederà.',
+      inputSchema: {
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .describe('Data di nascita locale, formato YYYY-MM-DD.'),
+        time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe("Ora di nascita locale. Ometti se ignota: niente case natali né assi."),
+        location_id: z.number().int().optional().describe('Identificatore GeoNames da search_location.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord.'),
+        longitude: z.number().min(-180).max(180).optional().describe('Longitudine, positiva a Est.'),
+        timezone: z.string().optional().describe('Fuso IANA della nascita, se non usi location_id.'),
+        from: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('Primo giorno dell\'arco. OMETTILO per partire da oggi.'),
+        to: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe(`Ultimo giorno. Default: un anno dopo l'inizio. Massimo ${MAX_RANGE_DAYS} giorni.`),
+        timezone_range: z
+          .string()
+          .optional()
+          .describe('Fuso in cui leggere le date e gli istanti restituiti. Default: quello di nascita.'),
+        bodies: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Corpi in transito da seguire, es. ["saturno", "plutone"]. Default: tutti tranne la Luna. ' +
+              'Restringere a uno o due rende l\'elenco leggibile quando l\'arco è lungo.',
+          ),
+        targets: z
+          .array(z.string())
+          .optional()
+          .describe('Punti natali da bersagliare, es. ["sole", "ascendente"]. Default: corpi, ASC e MC.'),
+        minor_aspects: z.boolean().optional().describe('Includi anche gli aspetti minori. Default: false.'),
+        format: z.enum(['compact', 'json']).optional().describe('compact (default) oppure json.'),
+      },
+    },
+    async (args) => {
+      try {
+        const place = resolvePlace(args, context);
+        if ('error' in place) return fail(place.error);
+
+        const birth: BirthData = {
+          date: args.date,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          timezone: place.timezone,
+        };
+        if (args.time !== undefined) birth.time = args.time;
+
+        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
+        if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+        const chart = computeNatalChart(birth, options);
+
+        const range = passageRange(args, place.timezone);
+        const durata = (Date.parse(`${range.to}T00:00:00Z`) - Date.parse(`${range.from}T00:00:00Z`)) / 86_400_000;
+        if (durata > MAX_RANGE_DAYS) {
+          return fail(
+            `Arco di ${Math.round(durata)} giorni: il massimo è ${MAX_RANGE_DAYS}, cioè tre anni. ` +
+              'Chiedi periodi più brevi, uno dopo l\'altro, oppure restringi bodies ai soli pianeti che ti servono.',
+          );
+        }
+
+        const passageOptions: PassageOptions = { minorAspects: args.minor_aspects ?? false };
+        if (context.ephemerisPath) passageOptions.ephemerisPath = context.ephemerisPath;
+        if (args.bodies) passageOptions.bodies = args.bodies as PassageOptions['bodies'];
+        if (args.targets) passageOptions.targets = args.targets as PassageOptions['targets'];
+
+        const { passages, warnings } = findTransitPassages(chart, range, passageOptions);
+
+        if (args.format === 'json') {
+          return ok(JSON.stringify({ range, passages, warnings }, null, 2));
+        }
+
+        const header = place.label ? `Luogo di nascita: ${place.label}\n` : '';
+        return ok(header + formatPassagesCompact(chart, passages, range, warnings));
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
+
+/**
+ * L'arco su cui cercare.
+ *
+ * Senza `from` si parte da oggi, e la data la mette il server: è la sola
+ * fonte che la sappia. Senza `to` si arriva a un anno dopo, che è il tempo in
+ * cui un pianeta lento completa l'andirivieni su uno stesso punto.
+ */
+function passageRange(
+  args: { from?: string | undefined; to?: string | undefined; timezone_range?: string | undefined },
+  birthTimezone: string,
+): PassageRange {
+  const timezone = args.timezone_range ?? birthTimezone;
+  const from = args.from ?? currentMoment(timezone).date;
+  const to = args.to ?? addYear(from);
+  return { from, to, timezone };
+}
+
+function addYear(date: string): string {
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCFullYear(next.getUTCFullYear() + 1);
+  return next.toISOString().slice(0, 10);
 }
 
 interface ResolvedPlace {

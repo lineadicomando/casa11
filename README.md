@@ -22,7 +22,7 @@ undicesimacasa/
 ├── packages/
 │   ├── core/          motore di calcolo (nessuna dipendenza web)
 │   ├── geo/           ricerca località, dataset GeoNames locale
-│   └── mcp/           server MCP: ricerca luogo, tema natale, transiti
+│   └── mcp/           server MCP: luogo, tema natale, transiti, passaggi
 └── apps/
     └── web/           SvelteKit: interfaccia + API REST
 ```
@@ -167,6 +167,7 @@ Senza `--on` vale adesso, ora compresa. Via API e via MCP:
 
 ```
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
+GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 ```
 
 La risposta porta il tema **e** i transiti, perché le posizioni natali servono
@@ -174,10 +175,56 @@ comunque a leggere il quadro. Quando l'istante è indicato vale un giorno di
 cache come un tema; quando è «adesso» la risposta è `no-store`: invecchia mentre
 la si legge, e conservarla significherebbe mostrare domani il cielo di oggi.
 
-**Un transito è una fase, non un evento con una data.** Il motore dice dove sono
-i pianeti e con che scarto toccano il tema; quando l'aspetto diventerà esatto —
-e quante volte, se il transitante passa in retrogradazione — è il *calendario
-dei passaggi*, che non è ancora implementato.
+### Il calendario dei passaggi
+
+Un quadro istantaneo dice *che cosa* sta passando. Non dice **quando** un
+aspetto diventerà esatto, né **quante volte**:
+
+```ts
+const { passages } = findTransitPassages(natal, {
+  from: '2026-01-01',
+  to: '2027-12-31',
+  timezone: 'Europe/Rome',
+}, { bodies: ['saturno'], targets: ['saturno'] });
+```
+
+```
+3 giu 2026, 09:19   Saturno  congiunzione  Saturno  D  [12 mag → 7 lug]
+19 set 2026, 21:24  Saturno  congiunzione  Saturno  R  [15 ago → 15 ott]
+23 feb 2027, 06:16  Saturno  congiunzione  Saturno  D  [2 feb → 12 mar]
+```
+
+Tre righe, un fatto solo: il ritorno di Saturno di chi è nato nel 1968. Il
+pianeta arriva sulla posizione natale, retrocede oltre e ci ripassa, poi torna
+a perfezionarla — ed è quel ritmo, non un giorno singolo, a descrivere il
+periodo. Un quadro istantaneo ne vedrebbe uno solo dei tre.
+
+Il metodo è quello classico per le radici di una funzione continua: si campiona
+lo scarto dall'angolo esatto a passo commisurato alla velocità del corpo, si
+cerca dove cambia segno, e lì si dimezza l'intervallo fino al minuto. Un aspetto
+sfiorato e non raggiunto — il corpo inverte il moto appena prima — non produce
+cambi di segno e non compare, che è il risultato corretto.
+
+**La Luna resta fuori** per impostazione predefinita: percorre lo zodiaco in
+ventisette giorni, quindi perfeziona qualche migliaio di aspetti all'anno. Un
+elenco così non è un calendario.
+
+Sulle altre superfici:
+
+```sh
+casa11 --date … --passages --from 2026-01-01 --to 2026-12-31
+```
+
+```
+GET /api/transits/passages?date=1968-03-12&…&from=2026-01-01&to=2026-12-31
+```
+
+Via API l'arco ha un tetto di tre anni, che il motore non ha: la ricerca costa
+proporzionalmente alla durata. Senza `from` si parte da oggi, senza `to` si
+arriva a un anno dopo.
+
+**Resta un elenco di istanti, non di eventi.** Il motore dice quando un angolo
+si chiude; che cosa accada in quel periodo non è un dato astronomico.
 
 ## Le località
 
@@ -327,6 +374,7 @@ GET /api/locations?q=napoli&limit=8&country=IT
 GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
 GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
+GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 ```
 
 I transiti accettano **gli stessi parametri di nascita** del tema, più
@@ -360,6 +408,7 @@ pagina:
 | `lib/server/{place,birth,moment}.ts` | lettura dei parametri, condivisa fra i due endpoint |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
 | `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
+| `lib/nodal-axis.ts` | accorpa l'asse dei Nodi, che si presenta sempre in coppia |
 | `lib/components/*Table.svelte` | le tabelle dei risultati |
 
 Le tabelle prendono **i dati, non il tema**: un quadro di transiti ha due
@@ -486,6 +535,7 @@ Tre tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 | `search_location` | nome → candidati con `location_id`, coordinate, fuso IANA |
 | `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
 | `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema |
+| `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
 
 In `compute_transits` **`transit_date` va omessa** per il cielo di adesso: la
 data corrente la mette il server, che è la sola fonte a saperla. È la stessa

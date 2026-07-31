@@ -3,6 +3,7 @@ import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@u
 import {
   registerComputeNatalChart,
   registerComputeTransits,
+  registerFindTransitPassages,
   registerSearchLocation,
   type ToolContext,
 } from './tools.js';
@@ -25,14 +26,16 @@ export function createServer(context: ToolContext = {}): McpServer {
         'Espone il calcolo del tema natale e dei transiti. Flusso tipico: search_location per ' +
         'ottenere un location_id, poi compute_natal_chart oppure compute_transits. Data e ora ' +
         'vanno passate in ora locale, come segnate sul documento di nascita. Per il cielo di ' +
-        'adesso ometti transit_date: la data corrente la mette il server. Il server restituisce ' +
-        "solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
+        'adesso ometti transit_date: la data corrente la mette il server. Per sapere quando un ' +
+        'transito diventa esatto, e quante volte, c\'è find_transit_passages. Il server ' +
+        "restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
     },
   );
 
   registerSearchLocation(server, context);
   registerComputeNatalChart(server, context);
   registerComputeTransits(server, context);
+  registerFindTransitPassages(server, context);
   registerReferenceResources(server);
 
   return server;

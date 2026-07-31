@@ -64,13 +64,14 @@ function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
 }
 
 describe('superficie MCP', () => {
-  it('espone i tre tool con descrizione e schema', async () => {
+  it('espone i quattro tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
     expect(names).toContain('search_location');
     expect(names).toContain('compute_natal_chart');
     expect(names).toContain('compute_transits');
+    expect(names).toContain('find_transit_passages');
 
     const transitTool = tools.find((tool) => tool.name === 'compute_transits');
     // La descrizione deve dissuadere l'agente dall'inventare la data di oggi
@@ -327,5 +328,64 @@ describe('compute_transits', () => {
 
     expect(result.isError).toBe(true);
     expect(textOf(result)).toMatch(/search_location/);
+  });
+});
+
+describe('find_transit_passages', () => {
+  const NASCITA = { date: '1968-03-12', time: '14:30', location_id: ROMA_ID };
+
+  it('trova i passaggi ripetuti di un pianeta lento sullo stesso punto', async () => {
+    // Il ritorno di Saturno passa tre volte fra il 2026 e il 2027: è la
+    // ragione per cui questo tool esiste accanto a compute_transits.
+    const result = await client.callTool({
+      name: 'find_transit_passages',
+      arguments: {
+        ...NASCITA,
+        from: '2026-01-01',
+        to: '2027-12-31',
+        bodies: ['saturno'],
+        targets: ['saturno'],
+        format: 'json',
+      },
+    });
+
+    const { passages } = JSON.parse(textOf(result));
+    expect(passages).toHaveLength(3);
+    expect(passages.map((p: { retrograde: boolean }) => p.retrograde)).toEqual([
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it('parte da oggi quando l arco non è indicato', async () => {
+    const result = await client.callTool({
+      name: 'find_transit_passages',
+      arguments: { ...NASCITA, bodies: ['giove'], format: 'json' },
+    });
+
+    const { range } = JSON.parse(textOf(result));
+    const oggi = new Date().toISOString().slice(0, 10);
+    expect(Math.abs(Date.parse(range.from) - Date.parse(oggi))).toBeLessThanOrEqual(86_400_000);
+    // Un anno dopo: il tempo in cui un pianeta lento chiude l'andirivieni.
+    expect(Number(range.to.slice(0, 4)) - Number(range.from.slice(0, 4))).toBe(1);
+  });
+
+  it('rifiuta un arco troppo lungo spiegando come restringerlo', async () => {
+    const result = await client.callTool({
+      name: 'find_transit_passages',
+      arguments: { ...NASCITA, from: '2026-01-01', to: '2050-01-01' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/bodies/);
+  });
+
+  it('dice all agente che tre righe uguali sono un periodo solo', async () => {
+    const { tools } = await client.listTools();
+    const tool = tools.find((t) => t.name === 'find_transit_passages');
+
+    expect(tool?.description).toMatch(/retrogradazione/i);
+    expect(tool?.description).toMatch(/previsione/i);
   });
 });
