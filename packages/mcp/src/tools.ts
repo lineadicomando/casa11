@@ -1,10 +1,15 @@
 import {
   ChartError,
   computeNatalChart,
+  computeTransits,
+  currentMoment,
   formatChartCompact,
+  formatTransitsCompact,
   type BirthData,
   type ChartOptions,
   type HouseSystem,
+  type TransitMoment,
+  type TransitOptions,
 } from '@undicesimacasa/core';
 import { GeoError, getLocation, searchLocations, type Location } from '@undicesimacasa/geo';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -202,6 +207,150 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
       }
     },
   );
+}
+
+export function registerComputeTransits(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'compute_transits',
+    {
+      title: 'Calcola i transiti su un tema natale',
+      description:
+        'Calcola dove sono i pianeti in un dato momento e che aspetti formano con un tema di ' +
+        'nascita. Vuole i dati di nascita come compute_natal_chart, più il momento del transito. ' +
+        'OMETTI transit_date per il cielo di adesso: la data corrente la mette il server, tu non ' +
+        'la sai e non devi indovinarla. Le case indicate sono quelle NATALI, cioè il settore del ' +
+        'tema in cui il transito cade: i transiti non hanno una domificazione propria. ' +
+        'Le orbite sono molto più strette di quelle natali — due gradi contro otto — perché ' +
+        'altrimenti un transito di Saturno risulterebbe attivo per mesi di fila. ' +
+        'Un transito è una FASE, non un evento con una data: non trasformarlo in una previsione, ' +
+        'non dire che cosa accadrà né quando, e non attribuirgli un esito.',
+      inputSchema: {
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .describe('Data di nascita locale, formato YYYY-MM-DD.'),
+        time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe(
+            "Ora di nascita locale, formato HH:mm. Ometti se ignota: i transiti resteranno " +
+              'senza case natali e senza aspetti agli assi.',
+          ),
+        location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe('Identificatore GeoNames restituito da search_location. Alternativo alla terna di coordinate.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord.'),
+        longitude: z.number().min(-180).max(180).optional().describe('Longitudine, positiva a Est.'),
+        timezone: z
+          .string()
+          .optional()
+          .describe('Fuso orario IANA della nascita. Obbligatorio se non usi location_id.'),
+        transit_date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe(
+            'Giorno del transito, formato YYYY-MM-DD. OMETTILO per adesso, invece di scrivere ' +
+              'una data che credi corrente.',
+          ),
+        transit_time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe(
+            "Ora del transito, formato HH:mm. Se la ometti vale mezzogiorno: nell'arco della " +
+              'giornata solo la Luna si sposta sensibilmente.',
+          ),
+        transit_timezone: z
+          .string()
+          .optional()
+          .describe(
+            'Fuso IANA in cui leggere transit_date e transit_time. Default: quello di nascita. ' +
+              'Le posizioni non cambiano, cambia solo come si nomina l\'istante.',
+          ),
+        house_system: z
+          .enum(HOUSE_SYSTEMS)
+          .optional()
+          .describe('Sistema di domificazione del tema natale. Default: placidus.'),
+        minor_aspects: z
+          .boolean()
+          .optional()
+          .describe('Includi semisestile, quinconce, semiquadrato, sesquiquadrato. Default: false.'),
+        format: z
+          .enum(['compact', 'json'])
+          .optional()
+          .describe(
+            'compact (default): tabella densa. json: tema e transiti completi, da usare solo ' +
+              'se devi elaborare i valori numerici.',
+          ),
+      },
+    },
+    async (args) => {
+      try {
+        const place = resolvePlace(args, context);
+        if ('error' in place) return fail(place.error);
+
+        const birth: BirthData = {
+          date: args.date,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          timezone: place.timezone,
+        };
+        if (args.time !== undefined) birth.time = args.time;
+
+        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
+        if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
+        if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+
+        const chart = computeNatalChart(birth, options);
+        const moment = transitMoment(args, place.timezone);
+
+        const transitOptions: TransitOptions = { minorAspects: args.minor_aspects ?? false };
+        if (context.ephemerisPath) transitOptions.ephemerisPath = context.ephemerisPath;
+
+        const transits = computeTransits(chart, moment, transitOptions);
+
+        if (args.format === 'json') {
+          return ok(JSON.stringify({ chart, transits }, null, 2));
+        }
+
+        const header = place.label ? `Luogo di nascita: ${place.label}\n` : '';
+        return ok(header + formatTransitsCompact(chart, transits));
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
+
+/**
+ * L'istante del transito.
+ *
+ * Senza `transit_date` vale adesso, e la data la mette il server: è la sola
+ * fonte che la sappia davvero. Con un giorno ma senza ora decide il motore,
+ * che ripiega su mezzogiorno e lo dichiara fra le avvertenze.
+ */
+function transitMoment(
+  args: {
+    transit_date?: string | undefined;
+    transit_time?: string | undefined;
+    transit_timezone?: string | undefined;
+  },
+  birthTimezone: string,
+): TransitMoment {
+  const timezone = args.transit_timezone ?? birthTimezone;
+
+  if (args.transit_date === undefined) {
+    const now = currentMoment(timezone);
+    return args.transit_time ? { ...now, time: args.transit_time } : now;
+  }
+
+  const moment: TransitMoment = { date: args.transit_date, timezone };
+  if (args.transit_time !== undefined) moment.time = args.transit_time;
+  return moment;
 }
 
 interface ResolvedPlace {

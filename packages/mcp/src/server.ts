@@ -1,31 +1,38 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ASPECTS, HOUSE_SYSTEM_CODES } from '@undicesimacasa/core';
-import { registerComputeNatalChart, registerSearchLocation, type ToolContext } from './tools.js';
+import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@undicesimacasa/core';
+import {
+  registerComputeNatalChart,
+  registerComputeTransits,
+  registerSearchLocation,
+  type ToolContext,
+} from './tools.js';
 
 export const SERVER_NAME = 'undicesimacasa';
 export const SERVER_VERSION = '0.0.0';
 
 /**
- * Costruisce il server MCP con i due tool e le risorse di riferimento.
+ * Costruisce il server MCP con i tool e le risorse di riferimento.
  *
- * I tool sono due e non uno di proposito: la ricerca del luogo è separata dal
- * calcolo perché la disambiguazione deve essere una decisione esplicita e
- * visibile, non un'inferenza nascosta dentro il calcolo.
+ * La ricerca del luogo è separata dal calcolo di proposito: la
+ * disambiguazione deve essere una decisione esplicita e visibile, non
+ * un'inferenza nascosta dentro il calcolo.
  */
 export function createServer(context: ToolContext = {}): McpServer {
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
     {
       instructions:
-        'Espone il calcolo del tema natale. Flusso tipico: search_location per ottenere ' +
-        'un location_id, poi compute_natal_chart. Data e ora vanno passate in ora locale, ' +
-        "come segnate sul documento di nascita. Il server restituisce solo dati astronomici: " +
-        "l'interpretazione, se richiesta, spetta a te.",
+        'Espone il calcolo del tema natale e dei transiti. Flusso tipico: search_location per ' +
+        'ottenere un location_id, poi compute_natal_chart oppure compute_transits. Data e ora ' +
+        'vanno passate in ora locale, come segnate sul documento di nascita. Per il cielo di ' +
+        'adesso ometti transit_date: la data corrente la mette il server. Il server restituisce ' +
+        "solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
     },
   );
 
   registerSearchLocation(server, context);
   registerComputeNatalChart(server, context);
+  registerComputeTransits(server, context);
   registerReferenceResources(server);
 
   return server;
@@ -84,7 +91,7 @@ function registerReferenceResources(server: McpServer): void {
 function aspectReference(): string {
   const rows = ASPECTS.map(
     (aspect) =>
-      `| ${aspect.id} | ${aspect.angle}° | ${aspect.orb}° | ${aspect.major ? 'maggiore' : 'minore'} |`,
+      `| ${aspect.id} | ${aspect.angle}° | ${aspect.orb}° | ${TRANSIT_ORBS[aspect.id]}° | ${aspect.major ? 'maggiore' : 'minore'} |`,
   );
 
   return [
@@ -94,11 +101,16 @@ function aspectReference(): string {
     "notevole entro una tolleranza detta orbita. Sole e Luna ricevono ciascuno 2° di orbita",
     'in più, secondo la prassi corrente: un aspetto fra i due luminari ne somma quindi 4.',
     '',
-    '| Aspetto | Angolo | Orbita di base | Classe |',
-    '|---|---|---|---|',
+    '| Aspetto | Angolo | Orbita natale | Orbita nei transiti | Classe |',
+    '|---|---|---|---|---|',
     ...rows,
     '',
     'Gli aspetti minori sono calcolati solo con `minor_aspects: true`.',
+    '',
+    '**Le orbite dei transiti sono più strette** perché un transito va collocato nel tempo:',
+    `con gli 8° della congiunzione natale, Saturno resterebbe «in aspetto» per mesi di fila.`,
+    `Nei transiti il bonus dei luminari vale ${TRANSIT_ORB_BONUS['luna']}° per la Luna e`,
+    `${TRANSIT_ORB_BONUS['sole']}° per il Sole, su entrambi i lati della coppia.`,
     '',
     'Un aspetto è **applicativo** quando si sta perfezionando (lo scarto diminuisce nel tempo),',
     '**separativo** quando si sta sciogliendo. La distinzione dipende dalla velocità relativa',

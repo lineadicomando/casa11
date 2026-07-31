@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
-import { DateTime } from 'luxon';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
 import { formatChartCompact, formatTransitsCompact } from './format.js';
+import { currentMoment } from './time.js';
 import { computeTransits } from './transits.js';
 import type { BirthData, ChartOptions, HouseSystem, TransitMoment, TransitOptions } from './types.js';
 
@@ -139,8 +139,8 @@ function transitMoment(
   const timezone = values['transit-tz'] ?? birthTimezone;
 
   if (!values.on) {
-    const now = DateTime.now().setZone(timezone);
-    return { date: now.toFormat('yyyy-MM-dd'), time: values.at ?? now.toFormat('HH:mm'), timezone };
+    const now = currentMoment(timezone);
+    return values.at ? { ...now, time: values.at } : now;
   }
 
   const moment: TransitMoment = { date: values.on, timezone };

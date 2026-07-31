@@ -64,12 +64,20 @@ function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
 }
 
 describe('superficie MCP', () => {
-  it('espone i due tool con descrizione e schema', async () => {
+  it('espone i tre tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
     expect(names).toContain('search_location');
     expect(names).toContain('compute_natal_chart');
+    expect(names).toContain('compute_transits');
+
+    const transitTool = tools.find((tool) => tool.name === 'compute_transits');
+    // La descrizione deve dissuadere l'agente dall'inventare la data di oggi
+    // e dal trasformare un transito in una previsione.
+    expect(transitTool?.description).toMatch(/ometti transit_date/i);
+    expect(transitTool?.description).toMatch(/previsione/i);
+    expect(transitTool?.inputSchema.required).toEqual(['date']);
 
     const chartTool = tools.find((tool) => tool.name === 'compute_natal_chart');
     // La descrizione deve dire all'agente di NON convertire l'ora da sé: è
@@ -249,5 +257,75 @@ describe('compute_natal_chart', () => {
     });
 
     expect(textOf(result)).toMatch(/ambigua/);
+  });
+});
+
+describe('compute_transits', () => {
+  const NASCITA = { date: '1968-03-12', time: '14:30', location_id: ROMA_ID };
+
+  it('calcola i transiti a una data indicata', async () => {
+    const result = await client.callTool({
+      name: 'compute_transits',
+      arguments: { ...NASCITA, transit_date: '2026-08-15', transit_time: '12:00' },
+    });
+    const text = textOf(result);
+
+    expect(result.isError).toBeFalsy();
+    expect(text).toContain('Luogo di nascita: Roma, Lazio, Italia');
+    expect(text).toContain('TRANSITI — 2026-08-15 12:00');
+    expect(text).toContain('IN TRANSITO');
+    // Il verso dei due lati va dichiarato: i glifi sono gli stessi.
+    expect(text).toContain('in transito → natale');
+  });
+
+  it('usa la data corrente quando transit_date è omessa', async () => {
+    // È il punto della scelta: un agente la data di oggi non la sa, e senza
+    // questa via la inventerebbe.
+    const result = await client.callTool({
+      name: 'compute_transits',
+      arguments: { ...NASCITA, format: 'json' },
+    });
+
+    const { transits } = JSON.parse(textOf(result));
+    const oggi = new Date().toISOString().slice(0, 10);
+
+    // Il fuso del transito è quello di nascita: a cavallo della mezzanotte
+    // può essere il giorno prima o dopo rispetto a UTC.
+    expect(Math.abs(Date.parse(transits.input.date) - Date.parse(oggi))).toBeLessThanOrEqual(
+      86_400_000,
+    );
+  });
+
+  it('colloca i transiti nelle case natali', async () => {
+    const result = await client.callTool({
+      name: 'compute_transits',
+      arguments: { ...NASCITA, transit_date: '2026-08-15', format: 'json' },
+    });
+
+    const { transits } = JSON.parse(textOf(result));
+    expect(transits.transiting.length).toBeGreaterThan(0);
+    for (const body of transits.transiting) {
+      expect(body.house).toBeGreaterThanOrEqual(1);
+      expect(body.house).toBeLessThanOrEqual(12);
+    }
+  });
+
+  it('avverte che senza ora di nascita non ci sono case né assi', async () => {
+    const result = await client.callTool({
+      name: 'compute_transits',
+      arguments: { date: '1968-03-12', location_id: ROMA_ID, transit_date: '2026-08-15' },
+    });
+
+    expect(textOf(result)).toMatch(/Tema natale senza ora/);
+  });
+
+  it('spiega come rimediare se manca il luogo', async () => {
+    const result = await client.callTool({
+      name: 'compute_transits',
+      arguments: { date: '1968-03-12', transit_date: '2026-08-15' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/search_location/);
   });
 });

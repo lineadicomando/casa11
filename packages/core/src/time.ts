@@ -91,6 +91,31 @@ export function resolveTime(moment: LocalMoment): TimeResolution {
   };
 }
 
+/**
+ * L'istante presente, in ora locale di un fuso.
+ *
+ * Sta qui perché «che giorno è adesso» è una domanda sul fuso orario, e le
+ * superfici che accettano il presente — la riga di comando senza `--on`, il
+ * tool MCP senza `transit_date` — devono rispondersi tutte allo stesso modo.
+ * Vale soprattutto per un agente, che la data corrente non la sa e non deve
+ * tirarla a indovinare.
+ */
+export function currentMoment(timezone: string): LocalMoment {
+  if (!IANAZone.isValidZone(timezone)) {
+    throw new ChartError(
+      'FUSO_ORARIO_NON_VALIDO',
+      `Fuso orario "${timezone}" sconosciuto: atteso un identificatore IANA, es. Europe/Rome.`,
+    );
+  }
+
+  const now = DateTime.now().setZone(timezone);
+  return {
+    date: now.toFormat('yyyy-MM-dd'),
+    time: now.toFormat('HH:mm'),
+    timezone,
+  };
+}
+
 function normalizeTime(time: string): string {
   return time.length === 5 ? `${time}:00` : time;
 }

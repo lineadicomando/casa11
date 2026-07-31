@@ -16,7 +16,7 @@ export {
   resetEphemerisCache,
   type EphemerisContext,
 } from './ephemeris.js';
-export { resolveTime, toJulianDay, type TimeResolution } from './time.js';
+export { currentMoment, resolveTime, toJulianDay, type TimeResolution } from './time.js';
 export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
 export { formatChartCompact, formatTransitsCompact } from './format.js';

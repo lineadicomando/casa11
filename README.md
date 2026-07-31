@@ -22,7 +22,7 @@ undicesimacasa/
 ├── packages/
 │   ├── core/          motore di calcolo (nessuna dipendenza web)
 │   ├── geo/           ricerca località, dataset GeoNames locale
-│   └── mcp/           server MCP: search_location + compute_natal_chart
+│   └── mcp/           server MCP: ricerca luogo, tema natale, transiti
 └── apps/
     └── web/           SvelteKit: interfaccia + API REST
 ```
@@ -58,6 +58,7 @@ Luna        22°53' Leo    casa  1
 ```
 
 Aggiungi `--json` per l'oggetto completo, `--help` per tutte le opzioni.
+Con `--transits` si calcolano i transiti sullo stesso tema — vedi *Transiti*.
 
 ## Le due modalità di effemeridi
 
@@ -104,6 +105,79 @@ formatChartCompact(chart);  // resa tabellare, ~1/8 dei token del JSON
 
 Sistemi di case: `placidus`, `koch`, `segni-interi`, `equale`, `regiomontano`,
 `campano`, `porfirio`, `topocentrico`, `alcabizio`.
+
+## Transiti
+
+Dove sono i pianeti in un dato momento, e che aspetti formano con un tema di
+nascita.
+
+```ts
+import { computeNatalChart, computeTransits, formatTransitsCompact } from '@undicesimacasa/core';
+
+const natal = computeNatalChart(nascita);
+const transits = computeTransits(natal, { date: '2026-08-15', timezone: 'Europe/Rome' });
+
+transits.transiting;  // posizioni all'istante, con la casa **natale** in cui cadono
+transits.aspects;     // aspetti al tema: transitante, punto natale, orbita, direzione
+transits.warnings;    // ora del transito non fornita, tema senza case, bersagli assenti
+```
+
+`computeTransits` prende il **tema già calcolato**, non i dati di nascita: non
+lo ricalcola, e le case in cui i transiti cadono sono quelle che la persona ha
+davanti, nello stesso sistema di domificazione. I transiti non hanno una
+domificazione propria.
+
+### Le orbite sono un'altra tabella
+
+| | congiunzione, opposizione, quadrato, trigono | sestile | minori |
+|---|---|---|---|
+| **Tema natale** | 8° / 8° / 7° / 7° | 5° | 2–3° |
+| **Transiti** | 2° | 1,5° | 1° |
+
+Non è una preferenza. Con gli 8° della congiunzione natale un transito di
+Saturno risulterebbe «in aspetto» per mesi di fila, e il quadro del momento non
+distinguerebbe più il giorno in cui l'aspetto si perfeziona da quello prima e da
+quello dopo. I luminari conservano un bonus — 1° la Luna, mezzo grado il Sole —
+su **entrambi** i lati: un contatto che tocca il Sole o la Luna di nascita
+merita più spazio quanto la Luna che passa. Si sostituiscono per singolo aspetto
+con `options.orbs`.
+
+### Che cosa aspetta che cosa
+
+I bersagli natali predefiniti sono i corpi del tema più **Ascendente e Medio
+Cielo**: un transito sull'Ascendente è fra i più significativi che esistano, e
+l'Ascendente non è un corpo celeste. Discendente e Fondo Cielo restano fuori
+perché ogni loro riga comparirebbe già come aspetto all'asse opposto;
+simmetricamente il **Nodo Sud** non è fra i transitanti, dove sarebbe
+l'opposizione esatta del Nord. Entrambi si chiedono per nome con
+`options.targets` e `options.bodies`.
+
+Un punto natale entra nel calcolo con **velocità nulla**: una posizione di
+nascita è ferma per sempre, e da questo dipende il verso di `applying` — è il
+transito che si avvicina, non l'incontro.
+
+### Sulle altre superfici
+
+```sh
+casa11 --date 1968-03-12 --time 14:30 --lat 40.85 --lon 14.27 --tz Europe/Rome \
+       --transits --on 2026-08-15
+```
+
+Senza `--on` vale adesso, ora compresa. Via API e via MCP:
+
+```
+GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
+```
+
+La risposta porta il tema **e** i transiti, perché le posizioni natali servono
+comunque a leggere il quadro. Quando l'istante è indicato vale un giorno di
+cache come un tema; quando è «adesso» la risposta è `no-store`: invecchia mentre
+la si legge, e conservarla significherebbe mostrare domani il cielo di oggi.
+
+**Un transito è una fase, non un evento con una data.** Il motore dice dove sono
+i pianeti e con che scarto toccano il tema; quando l'aspetto diventerà esatto —
+e quante volte, se il transitante passa in retrogradazione — è il *calendario
+dei passaggi*, che non è ancora implementato.
 
 ## Le località
 
@@ -245,14 +319,20 @@ npm start -w @undicesimacasa/web        # http://localhost:3000
 npm run dev -w @undicesimacasa/web      # sviluppo
 ```
 
-Due endpoint, entrambi in GET perché un tema natale è una funzione pura dei
-suoi parametri: l'URL è condivisibile e la risposta memorizzabile.
+Tre endpoint, tutti in GET perché un tema natale è una funzione pura dei suoi
+parametri: l'URL è condivisibile e la risposta memorizzabile.
 
 ```
 GET /api/locations?q=napoli&limit=8&country=IT
 GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
 GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
+GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
 ```
+
+I transiti accettano **gli stessi parametri di nascita** del tema, più
+`transitDate`, `transitTime` e `transitTimezone`: un indirizzo che calcola un
+tema ne calcola i transiti cambiando solo il percorso. Senza `transitDate`
+valgono l'istante e il giorno correnti.
 
 Gli errori riportano il `code` del dominio (`FUSO_ORARIO_NON_VALIDO`,
 `LUOGO_MANCANTE`, …) con lo status appropriato: 400 per l'input, 404 per una
@@ -265,21 +345,28 @@ dentro il JavaScript scaricato dall'utente.
 
 ### Struttura dell'interfaccia
 
-L'applicazione è pensata per ospitare più sezioni — i transiti, poi altro — che
-partono tutte dalla stessa nascita. Le parti riusabili stanno perciò in `$lib`
-e non nella pagina:
+L'applicazione ospita più sezioni — il tema, i transiti — che partono tutte
+dalla stessa nascita. Le parti riusabili stanno perciò in `$lib` e non nella
+pagina:
 
 | | |
 |---|---|
 | `lib/birth.ts` | lo stato del modulo di nascita, con `isComplete` e le coordinate corrette |
+| `lib/transit.ts` | lo stato del modulo dell'istante, con il fuso di chi guarda |
+| `lib/clock.ts` | l'ora da parete in un fuso: la stessa risposta al server e al browser |
 | `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |
+| `lib/wheel.ts` | la geometria della ruota, senza SVG e quindi verificabile |
 | `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
+| `lib/server/{place,birth,moment}.ts` | lettura dei parametri, condivisa fra i due endpoint |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
-| `lib/components/{Body,Angle,Aspect}Table.svelte` | le tabelle dei risultati |
+| `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
+| `lib/components/*Table.svelte` | le tabelle dei risultati |
 
 Le tabelle prendono **i dati, non il tema**: un quadro di transiti ha due
 insiemi di posizioni e aspetti fra insiemi diversi, e legarle a `NatalChart`
-costringerebbe a riscriverle.
+costringerebbe a riscriverle. È la ragione per cui la sezione dei transiti ha
+richiesto una tabella nuova sola — quella degli aspetti a due lati — e ha
+riusato le altre.
 
 ### Privacy
 
@@ -392,12 +479,19 @@ Espone il calcolo agli agenti. Trasporto stdio:
 Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
 il percorso assoluto.
 
-Due tool, deliberatamente separati:
+Tre tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 
 | Tool | Cosa fa |
 |---|---|
 | `search_location` | nome → candidati con `location_id`, coordinate, fuso IANA |
 | `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
+| `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema |
+
+In `compute_transits` **`transit_date` va omessa** per il cielo di adesso: la
+data corrente la mette il server, che è la sola fonte a saperla. È la stessa
+ragione per cui il tool non converte l'ora e non inventa le coordinate — le
+descrizioni dicono all'agente che cosa non deve fare da sé, perché è lì che un
+modello produce un risultato plausibile e sbagliato.
 
 La separazione è il punto: `compute_natal_chart` non fa geocoding. Un tool
 unico dovrebbe scegliere in silenzio fra le decine di "Roma" del mondo, e uno
