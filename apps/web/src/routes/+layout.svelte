@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { isActive, SECTIONS } from '$lib/navigation';
+  import { REPOSITORY_URL } from '$lib/project';
   import '../app.css';
 
   let { children } = $props();
@@ -6,10 +9,20 @@
 
 <div class="guscio">
   <header>
-    <h1>Tema natale</h1>
-    <p class="sottotitolo">
-      Posizioni planetarie, case e aspetti. Calcolo con Swiss Ephemeris, fusi orari storici.
-    </p>
+    <a class="marchio" href="/">undicesimacasa</a>
+
+    <nav aria-label="Sezioni">
+      <ul>
+        {#each SECTIONS as section (section.href)}
+          {@const attiva = isActive(section.href, page.url.pathname)}
+          <li>
+            <a href={section.href} aria-current={attiva ? 'page' : undefined} class:attiva>
+              {section.label}
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </nav>
   </header>
 
   <main>
@@ -19,8 +32,16 @@
   <footer>
     <p>
       Dati astronomici <a href="https://www.astro.com/swisseph/">Swiss Ephemeris</a> ·
-      località <a href="https://www.geonames.org/">GeoNames</a> (CC BY 4.0) ·
-      codice sotto licenza AGPL-3.0
+      località <a href="https://www.geonames.org/">GeoNames</a> (CC BY 4.0)
+    </p>
+    <p>
+      <a href="/privacy">Privacy e cookie</a> ·
+      {#if REPOSITORY_URL}
+        <a href={REPOSITORY_URL}>codice sorgente</a>
+      {:else}
+        codice sorgente
+      {/if}
+      sotto licenza AGPL-3.0
     </p>
   </footer>
 </div>
@@ -34,20 +55,53 @@
 
   header {
     margin-bottom: 2.5rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--linea);
   }
 
-  h1 {
+  /* Il marchio non è il titolo della pagina: con più sezioni il titolo scende
+     nelle pagine, che così hanno ciascuna il proprio `h1`. */
+  .marchio {
+    display: inline-block;
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(2rem, 5vw, 2.75rem);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    margin: 0 0 0.35rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    color: var(--testo-tenue);
   }
 
-  .sottotitolo {
-    margin: 0;
+  .marchio:hover {
+    color: var(--testo);
+  }
+
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    display: block;
+    padding-bottom: 0.5rem;
+    font-size: 0.85rem;
+    text-decoration: none;
     color: var(--testo-tenue);
-    font-size: 0.95rem;
+    /* Il bordo c'è sempre, trasparente quando la voce non è attiva: così la
+       riga non sobbalza di un pixel passando da una sezione all'altra. */
+    border-bottom: 2px solid transparent;
+    margin-bottom: -0.65rem;
+  }
+
+  nav a:hover {
+    color: var(--testo);
+  }
+
+  nav a.attiva {
+    color: var(--testo);
+    border-bottom-color: var(--accento);
   }
 
   footer {
@@ -60,5 +114,9 @@
 
   footer p {
     margin: 0;
+  }
+
+  footer p + p {
+    margin-top: 0.3rem;
   }
 </style>

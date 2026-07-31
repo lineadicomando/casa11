@@ -263,6 +263,52 @@ importa da `@undicesimacasa/core` solo *tipi*, mai valori: un singolo import di
 valore ne trascinerebbe l'intero grafo — effemeridi e modulo nativo compresi —
 dentro il JavaScript scaricato dall'utente.
 
+### Struttura dell'interfaccia
+
+L'applicazione è pensata per ospitare più sezioni — i transiti, poi altro — che
+partono tutte dalla stessa nascita. Le parti riusabili stanno perciò in `$lib`
+e non nella pagina:
+
+| | |
+|---|---|
+| `lib/birth.ts` | lo stato del modulo di nascita, con `isComplete` e le coordinate corrette |
+| `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |
+| `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
+| `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
+| `lib/components/{Body,Angle,Aspect}Table.svelte` | le tabelle dei risultati |
+
+Le tabelle prendono **i dati, non il tema**: un quadro di transiti ha due
+insiemi di posizioni e aspetti fra insiemi diversi, e legarle a `NatalChart`
+costringerebbe a riscriverle.
+
+### Privacy
+
+Non c'è nulla da consentire, quindi non c'è nessun banner: il sito **non
+imposta cookie**, non ha account, non profila e non carica nessuna risorsa da
+domini terzi. I dati di nascita sono calcolati in memoria e non vengono
+conservati da nessuna parte. L'informativa sta su `/privacy`.
+
+L'unica scrittura sul dispositivo è `sveltekit:scroll` nella `sessionStorage`,
+dove il router del framework tiene la posizione dello scorrimento per il
+ritorno indietro: due numeri per pagina, nessun identificativo, cancellati alla
+chiusura della scheda. È dichiarata nell'informativa — che deve descrivere
+quello che il sito fa, non quello che vorremmo facesse.
+
+Restano due punti che dipendono da **come si mette in rete** l'applicazione, e
+sono descritti in [`docs/proxy-e-log.md`](docs/proxy-e-log.md):
+
+- il formato di log predefinito di nginx registra la query string accanto
+  all'indirizzo IP, cioè i dati di nascita accanto a chi li ha inseriti: va
+  cambiato in uno che registri `$uri`;
+- la ritenzione dei log dichiarata nell'informativa (sette giorni) va resa vera
+  con la rotazione.
+
+Prima della pubblicazione va inoltre valorizzato `REPOSITORY_URL` in
+`apps/web/src/lib/project.ts`: l'AGPL, articolo 13, obbliga a offrire il codice
+sorgente a chi usa il programma attraverso la rete, ed è lo stesso indirizzo
+indicato come recapito nell'informativa. Finché è vuoto l'interfaccia scrive il
+testo senza collegamento, invece di produrne uno rotto.
+
 ## Docker
 
 Un'unica immagine serve le tre superfici — web, server MCP, importazione del

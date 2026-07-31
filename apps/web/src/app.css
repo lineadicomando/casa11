@@ -81,3 +81,103 @@ label {
   color: var(--testo-tenue);
   margin-bottom: 0.3rem;
 }
+
+/* Casella con etichetta accanto: annulla il trattamento da intestazione di
+   campo, perché qui il testo è l'opzione stessa e non il nome di un valore. */
+.interruttore {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+.interruttore input {
+  width: auto;
+  margin: 0;
+}
+
+/* Tabelle dei risultati.
+   Stanno qui invece che nei singoli componenti perché sono la stessa tabella
+   vista tre volte — corpi, cuspidi, aspetti — e le sezioni che verranno la
+   riuseranno: allineamenti e bordi devono restare identici senza doverli
+   ricopiare. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+}
+
+th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--testo-tenue);
+  font-weight: 600;
+  padding-bottom: 0.3rem;
+}
+
+td {
+  padding: 0.25rem 0.4rem 0.25rem 0;
+  border-bottom: 1px solid var(--linea);
+}
+
+tbody tr {
+  transition: background 0.12s ease;
+}
+
+tbody tr:hover,
+tbody tr.evidenziato {
+  background: var(--accento-tenue);
+}
+
+.titolo-sezione {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--testo-tenue);
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+}
+
+/* I glifi sono disegni, non testo: il corsivo di una riga li inclinerebbe
+   soltanto, senza che il font offra una vera variante. */
+.glifo,
+.glifo-piccolo {
+  font-style: normal;
+}
+
+.glifo {
+  font-size: 1.15rem;
+  width: 1.6rem;
+}
+
+.glifo-piccolo {
+  font-size: 1rem;
+}
+
+.numerico {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tenue {
+  color: var(--testo-tenue);
+}
+
+.nota,
+.errore {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--testo-tenue);
+}
+
+.errore {
+  color: var(--accento);
+  font-weight: 500;
+}

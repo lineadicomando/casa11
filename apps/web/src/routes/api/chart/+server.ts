@@ -81,7 +81,12 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
 
     const chart = computeNatalChart(birth, options);
 
-    setHeaders({ 'cache-control': 'public, max-age=86400' });
+    // `private` e non `public`: la risposta è memorizzabile — un tema è una
+    // funzione pura dei suoi parametri — ma solo dal browser di chi l'ha
+    // chiesta. `public` autorizzerebbe le cache condivise (CDN, proxy
+    // aziendali) a conservarla, e la chiave di quella cache è un indirizzo
+    // che contiene data, ora e luogo di nascita.
+    setHeaders({ 'cache-control': 'private, max-age=86400' });
     return json({
       chart,
       place: place.label ? { label: place.label, refined: place.refined ?? false } : undefined,
