@@ -19,7 +19,7 @@ export {
 export { resolveTime, toJulianDay, type TimeResolution } from './time.js';
 export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
-export { formatChartCompact } from './format.js';
+export { formatChartCompact, formatTransitsCompact } from './format.js';
 export { ChartError, type ChartErrorCode } from './errors.js';
 
 export {
@@ -38,6 +38,7 @@ export {
   DEFAULT_BODIES,
   DEFAULT_TRANSIT_BODIES,
   HOUSE_SYSTEM_CODES,
+  NATAL_POINT_NAMES,
   SIGN_ABBR,
   TRANSIT_ORB_BONUS,
   TRANSIT_ORBS,

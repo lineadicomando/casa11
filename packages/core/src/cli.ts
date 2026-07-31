@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
+import { DateTime } from 'luxon';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
-import { formatChartCompact } from './format.js';
-import type { BirthData, ChartOptions, HouseSystem } from './types.js';
+import { formatChartCompact, formatTransitsCompact } from './format.js';
+import { computeTransits } from './transits.js';
+import type { BirthData, ChartOptions, HouseSystem, TransitMoment, TransitOptions } from './types.js';
 
 const USAGE = `
 casa11 — calcolo del tema natale da riga di comando
 
   casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
+  casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome \\
+         --transits --on 2026-08-15
 
 Opzioni
   --date <YYYY-MM-DD>   Data di nascita locale (obbligatoria)
@@ -24,6 +28,12 @@ Opzioni
   --json                Stampa il JSON completo invece della tabella compatta
   --ephe <percorso>     Cartella dei file .se1
   --help                Mostra questo messaggio
+
+Transiti
+  --transits            Calcola i transiti sul tema invece del tema soltanto
+  --on <YYYY-MM-DD>     Giorno del transito. Se omesso, adesso
+  --at <HH:mm>          Ora del transito. Se omessa, mezzogiorno locale
+  --transit-tz <IANA>   Fuso del transito. Se omesso, quello di nascita
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -41,6 +51,10 @@ function main(argv: string[]): number {
       json: { type: 'boolean', default: false },
       ephe: { type: 'string' },
       help: { type: 'boolean', default: false },
+      transits: { type: 'boolean', default: false },
+      on: { type: 'string' },
+      at: { type: 'string' },
+      'transit-tz': { type: 'string' },
     },
     allowPositionals: false,
   });
@@ -80,10 +94,58 @@ function main(argv: string[]): number {
   }
 
   const chart = computeNatalChart(birth, options);
+
+  if (!values.transits) {
+    // Le opzioni del transito senza `--transits` verrebbero ignorate in
+    // silenzio, e chi le ha scritte aspetterebbe un risultato che non arriva.
+    const orphans = (['on', 'at', 'transit-tz'] as const).filter((key) => values[key]);
+    if (orphans.length > 0) {
+      process.stderr.write(
+        `${orphans.map((o) => `--${o}`).join(', ')} richiede --transits.\n`,
+      );
+      return 2;
+    }
+
+    process.stdout.write(
+      values.json ? `${JSON.stringify(chart, null, 2)}\n` : `${formatChartCompact(chart)}\n`,
+    );
+    return 0;
+  }
+
+  const moment = transitMoment(values, birth.timezone);
+  const transitOptions: TransitOptions = { minorAspects: values.minor };
+  if (values.ephe) transitOptions.ephemerisPath = values.ephe;
+
+  const transits = computeTransits(chart, moment, transitOptions);
   process.stdout.write(
-    values.json ? `${JSON.stringify(chart, null, 2)}\n` : `${formatChartCompact(chart)}\n`,
+    values.json
+      ? `${JSON.stringify({ chart, transits }, null, 2)}\n`
+      : `${formatTransitsCompact(chart, transits)}\n`,
   );
   return 0;
+}
+
+/**
+ * L'istante del transito.
+ *
+ * Senza `--on` vale adesso, ora compresa: chi non indica un giorno vuole il
+ * cielo di questo momento. Con un giorno ma senza `--at` decide il motore,
+ * che ripiega su mezzogiorno e lo dichiara fra le avvertenze.
+ */
+function transitMoment(
+  values: { on?: string | undefined; at?: string | undefined; 'transit-tz'?: string | undefined },
+  birthTimezone: string,
+): TransitMoment {
+  const timezone = values['transit-tz'] ?? birthTimezone;
+
+  if (!values.on) {
+    const now = DateTime.now().setZone(timezone);
+    return { date: now.toFormat('yyyy-MM-dd'), time: values.at ?? now.toFormat('HH:mm'), timezone };
+  }
+
+  const moment: TransitMoment = { date: values.on, timezone };
+  if (values.at) moment.time = values.at;
+  return moment;
 }
 
 try {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeNatalChart } from '../src/chart.js';
 import { computeTransits } from '../src/transits.js';
+import { formatTransitsCompact } from '../src/format.js';
 import { angularSeparation } from '../src/math.js';
 import type { BirthData, NatalChart, NatalPointId, TransitMoment } from '../src/types.js';
 
@@ -159,5 +160,51 @@ describe('computeTransits', () => {
       // I corpi restano bersagliabili: è il caso d'uso di un tema senza ora.
       expect(transits.aspects.length).toBeGreaterThan(0);
     });
+  });
+});
+
+describe('formatTransitsCompact', () => {
+  const reso = formatTransitsCompact(natal, computeTransits(natal, OGGI));
+
+  it('intesta con l istante del transito e con la nascita su cui si legge', () => {
+    // Un quadro di transiti senza la data di nascita è un cielo qualsiasi.
+    expect(reso).toContain('TRANSITI — 2024-06-15 12:00 (Europe/Rome, UTC+02:00)');
+    expect(reso).toContain('Tema natale: 1968-03-12 14:30 — 40.8518N 14.2681E');
+    expect(reso).toContain('Case natali: placidus');
+  });
+
+  it('elenca i corpi in transito con la casa natale in cui cadono', () => {
+    expect(reso).toMatch(/^Sole {8}\d{1,2}°\d{2}' \w{3} +casa +\d{1,2}$/m);
+  });
+
+  it('distingue i due lati di ogni aspetto', () => {
+    expect(reso).toContain('ASPETTI (in transito → natale)');
+  });
+
+  it('nomina gli assi natali fra i bersagli', () => {
+    const soloAsse = formatTransitsCompact(
+      natal,
+      computeTransits(natal, OGGI, { targets: ['ascendente', 'medio-cielo'] }),
+    );
+
+    expect(soloAsse).toMatch(/Ascendente|Medio Cielo/);
+  });
+
+  it('segna il moto retrogrado', () => {
+    // Il Nodo Nord medio è retrogrado per definizione: nessuna data lo smentisce.
+    expect(reso).toMatch(/^Nodo Nord.* R /m);
+  });
+
+  it('dichiara l assenza di aspetti invece di lasciare la sezione vuota', () => {
+    const nessuno = computeTransits(natal, OGGI, { bodies: ['plutone'], targets: ['plutone'] });
+
+    expect(nessuno.aspects).toHaveLength(0);
+    expect(formatTransitsCompact(natal, nessuno)).toContain('(nessuno entro le orbite dei transiti)');
+  });
+
+  it('riporta le avvertenze in coda', () => {
+    const senzaOra = computeTransits(natal, { date: '2024-06-15', timezone: 'Europe/Rome' });
+
+    expect(formatTransitsCompact(natal, senzaOra)).toContain('AVVERTENZE');
   });
 });

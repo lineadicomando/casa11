@@ -1,4 +1,4 @@
-import type { AspectId, BodyId, HouseSystem, ZodiacSign } from './types.js';
+import type { AspectId, BodyId, HouseSystem, NatalPointId, ZodiacSign } from './types.js';
 
 export const ZODIAC_SIGNS: readonly ZodiacSign[] = [
   'ariete',
@@ -97,6 +97,21 @@ export const DEFAULT_TRANSIT_BODIES: readonly BodyId[] = [
   'plutone',
   'nodo-nord',
 ];
+
+/**
+ * Nomi dei bersagli natali che non sono corpi celesti: quelli dei corpi
+ * stanno già in `BODIES`.
+ *
+ * «Fortuna» e non «Parte di Fortuna» per la stessa ragione per cui la resa
+ * compatta abbrevia: è una colonna, non una frase.
+ */
+export const NATAL_POINT_NAMES: Readonly<Record<Exclude<NatalPointId, BodyId>, string>> = {
+  ascendente: 'Ascendente',
+  'medio-cielo': 'Medio Cielo',
+  discendente: 'Discendente',
+  'fondo-cielo': 'Fondo Cielo',
+  fortuna: 'Fortuna',
+};
 
 /** Codici a un carattere attesi da `sweph.houses_ex`. */
 export const HOUSE_SYSTEM_CODES: Readonly<Record<HouseSystem, string>> = {

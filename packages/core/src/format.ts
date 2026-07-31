@@ -1,5 +1,6 @@
+import { NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
-import type { NatalChart } from './types.js';
+import type { BirthData, NatalChart, NatalPointId, TransitChart } from './types.js';
 
 /**
  * Rende il tema in forma tabellare compatta.
@@ -12,7 +13,7 @@ export function formatChartCompact(chart: NatalChart): string {
   const lines: string[] = [];
   const { input, time } = chart;
 
-  const place = `${formatCoordinate(input.latitude, 'N', 'S')} ${formatCoordinate(input.longitude, 'E', 'O')}`;
+  const place = formatPlace(input);
   const when = time.timeKnown
     ? `${input.date} ${input.time} (${input.timezone}, UTC${formatOffset(time.offsetMinutes)})`
     : `${input.date} (ora ignota)`;
@@ -81,8 +82,76 @@ export function formatChartCompact(chart: NatalChart): string {
   return lines.join('\n');
 }
 
+/**
+ * Rende i transiti in forma tabellare compatta.
+ *
+ * Prende anche il tema natale perché senza non si possono nominare i
+ * bersagli, e perché chi legge deve vedere su quale nascita sta lavorando:
+ * un quadro di transiti senza la data di nascita è un cielo qualsiasi.
+ */
+export function formatTransitsCompact(natal: NatalChart, transits: TransitChart): string {
+  const lines: string[] = [];
+  const { input, time } = transits;
+
+  const when = time.timeKnown
+    ? `${input.date} ${input.time} (${input.timezone}, UTC${formatOffset(time.offsetMinutes)})`
+    : `${input.date} (ora non indicata, mezzogiorno locale)`;
+  const birth = natal.time.timeKnown
+    ? `${natal.input.date} ${natal.input.time}`
+    : `${natal.input.date} (ora ignota)`;
+
+  lines.push(`TRANSITI — ${when}`);
+  lines.push(`Tema natale: ${birth} — ${formatPlace(natal.input)}`);
+  lines.push(
+    `Case natali: ${natal.houseSystem} | Effemeridi: ${transits.ephemerisMode} | UT: ${time.utc}`,
+  );
+
+  lines.push('', 'IN TRANSITO');
+  for (const body of transits.transiting) {
+    const retro = body.retrograde ? ' R' : '  ';
+    // La casa è quella natale in cui il transito cade: è il senso della colonna.
+    const house = body.house !== undefined ? ` casa ${String(body.house).padStart(2)}` : '';
+    lines.push(
+      `${body.name.padEnd(11)} ${formatZodiacal(body.longitude).padEnd(11)}${retro}${house}`,
+    );
+  }
+
+  lines.push('', 'ASPETTI (in transito → natale)');
+  if (transits.aspects.length === 0) {
+    lines.push('(nessuno entro le orbite dei transiti)');
+  }
+  for (const aspect of transits.aspects) {
+    const moving = transits.transiting.find((body) => body.id === aspect.transiting);
+    const direction = aspect.applying ? 'applicativo' : 'separativo';
+    lines.push(
+      `${(moving?.name ?? aspect.transiting).padEnd(11)} ${aspect.aspect.padEnd(15)} ` +
+        `${natalPointName(natal, aspect.natal).padEnd(11)} ` +
+        `${formatDegrees(aspect.orb).padStart(7)}  ${direction}${aspect.retrograde ? '  R' : ''}`,
+    );
+  }
+
+  if (transits.warnings.length > 0) {
+    lines.push('', 'AVVERTENZE');
+    for (const warning of transits.warnings) lines.push(`- ${warning}`);
+  }
+
+  return lines.join('\n');
+}
+
 function nameOf(chart: NatalChart, id: string): string {
   return chart.bodies.find((body) => body.id === id)?.name ?? id;
+}
+
+/** Gli stessi nomi visti come mappa parziale su tutti i bersagli possibili. */
+const POINT_NAMES: Readonly<Partial<Record<NatalPointId, string>>> = NATAL_POINT_NAMES;
+
+/** Il nome di un bersaglio natale: un corpo del tema, oppure un asse. */
+function natalPointName(chart: NatalChart, id: NatalPointId): string {
+  return POINT_NAMES[id] ?? nameOf(chart, id);
+}
+
+function formatPlace(birth: BirthData): string {
+  return `${formatCoordinate(birth.latitude, 'N', 'S')} ${formatCoordinate(birth.longitude, 'E', 'O')}`;
 }
 
 function formatCoordinate(value: number, positive: string, negative: string): string {
