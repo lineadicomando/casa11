@@ -47,8 +47,10 @@ interface AspectRules {
 /**
  * Calcola la matrice degli aspetti fra i corpi di uno stesso tema.
  *
- * Ogni coppia compare una volta sola, con il corpo più veloce come `from`,
- * così che la direzione dell'aspetto (applicativo / separativo) sia leggibile.
+ * Ogni coppia compare una volta sola, nell'ordine in cui i corpi sono stati
+ * passati: `from` è quello che viene prima nell'elenco, non il più veloce.
+ * La direzione dell'aspetto non ne dipende — `applying` guarda il moto di
+ * entrambi — quindi l'ordine è di sola presentazione.
  */
 export function computeAspects(
   bodies: readonly CelestialBody[],
