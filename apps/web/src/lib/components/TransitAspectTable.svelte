@@ -10,7 +10,7 @@
     natalPointGlyph,
     natalPointLabel,
   } from '$lib/glyphs';
-  import { collapseNodalAxis } from '$lib/nodal-axis';
+  import { byOrb, collapseNodalAxis } from '$lib/nodal-axis';
 
   /**
    * I due lati non sono intercambiabili: uno si muove e l'altro è fermo per
@@ -28,7 +28,7 @@
 
   // I due nodi sono opposti per definizione: ogni loro contatto arriva in
   // coppia e descrive un fatto solo. Vedi `lib/nodal-axis.ts`.
-  const righe = $derived(collapseNodalAxis(aspects));
+  const righe = $derived(collapseNodalAxis(aspects, byOrb));
   const accorpato = $derived(righe.length < aspects.length);
 </script>
 

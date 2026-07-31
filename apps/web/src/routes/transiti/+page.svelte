@@ -1,11 +1,23 @@
 <script lang="ts">
-  import type { HouseSystem, NatalChart, TransitChart } from '@undicesimacasa/core';
-  import { fetchTransits, RequestError, transitParameters } from '$lib/api';
+  import type {
+    HouseSystem,
+    NatalChart,
+    TransitChart,
+    TransitPassage,
+  } from '@undicesimacasa/core';
+  import {
+    fetchPassages,
+    fetchTransits,
+    passageParameters,
+    RequestError,
+    transitParameters,
+  } from '$lib/api';
   import { emptyBirthInput, isComplete } from '$lib/birth';
   import BirthForm from '$lib/components/BirthForm.svelte';
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import PassageTable from '$lib/components/PassageTable.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import TransitSettings from '$lib/components/TransitSettings.svelte';
   import { isCompleteTransit, nowTransitInput } from '$lib/transit';
@@ -21,6 +33,12 @@
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   let highlighted = $state<string | null>(null);
+
+  /** Il calendario è una seconda richiesta: costa, e non tutti lo vogliono. */
+  const MESI = 12;
+  let passages = $state<TransitPassage[] | null>(null);
+  let loadingPassages = $state(false);
+  let passagesError = $state<string | null>(null);
 
   const canSubmit = $derived(isComplete(birth) && isCompleteTransit(transit));
 
@@ -38,6 +56,9 @@
       chart = body.chart;
       transits = body.transits;
       placeLabel = body.place?.label ?? null;
+      // Il calendario riguardava l'istante precedente: si ricomincia da capo.
+      passages = null;
+      passagesError = null;
     } catch (cause) {
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo dei transiti non riuscito.';
@@ -45,6 +66,23 @@
       transits = null;
     } finally {
       loading = false;
+    }
+  }
+
+  async function loadPassages(): Promise<void> {
+    loadingPassages = true;
+    passagesError = null;
+
+    try {
+      const body = await fetchPassages(
+        passageParameters(birth, { houseSystem, minorAspects }, transit, MESI),
+      );
+      passages = body.passages;
+    } catch (cause) {
+      passagesError =
+        cause instanceof RequestError ? cause.message : 'Ricerca dei passaggi non riuscita.';
+    } finally {
+      loadingPassages = false;
     }
   }
 </script>
@@ -128,6 +166,26 @@
         />
       </div>
     </div>
+
+    <section class="passaggi">
+      {#if passages}
+        <PassageTable {passages} title="Passaggi esatti nei dodici mesi" />
+        <p class="suggerimento">
+          Il momento in cui ogni aspetto diventa esatto, e la finestra in cui resta
+          entro l'orbita. Un pianeta lento che retrograda torna sullo stesso punto
+          due o tre volte: sono lo stesso periodo, non fatti distinti. La Luna è
+          esclusa — da sola perfezionerebbe qualche migliaio di aspetti all'anno.
+        </p>
+      {:else}
+        <button type="button" class="secondario" onclick={loadPassages} disabled={loadingPassages}>
+          {loadingPassages ? 'Cerco…' : `Quando diventano esatti? Cerca i prossimi ${MESI} mesi`}
+        </button>
+      {/if}
+
+      {#if passagesError}
+        <p class="errore" role="alert">{passagesError}</p>
+      {/if}
+    </section>
   </section>
 {/if}
 
@@ -230,5 +288,31 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+  }
+
+  .passaggi {
+    display: block;
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--linea);
+  }
+
+  .secondario {
+    padding: 0.5rem 1.1rem;
+    background: none;
+    color: var(--accento);
+    border: 1px solid var(--linea-forte);
+    border-radius: var(--raggio);
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .secondario:hover {
+    border-color: var(--accento);
+  }
+
+  .secondario:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

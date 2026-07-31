@@ -1,6 +1,6 @@
 import type { AspectId, BodyId, NatalPointId, TransitAspect } from '@undicesimacasa/core';
 import { describe, expect, it } from 'vitest';
-import { collapseNodalAxis } from './nodal-axis';
+import { byOrb, collapseNodalAxis } from './nodal-axis';
 
 function aspect(
   transiting: BodyId,
@@ -26,7 +26,7 @@ describe('collapseNodalAxis', () => {
     const righe = collapseNodalAxis([
       aspect('saturno', 'opposizione', 'nodo-nord', 1.2),
       aspect('saturno', 'congiunzione', 'nodo-sud', 1.2),
-    ]);
+    ], byOrb);
 
     expect(righe).toHaveLength(1);
     expect(righe[0]).toMatchObject({ aspect: 'congiunzione', natal: 'nodo-sud' });
@@ -36,7 +36,7 @@ describe('collapseNodalAxis', () => {
     const righe = collapseNodalAxis([
       aspect('sole', 'trigono', 'nodo-nord', 1),
       aspect('sole', 'sestile', 'nodo-sud', 1),
-    ]);
+    ], byOrb);
 
     expect(righe.map((r) => r.aspect)).toEqual(['trigono']);
   });
@@ -45,7 +45,7 @@ describe('collapseNodalAxis', () => {
     const righe = collapseNodalAxis([
       aspect('mercurio', 'quadrato', 'nodo-nord', 1.13),
       aspect('mercurio', 'quadrato', 'nodo-sud', 1.13),
-    ]);
+    ], byOrb);
 
     expect(righe).toHaveLength(1);
     expect(righe[0]?.natal).toBe('nodo-nord');
@@ -54,7 +54,7 @@ describe('collapseNodalAxis', () => {
   it('lascia stare la riga che il riflesso non ce l ha', () => {
     // Succede davvero: l'aspetto riflesso può cadere fuori dalla propria
     // orbita, che è più stretta. Allora quella riga è sola e resta.
-    const righe = collapseNodalAxis([aspect('sole', 'trigono', 'nodo-nord', 2.4)]);
+    const righe = collapseNodalAxis([aspect('sole', 'trigono', 'nodo-nord', 2.4)], byOrb);
 
     expect(righe).toHaveLength(1);
   });
@@ -65,7 +65,7 @@ describe('collapseNodalAxis', () => {
       aspect('marte', 'opposizione', 'nodo-sud', 1),
       aspect('venere', 'congiunzione', 'nodo-nord', 1),
       aspect('venere', 'opposizione', 'nodo-sud', 1.9),
-    ]);
+    ], byOrb);
 
     expect(righe).toHaveLength(4);
   });
@@ -76,6 +76,6 @@ describe('collapseNodalAxis', () => {
       aspect('luna', 'quadrato', 'sole', 1.1),
     ];
 
-    expect(collapseNodalAxis(altri)).toEqual(altri);
+    expect(collapseNodalAxis(altri, byOrb)).toEqual(altri);
   });
 });

@@ -7,7 +7,13 @@
  * di rete, e mostrarli in modo diverso.
  */
 
-import type { HouseSystem, NatalChart, TransitChart } from '@undicesimacasa/core';
+import type {
+  HouseSystem,
+  NatalChart,
+  PassageRange,
+  TransitChart,
+  TransitPassage,
+} from '@undicesimacasa/core';
 import type { BirthInput } from './birth';
 import { refinedCoordinates } from './birth';
 import type { TransitInput } from './transit';
@@ -94,6 +100,47 @@ export function transitParameters(
 
 export async function fetchTransits(parameters: URLSearchParams): Promise<TransitsResponse> {
   return request<TransitsResponse>(`/api/transits?${parameters}`, 'Calcolo dei transiti non riuscito');
+}
+
+export interface PassagesResponse extends ChartResponse {
+  range: PassageRange;
+  passages: TransitPassage[];
+  warnings: string[];
+}
+
+/**
+ * Compone i parametri del calendario dei passaggi.
+ *
+ * L'arco parte dal giorno che si sta guardando: chi ha davanti il cielo di
+ * una data vuole sapere che cosa si perfeziona a partire da lì, non da oggi.
+ */
+export function passageParameters(
+  birth: BirthInput,
+  options: ChartOptionsInput,
+  transit: TransitInput,
+  months: number,
+): URLSearchParams {
+  const parameters = chartParameters(birth, options);
+
+  parameters.set('from', transit.date);
+  parameters.set('to', addMonths(transit.date, months));
+  parameters.set('transitTimezone', transit.timezone);
+
+  return parameters;
+}
+
+export async function fetchPassages(parameters: URLSearchParams): Promise<PassagesResponse> {
+  return request<PassagesResponse>(
+    `/api/transits/passages?${parameters}`,
+    'Ricerca dei passaggi non riuscita',
+  );
+}
+
+/** Stessa data, `months` mesi dopo. Il 31 diventa il primo del mese seguente. */
+function addMonths(date: string, months: number): string {
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCMonth(next.getUTCMonth() + months);
+  return next.toISOString().slice(0, 10);
 }
 
 async function request<T>(url: string, fallback: string): Promise<T> {

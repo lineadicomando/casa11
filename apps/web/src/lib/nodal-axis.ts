@@ -17,7 +17,14 @@
  * e sta perciò nell'interfaccia.
  */
 
-import type { AspectId, TransitAspect } from '@undicesimacasa/core';
+import type { AspectId, BodyId, NatalPointId } from '@undicesimacasa/core';
+
+/** Ciò che basta per riconoscere il riflesso di un contatto sull'asse. */
+export interface NodalRow {
+  transiting: BodyId;
+  natal: NatalPointId;
+  aspect: AspectId;
+}
 
 /**
  * Quale delle due letture tenere, dalla più parlante alla meno.
@@ -38,25 +45,40 @@ const PREFERENZA: readonly AspectId[] = [
   'semiquadrato',
 ];
 
-/** Scarto entro cui due orbite sono la stessa orbita. */
-const EPSILON = 1e-6;
+/** Chiave di un aspetto istantaneo: l'orbita, arrotondata al secondo d'arco. */
+export function byOrb(row: { orb: number }): string {
+  return row.orb.toFixed(4);
+}
 
-export function collapseNodalAxis(aspects: readonly TransitAspect[]): TransitAspect[] {
-  return aspects.filter((aspect) => {
+/** Chiave di un passaggio: l'istante in cui si perfeziona. */
+export function byInstant(row: { exact: string }): string {
+  return row.exact;
+}
+
+/**
+ * `key` distingue un contatto dall'altro: due righe sull'asse sono la stessa
+ * cosa quando la chiave coincide. Per gli aspetti di un istante è l'orbita,
+ * per i passaggi di un calendario è il momento in cui si perfezionano.
+ */
+export function collapseNodalAxis<T extends NodalRow>(
+  rows: readonly T[],
+  key: (row: T) => string,
+): T[] {
+  return rows.filter((aspect) => {
     if (aspect.natal !== 'nodo-nord' && aspect.natal !== 'nodo-sud') return true;
 
-    const mirror = aspects.find(
+    const mirror = rows.find(
       (other) =>
         other !== aspect &&
         other.transiting === aspect.transiting &&
         other.natal === (aspect.natal === 'nodo-nord' ? 'nodo-sud' : 'nodo-nord') &&
-        Math.abs(other.orb - aspect.orb) < EPSILON,
+        key(other) === key(aspect),
     );
 
     // Senza riflesso non c'è nulla da accorpare: la riga resta.
     if (!mirror) return true;
 
-    const rank = (a: TransitAspect): number => PREFERENZA.indexOf(a.aspect);
+    const rank = (a: T): number => PREFERENZA.indexOf(a.aspect);
     // A parità di nome — il quadrato, che si riflette in sé stesso — decide
     // il Nodo Nord, per avere un criterio e non un caso.
     return rank(aspect) === rank(mirror)
@@ -65,7 +87,3 @@ export function collapseNodalAxis(aspects: readonly TransitAspect[]): TransitAsp
   });
 }
 
-/** `true` se l'accorpamento ha tolto qualcosa: la tabella lo dichiara. */
-export function hasCollapsedNodalAxis(aspects: readonly TransitAspect[]): boolean {
-  return collapseNodalAxis(aspects).length < aspects.length;
-}
