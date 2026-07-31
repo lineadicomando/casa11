@@ -73,21 +73,24 @@ export function computeHouses(
   const points = result.data.points;
   const ascendant = normalize360(requirePoint(points, 0, 'Ascendente'));
   const midheaven = normalize360(requirePoint(points, 1, 'Medio Cielo'));
-  // `points[3]` è il Vertex; se assente lo si omette valorizzandolo a NaN
-  // sarebbe peggio, quindi ricadiamo sul Discendente calcolato.
-  const vertex = normalize360(points[3] ?? ascendant + 180);
 
-  return {
-    houses,
-    angles: {
-      ascendant,
-      midheaven,
-      descendant: normalize360(ascendant + 180),
-      imumCoeli: normalize360(midheaven + 180),
-      vertex,
-    },
-    warnings,
+  const angles: Angles = {
+    ascendant,
+    midheaven,
+    descendant: normalize360(ascendant + 180),
+    imumCoeli: normalize360(midheaven + 180),
   };
+
+  // `points[3]` è il Vertex. Se manca, lo si omette e lo si segnala:
+  // sostituirlo in silenzio con un altro punto sarebbe un dato inventato.
+  const vertex = points[3];
+  if (typeof vertex === 'number' && Number.isFinite(vertex)) {
+    angles.vertex = normalize360(vertex);
+  } else {
+    warnings.push('Vertex non riportato dalle effemeridi: omesso dagli assi.');
+  }
+
+  return { houses, angles, warnings };
 }
 
 /**

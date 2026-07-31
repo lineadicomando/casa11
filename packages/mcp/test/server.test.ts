@@ -184,6 +184,26 @@ describe('compute_natal_chart', () => {
     expect(compact.length).toBeLessThan(json.length / 4);
   });
 
+  it('accetta la formula alternativa della Parte di Fortuna', async () => {
+    // Tema notturno: è il caso in cui le due formule divergono.
+    const args = { date: '1968-03-12', time: '23:30', location_id: ROMA_ID, format: 'json' };
+
+    const settore = JSON.parse(
+      textOf(await client.callTool({ name: 'compute_natal_chart', arguments: args })),
+    );
+    const diurna = JSON.parse(
+      textOf(
+        await client.callTool({
+          name: 'compute_natal_chart',
+          arguments: { ...args, part_of_fortune_formula: 'diurna' },
+        }),
+      ),
+    );
+
+    expect(settore.sect).toBe('notturna');
+    expect(settore.partOfFortune.longitude).not.toBeCloseTo(diurna.partOfFortune.longitude, 2);
+  });
+
   it('spiega come rimediare se manca il luogo', async () => {
     const result = await client.callTool({
       name: 'compute_natal_chart',

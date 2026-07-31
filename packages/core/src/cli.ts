@@ -19,6 +19,8 @@ Opzioni
   --houses <sistema>    placidus (default), koch, segni-interi, equale,
                         regiomontano, campano, porfirio, topocentrico, alcabizio
   --minor               Includi anche gli aspetti minori
+  --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
+                        notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
   --ephe <percorso>     Cartella dei file .se1
   --help                Mostra questo messaggio
@@ -35,6 +37,7 @@ function main(argv: string[]): number {
       tz: { type: 'string' },
       houses: { type: 'string' },
       minor: { type: 'boolean', default: false },
+      fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       ephe: { type: 'string' },
       help: { type: 'boolean', default: false },
@@ -64,6 +67,17 @@ function main(argv: string[]): number {
   const options: ChartOptions = { minorAspects: values.minor };
   if (values.houses) options.houseSystem = values.houses as HouseSystem;
   if (values.ephe) options.ephemerisPath = values.ephe;
+  if (values.fortuna) {
+    // Un valore non riconosciuto agirebbe come `diurna` in silenzio:
+    // meglio rifiutarlo subito.
+    if (values.fortuna !== 'settore' && values.fortuna !== 'diurna') {
+      process.stderr.write(
+        `Valore di --fortuna non riconosciuto: atteso "settore" oppure "diurna".\n`,
+      );
+      return 2;
+    }
+    options.partOfFortuneFormula = values.fortuna;
+  }
 
   const chart = computeNatalChart(birth, options);
   process.stdout.write(

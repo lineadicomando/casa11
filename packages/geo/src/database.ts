@@ -19,31 +19,56 @@ export function defaultDatabasePath(): string {
   );
 }
 
+let cached: { path: string; database: DatabaseSync } | undefined;
+
 /**
- * Apre il database in sola lettura.
+ * Apre il database in sola lettura, riusando la connessione già aperta.
+ *
+ * Il dataset cambia solo quando lo si reimporta: tenere la connessione viva
+ * evita il costo di apertura a ogni chiamata — l'autocomplete ne fa una per
+ * battuta. Dopo una reimportazione serve `closeDatabase()` o un riavvio.
  *
  * Se il file non esiste solleva un errore con istruzioni esplicite: il
  * dataset non è versionato e va importato una volta sola.
  */
 export function openDatabase(databasePath?: string): DatabaseSync {
   const path = databasePath ?? defaultDatabasePath();
+  if (cached?.path === path) return cached.database;
 
   if (!existsSync(path)) {
     throw new GeoError(
       'DATABASE_ASSENTE',
       `Database delle località non trovato in ${path}. ` +
         'Eseguilo una volta con `npm run geo:import -w @undicesimacasa/geo` ' +
-        '(scarica ~14 MB da GeoNames e costruisce il database locale).',
+        '(scarica ~215 MB da GeoNames e costruisce il database locale).',
     );
   }
 
+  // Un percorso diverso dal precedente capita solo nei test: la vecchia
+  // connessione va chiusa, non accumulata.
+  closeDatabase();
+
   try {
-    return new DatabaseSync(path, { readOnly: true });
+    const database = new DatabaseSync(path, { readOnly: true });
+    cached = { path, database };
+    return database;
   } catch (error) {
     throw new GeoError(
       'DATABASE_CORROTTO',
       `Impossibile aprire ${path}: ${error instanceof Error ? error.message : String(error)}`,
     );
+  }
+}
+
+/** Chiude la connessione riusata. Serve ai test e dopo una reimportazione. */
+export function closeDatabase(): void {
+  if (!cached) return;
+  const { database } = cached;
+  cached = undefined;
+  try {
+    database.close();
+  } catch {
+    // Già chiusa altrove: l'obiettivo era proprio questo.
   }
 }
 

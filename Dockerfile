@@ -19,8 +19,13 @@ COPY packages/geo/package.json packages/geo/
 COPY packages/mcp/package.json packages/mcp/
 COPY apps/web/package.json apps/web/
 
-# `--ignore-scripts` evita che `prepare` giri prima che i sorgenti esistano.
-RUN npm ci --ignore-scripts
+# `--ignore-scripts` evita che `prepare` giri prima che i sorgenti esistano,
+# ma salta anche lo script d'installazione di `sweph`, l'unico che serve:
+# lo si riesegue da solo. `node-gyp-build` usa il prebuild se c'è, altrimenti
+# compila con la toolchain qui sopra — senza questo passo, su un'architettura
+# priva di prebuild l'errore emergerebbe solo a runtime.
+RUN npm ci --ignore-scripts \
+  && npm rebuild sweph
 
 
 # ── Sviluppo ─────────────────────────────────────────────────────────────────

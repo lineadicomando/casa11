@@ -56,65 +56,53 @@ export function searchLocations(query: string, options: SearchOptions = {}): Loc
   const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   const database = openDatabase(options.databasePath);
 
-  try {
-    const conditions = ["n.search_name LIKE ? ESCAPE '\\'"];
-    const parameters: (string | number)[] = [`${escapeLike(normalized)}%`];
+  const conditions = ["n.search_name LIKE ? ESCAPE '\\'"];
+  const parameters: (string | number)[] = [`${escapeLike(normalized)}%`];
 
-    if (options.countryCode) {
-      conditions.push('l.country_code = ?');
-      parameters.push(options.countryCode.toUpperCase());
-    }
-
-    // `MAX(...)` sul flag di corrispondenza esatta: una località può avere più
-    // nomi alternativi, ci interessa il migliore fra questi.
-    const statement = database.prepare(`
-      SELECT l.id, ${nameColumns(options.lang ?? DEFAULT_LANG)},
-             l.country_code, l.latitude, l.longitude, l.timezone, l.population,
-             MAX(CASE WHEN n.search_name = ? THEN 1 ELSE 0 END) AS exact
-      FROM location_names n
-      JOIN locations l ON l.id = n.location_id
-      WHERE ${conditions.join(' AND ')}
-      GROUP BY l.id
-      ORDER BY exact DESC, l.population DESC, name ASC
-      LIMIT ?
-    `);
-
-    const rows = statement.all(normalized, ...parameters, limit) as unknown as LocationRow[];
-    return rows.map(toLocation);
-  } finally {
-    database.close();
+  if (options.countryCode) {
+    conditions.push('l.country_code = ?');
+    parameters.push(options.countryCode.toUpperCase());
   }
+
+  // `MAX(...)` sul flag di corrispondenza esatta: una località può avere più
+  // nomi alternativi, ci interessa il migliore fra questi.
+  const statement = database.prepare(`
+    SELECT l.id, ${nameColumns(options.lang ?? DEFAULT_LANG)},
+           l.country_code, l.latitude, l.longitude, l.timezone, l.population,
+           MAX(CASE WHEN n.search_name = ? THEN 1 ELSE 0 END) AS exact
+    FROM location_names n
+    JOIN locations l ON l.id = n.location_id
+    WHERE ${conditions.join(' AND ')}
+    GROUP BY l.id
+    ORDER BY exact DESC, l.population DESC, name ASC
+    LIMIT ?
+  `);
+
+  const rows = statement.all(normalized, ...parameters, limit) as unknown as LocationRow[];
+  return rows.map(toLocation);
 }
 
 /** Restituisce una località dal suo identificatore GeoNames. */
 export function getLocation(id: number, options: SearchOptions = {}): Location | undefined {
   const database = openDatabase(options.databasePath);
-  try {
-    const row = database
-      .prepare(
-        `SELECT l.id, ${nameColumns(options.lang ?? DEFAULT_LANG)},
-                l.country_code, l.latitude, l.longitude, l.timezone, l.population, 1 AS exact
-         FROM locations l WHERE l.id = ?`,
-      )
-      .get(id) as unknown as LocationRow | undefined;
-    return row ? toLocation(row) : undefined;
-  } finally {
-    database.close();
-  }
+  const row = database
+    .prepare(
+      `SELECT l.id, ${nameColumns(options.lang ?? DEFAULT_LANG)},
+              l.country_code, l.latitude, l.longitude, l.timezone, l.population, 1 AS exact
+       FROM locations l WHERE l.id = ?`,
+    )
+    .get(id) as unknown as LocationRow | undefined;
+  return row ? toLocation(row) : undefined;
 }
 
 /** Metadati dell'importazione: versione del dataset, data, numero di località. */
 export function databaseInfo(options: SearchOptions = {}): Record<string, string> {
   const database = openDatabase(options.databasePath);
-  try {
-    const rows = database.prepare('SELECT key, value FROM metadata').all() as unknown as {
-      key: string;
-      value: string;
-    }[];
-    return Object.fromEntries(rows.map((row) => [row.key, row.value]));
-  } finally {
-    database.close();
-  }
+  const rows = database.prepare('SELECT key, value FROM metadata').all() as unknown as {
+    key: string;
+    value: string;
+  }[];
+  return Object.fromEntries(rows.map((row) => [row.key, row.value]));
 }
 
 function toLocation(row: LocationRow): Location {

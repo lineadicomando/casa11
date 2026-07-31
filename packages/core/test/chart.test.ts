@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { computeNatalChart } from '../src/chart.js';
 import { ChartError } from '../src/errors.js';
 import { formatChartCompact } from '../src/format.js';
-import { angularSeparation } from '../src/math.js';
+import { angularSeparation, normalize360 } from '../src/math.js';
 import type { BirthData } from '../src/types.js';
 
 const NAPOLI: BirthData = {
@@ -129,6 +129,37 @@ describe('computeNatalChart', () => {
     }
     // L'Ascendente non dipende dal sistema di case.
     expect(placidus.angles?.ascendant).toBeCloseTo(wholeSign.angles!.ascendant, 6);
+  });
+
+  it('inverte la Parte di Fortuna nei temi notturni, salvo formula diurna', () => {
+    // Alle 23:30 il Sole è ben sotto l'orizzonte: tema notturno.
+    const notturno: BirthData = { ...NAPOLI, time: '23:30' };
+
+    const settore = computeNatalChart(notturno);
+    expect(settore.sect).toBe('notturna');
+
+    const sun = settore.bodies.find((b) => b.id === 'sole')!;
+    const moon = settore.bodies.find((b) => b.id === 'luna')!;
+    const ascendant = settore.angles!.ascendant;
+
+    expect(settore.partOfFortune?.longitude).toBeCloseTo(
+      normalize360(ascendant + sun.longitude - moon.longitude),
+      6,
+    );
+
+    const diurna = computeNatalChart(notturno, { partOfFortuneFormula: 'diurna' });
+    expect(diurna.partOfFortune?.longitude).toBeCloseTo(
+      normalize360(ascendant + moon.longitude - sun.longitude),
+      6,
+    );
+  });
+
+  it('nei temi diurni le due formule della Parte di Fortuna coincidono', () => {
+    const settore = computeNatalChart(NAPOLI);
+    const diurna = computeNatalChart(NAPOLI, { partOfFortuneFormula: 'diurna' });
+
+    expect(settore.sect).toBe('diurna');
+    expect(settore.partOfFortune?.longitude).toBeCloseTo(diurna.partOfFortune!.longitude, 6);
   });
 
   it('rifiuta coordinate fuori intervallo', () => {

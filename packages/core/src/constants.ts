@@ -110,7 +110,11 @@ export const ASPECTS: readonly AspectDefinition[] = [
   { id: 'sesquiquadrato', angle: 135, orb: 2, major: false },
 ];
 
-/** I luminari ricevono un'orbita più ampia, secondo la prassi corrente. */
+/**
+ * I luminari ricevono un'orbita più ampia, secondo la prassi corrente.
+ * Il bonus vale per ciascun corpo della coppia: un aspetto fra Sole e Luna
+ * ne somma due, cioè +4°.
+ */
 export const LUMINARIES: readonly BodyId[] = ['sole', 'luna'];
 export const LUMINARY_ORB_BONUS = 2;
 

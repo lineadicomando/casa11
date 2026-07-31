@@ -179,7 +179,8 @@ export interface Angles {
   midheaven: number;
   descendant: number;
   imumCoeli: number;
-  vertex: number;
+  /** Assente, con avvertenza, se le effemeridi non lo riportano. */
+  vertex?: number;
 }
 
 export interface Aspect {

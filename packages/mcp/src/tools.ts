@@ -152,6 +152,14 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
           .boolean()
           .optional()
           .describe('Includi semisestile, quinconce, semiquadrato, sesquiquadrato. Default: false.'),
+        part_of_fortune_formula: z
+          .enum(['settore', 'diurna'])
+          .optional()
+          .describe(
+            'Formula della Parte di Fortuna. settore (default): si inverte nei temi notturni, ' +
+              'secondo la tradizione. diurna: sempre ASC + Luna − Sole, da usare solo per ' +
+              'riprodurre il risultato di un programma che ignora il settore.',
+          ),
         format: z
           .enum(['compact', 'json'])
           .optional()
@@ -176,6 +184,9 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
 
         const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
         if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
+        if (args.part_of_fortune_formula) {
+          options.partOfFortuneFormula = args.part_of_fortune_formula;
+        }
         if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
 
         const chart = computeNatalChart(birth, options);

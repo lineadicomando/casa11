@@ -208,6 +208,9 @@ cento gradi. Per riprodurre il risultato di un altro programma:
 computeNatalChart(nascita, { partOfFortuneFormula: 'diurna' });
 ```
 
+Lo stesso interruttore esiste su ogni superficie: `partOfFortuneFormula=diurna`
+via API, `part_of_fortune_formula` nel tool MCP, `--fortuna diurna` dalla CLI.
+
 ## Il punto delicato: i fusi orari
 
 Un errore di un'ora nella conversione sposta l'Ascendente di circa 15 gradi,

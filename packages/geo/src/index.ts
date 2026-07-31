@@ -8,7 +8,13 @@
  */
 
 export { searchLocations, getLocation, databaseInfo } from './search.js';
-export { defaultDatabasePath, normalizeName, loadSchema, openDatabase } from './database.js';
+export {
+  closeDatabase,
+  defaultDatabasePath,
+  normalizeName,
+  loadSchema,
+  openDatabase,
+} from './database.js';
 export {
   GeoError,
   type GeoErrorCode,

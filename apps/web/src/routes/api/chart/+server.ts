@@ -66,6 +66,19 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
       options.houseSystem = houseSystem as HouseSystem;
     }
 
+    const fortuneFormula = parameters.get('partOfFortuneFormula');
+    if (fortuneFormula) {
+      if (fortuneFormula !== 'settore' && fortuneFormula !== 'diurna') {
+        throw error(400, {
+          message:
+            `Formula "${fortuneFormula}" non riconosciuta per la Parte di Fortuna: ` +
+            'attesa "settore" oppure "diurna".',
+          code: 'FORMULA_FORTUNA_NON_VALIDA',
+        });
+      }
+      options.partOfFortuneFormula = fortuneFormula;
+    }
+
     const chart = computeNatalChart(birth, options);
 
     setHeaders({ 'cache-control': 'public, max-age=86400' });
@@ -138,9 +151,19 @@ function readCoordinateOverrides(parameters: URLSearchParams): {
  * intercettabile da nessun controllo.
  */
 function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
-  const locationId = Number(parameters.get('locationId'));
+  const rawLocationId = parameters.get('locationId');
 
-  if (Number.isInteger(locationId) && locationId > 0) {
+  if (rawLocationId) {
+    const locationId = Number(rawLocationId);
+    // Un identificatore malformato è un errore suo, non un motivo per
+    // ripiegare sulle coordinate e rispondere che "manca il luogo".
+    if (!Number.isInteger(locationId) || locationId <= 0) {
+      throw error(400, {
+        message: `Valore di "locationId" non valido: atteso un identificatore GeoNames intero positivo.`,
+        code: 'LOCALITA_NON_VALIDA',
+      });
+    }
+
     const location = getLocation(locationId);
     if (!location) {
       throw error(404, {
