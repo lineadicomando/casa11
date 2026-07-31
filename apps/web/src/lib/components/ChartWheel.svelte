@@ -1,34 +1,39 @@
 <script lang="ts">
-  import type { CelestialBody, NatalChart } from '@undicesimacasa/core';
+  import type { NatalChart, TransitChart } from '@undicesimacasa/core';
   import {
     ASPECT_COLOR,
-    BODY_GLYPH,
     ELEMENT_COLOR,
     SIGN_ELEMENT,
-    POINT_GLYPH,
     SIGN_GLYPH,
     ZODIAC_ORDER,
   } from '$lib/glyphs';
+  import {
+    CENTER,
+    PADDING,
+    SIZE,
+    natalPointLongitude,
+    natalWheelPoints,
+    polar,
+    radiiFor,
+    spread,
+    transitWheelPoints,
+  } from '$lib/wheel';
 
   interface Props {
     chart: NatalChart;
+    /**
+     * Transiti da disegnare in un anello esterno. Quando ci sono, le linee
+     * al centro sono i loro aspetti al tema e non quelli interni al tema:
+     * sovrapporre le due trame renderebbe illeggibili entrambe.
+     */
+    transits?: TransitChart | null;
     /** Corpo evidenziato: gli aspetti che non lo toccano vengono attenuati. */
     highlighted?: string | null;
   }
 
-  let { chart, highlighted = null }: Props = $props();
+  let { chart, transits = null, highlighted = null }: Props = $props();
 
-  const SIZE = 800;
-  const CENTER = SIZE / 2;
-  /** Margine attorno al riquadro: le etichette degli assi sporgono dal cerchio. */
-  const PADDING = 26;
-
-  // Raggi dei vari anelli concentrici, dall'esterno verso l'interno.
-  const R_ZODIAC_OUT = 390;
-  const R_ZODIAC_IN = 335;
-  const R_HOUSE_RING = 300;
-  const R_PLANET = 268;
-  const R_ASPECT = 232;
+  const R = $derived(radiiFor(transits !== null));
 
   /**
    * Longitudine dell'eclittica che va posta a sinistra (ore 9).
@@ -41,125 +46,68 @@
 
   const hasHouses = $derived(chart.houses.length === 12 && chart.angles !== undefined);
 
-  /**
-   * Converte una longitudine eclittica in coordinate sullo schermo.
-   *
-   * L'origine è a sinistra e le longitudini crescenti scendono verso il basso
-   * (verso il Fondo Cielo), come in una carta tracciata a mano.
-   */
   function toXY(longitude: number, radius: number): { x: number; y: number } {
-    const angle = ((180 + (longitude - rotation)) * Math.PI) / 180;
-    return {
-      x: CENTER + radius * Math.cos(angle),
-      y: CENTER - radius * Math.sin(angle),
-    };
+    return polar(longitude, radius, rotation);
   }
 
-  /**
-   * Posizione di disegno dei corpi, distanziata per evitare le sovrapposizioni.
-   *
-   * I pianeti restano ancorati alla loro longitudine reale per le linee degli
-   * aspetti e per i trattini indicatori; a spostarsi è solo il glifo, così che
-   * uno stellium resti leggibile senza mentire sulle posizioni.
-   */
-  const MIN_SEPARATION = 7;
-
-  interface WheelPoint {
-    id: string;
-    glyph: string;
-    longitude: number;
-    retrograde: boolean;
-    label: string;
-  }
-
-  /** Corpi e punti calcolati insieme: la spaziatura deve tenerne conto di tutti. */
-  const wheelPoints = $derived.by<WheelPoint[]>(() => {
-    const points: WheelPoint[] = chart.bodies.map((body) => ({
-      id: body.id,
-      glyph: BODY_GLYPH[body.id],
-      longitude: body.longitude,
-      retrograde: body.retrograde,
-      label: bodyLabel(body),
-    }));
-
-    if (chart.partOfFortune) {
-      const house =
-        chart.partOfFortune.house !== undefined ? `, casa ${chart.partOfFortune.house}` : '';
-      points.push({
-        id: 'fortuna',
-        glyph: POINT_GLYPH.fortuna,
-        longitude: chart.partOfFortune.longitude,
-        retrograde: false,
-        label: `Parte di Fortuna a ${chart.partOfFortune.signDegree.toFixed(0)} gradi ${chart.partOfFortune.sign}${house}`,
-      });
-    }
-
-    return points;
-  });
-
-  const placedBodies = $derived.by(() => {
-    const sorted = [...wheelPoints].sort((a, b) => a.longitude - b.longitude);
-    const display = sorted.map((body) => ({ body, display: body.longitude }));
-
-    // Alcune passate di rilassamento: spinge via i vicini troppo stretti.
-    for (let pass = 0; pass < 60; pass += 1) {
-      let moved = false;
-      for (let i = 0; i < display.length; i += 1) {
-        const current = display[i]!;
-        const next = display[(i + 1) % display.length]!;
-        const gap = (next.display - current.display + 360) % 360;
-        if (gap < MIN_SEPARATION && display.length > 1) {
-          const push = (MIN_SEPARATION - gap) / 2;
-          current.display = (current.display - push + 360) % 360;
-          next.display = (next.display + push) % 360;
-          moved = true;
-        }
-      }
-      if (!moved) break;
-    }
-
-    return display;
-  });
-
-  const visibleAspects = $derived(
-    highlighted
-      ? chart.aspects.filter((a) => a.from === highlighted || a.to === highlighted)
-      : chart.aspects,
+  const placedBodies = $derived(spread(natalWheelPoints(chart), R.separation));
+  const placedTransits = $derived(
+    transits ? spread(transitWheelPoints(transits), R.outerSeparation) : [],
   );
 
-  function longitudeOf(id: string): number {
-    return chart.bodies.find((body) => body.id === id)?.longitude ?? 0;
-  }
+  /** Le linee al centro: gli aspetti del tema, o quelli dei transiti a esso. */
+  const lines = $derived.by(() => {
+    const drawn = transits
+      ? transits.aspects
+          .filter((a) => !highlighted || a.transiting === highlighted || a.natal === highlighted)
+          .map((a) => ({
+            aspect: a.aspect,
+            orb: a.orb,
+            from: transits.transiting.find((body) => body.id === a.transiting)?.longitude,
+            to: natalPointLongitude(chart, a.natal),
+          }))
+      : chart.aspects
+          .filter((a) => !highlighted || a.from === highlighted || a.to === highlighted)
+          .map((a) => ({
+            aspect: a.aspect,
+            orb: a.orb,
+            from: natalPointLongitude(chart, a.from),
+            to: natalPointLongitude(chart, a.to),
+          }));
 
-  function bodyLabel(body: CelestialBody): string {
-    const house = body.house !== undefined ? `, casa ${body.house}` : '';
-    const retrograde = body.retrograde ? ', retrogrado' : '';
-    return `${body.name} a ${body.signDegree.toFixed(0)} gradi ${body.sign}${house}${retrograde}`;
-  }
+    // Un capo mancante — un asse in un tema senza ora — darebbe una linea
+    // tirata verso il centro della ruota, che non significa nulla.
+    return drawn.filter(
+      (line): line is { aspect: typeof line.aspect; orb: number; from: number; to: number } =>
+        line.from !== undefined && line.to !== undefined,
+    );
+  });
 </script>
 
 <svg
   viewBox="{-PADDING} {-PADDING} {SIZE + PADDING * 2} {SIZE + PADDING * 2}"
   class="wheel"
   role="img"
-  aria-label="Ruota del tema natale con posizioni planetarie, case e aspetti"
+  aria-label={transits
+    ? 'Ruota con il tema natale, i corpi in transito e i loro aspetti'
+    : 'Ruota del tema natale con posizioni planetarie, case e aspetti'}
 >
   <!-- Settori dei segni, colorati per elemento -->
   {#each ZODIAC_ORDER as sign, index (sign)}
     {@const start = index * 30}
-    {@const mid = toXY(start + 15, (R_ZODIAC_OUT + R_ZODIAC_IN) / 2)}
+    {@const mid = toXY(start + 15, (R.zodiacOuter + R.zodiacInner) / 2)}
     {@const corners = [
-      toXY(start, R_ZODIAC_IN),
-      toXY(start, R_ZODIAC_OUT),
-      toXY(start + 30, R_ZODIAC_OUT),
-      toXY(start + 30, R_ZODIAC_IN),
+      toXY(start, R.zodiacInner),
+      toXY(start, R.zodiacOuter),
+      toXY(start + 30, R.zodiacOuter),
+      toXY(start + 30, R.zodiacInner),
     ]}
     <path
       d="M {corners[0].x} {corners[0].y}
          L {corners[1].x} {corners[1].y}
-         A {R_ZODIAC_OUT} {R_ZODIAC_OUT} 0 0 0 {corners[2].x} {corners[2].y}
+         A {R.zodiacOuter} {R.zodiacOuter} 0 0 0 {corners[2].x} {corners[2].y}
          L {corners[3].x} {corners[3].y}
-         A {R_ZODIAC_IN} {R_ZODIAC_IN} 0 0 1 {corners[0].x} {corners[0].y} Z"
+         A {R.zodiacInner} {R.zodiacInner} 0 0 1 {corners[0].x} {corners[0].y} Z"
       fill={ELEMENT_COLOR[SIGN_ELEMENT[sign]]}
       fill-opacity="0.12"
       stroke="var(--linea)"
@@ -177,8 +125,8 @@
 
   <!-- Tacche di grado: ogni 5°, più marcate ogni 10° -->
   {#each Array.from({ length: 72 }, (_, i) => i * 5) as degree (degree)}
-    {@const outer = toXY(degree, R_ZODIAC_IN)}
-    {@const inner = toXY(degree, R_ZODIAC_IN - (degree % 10 === 0 ? 12 : 6))}
+    {@const outer = toXY(degree, R.zodiacInner)}
+    {@const inner = toXY(degree, R.zodiacInner - (degree % 10 === 0 ? 12 : 6))}
     <line
       x1={outer.x}
       y1={outer.y}
@@ -189,18 +137,24 @@
     />
   {/each}
 
-  <circle cx={CENTER} cy={CENTER} r={R_HOUSE_RING} fill="none" stroke="var(--linea)" />
-  <circle cx={CENTER} cy={CENTER} r={R_ASPECT} fill="none" stroke="var(--linea)" />
+  <!-- Chiusura dell'anello dei transiti, che lo separa dalle case -->
+  {#if R.outerBodies !== undefined}
+    <circle cx={CENTER} cy={CENTER} r={R.houseSpanOuter} fill="none" stroke="var(--linea)" />
+  {/if}
+
+  <circle cx={CENTER} cy={CENTER} r={R.houses} fill="none" stroke="var(--linea)" />
+  <circle cx={CENTER} cy={CENTER} r={R.aspects} fill="none" stroke="var(--linea)" />
 
   {#if hasHouses}
     <!-- Cuspidi delle case -->
     {#each chart.houses as house (house.number)}
-      {@const isAngular = house.number === 1 || house.number === 4 || house.number === 7 || house.number === 10}
-      {@const outer = toXY(house.longitude, R_ZODIAC_IN)}
-      {@const inner = toXY(house.longitude, R_ASPECT)}
+      {@const isAngular =
+        house.number === 1 || house.number === 4 || house.number === 7 || house.number === 10}
+      {@const outer = toXY(house.longitude, R.houseSpanOuter)}
+      {@const inner = toXY(house.longitude, R.aspects)}
       {@const next = chart.houses[house.number % 12]!}
       {@const span = (next.longitude - house.longitude + 360) % 360}
-      {@const label = toXY(house.longitude + span / 2, (R_HOUSE_RING + R_ASPECT) / 2)}
+      {@const label = toXY(house.longitude + span / 2, (R.houses + R.aspects) / 2)}
       <line
         x1={outer.x}
         y1={outer.y}
@@ -209,14 +163,18 @@
         stroke={isAngular ? 'var(--accento)' : 'var(--linea-forte)'}
         stroke-width={isAngular ? 2.5 : 1}
       />
-      <text x={label.x} y={label.y} class="numero-casa" text-anchor="middle" dominant-baseline="central"
-        >{house.number}</text
+      <text
+        x={label.x}
+        y={label.y}
+        class="numero-casa"
+        text-anchor="middle"
+        dominant-baseline="central">{house.number}</text
       >
     {/each}
 
     <!-- Etichette degli assi -->
     {#each [['ASC', chart.angles!.ascendant], ['MC', chart.angles!.midheaven], ['DSC', chart.angles!.descendant], ['IC', chart.angles!.imumCoeli]] as const as [label, longitude] (label)}
-      {@const position = toXY(longitude, R_ZODIAC_OUT + 14)}
+      {@const position = toXY(longitude, R.zodiacOuter + 14)}
       <text
         x={position.x}
         y={position.y}
@@ -229,28 +187,68 @@
 
   <!-- Linee degli aspetti -->
   <g class="aspetti">
-    {#each visibleAspects as aspect, index (index)}
-      {@const from = toXY(longitudeOf(aspect.from), R_ASPECT)}
-      {@const to = toXY(longitudeOf(aspect.to), R_ASPECT)}
+    {#each lines as line, index (index)}
+      {@const from = toXY(line.from, R.aspects)}
+      {@const to = toXY(line.to, R.aspects)}
       <line
         x1={from.x}
         y1={from.y}
         x2={to.x}
         y2={to.y}
-        stroke={ASPECT_COLOR[aspect.aspect]}
-        stroke-width={aspect.orb < 2 ? 1.8 : 1}
-        stroke-opacity={Math.max(0.2, 0.85 - aspect.orb / 12)}
-        stroke-dasharray={aspect.aspect === 'congiunzione' ? '4 3' : undefined}
+        stroke={ASPECT_COLOR[line.aspect]}
+        stroke-width={line.orb < 2 ? 1.8 : 1}
+        stroke-opacity={Math.max(0.2, 0.85 - line.orb / 12)}
+        stroke-dasharray={line.aspect === 'congiunzione' ? '4 3' : undefined}
       />
     {/each}
   </g>
 
-  <!-- Corpi celesti -->
-  {#each placedBodies as { body, display } (body.id)}
-    {@const glyph = toXY(display, R_PLANET)}
-    {@const tickOuter = toXY(body.longitude, R_HOUSE_RING)}
-    {@const tickInner = toXY(body.longitude, R_PLANET + 16)}
-    {@const dimmed = highlighted !== null && highlighted !== body.id}
+  <!-- Corpi in transito, nell'anello esterno -->
+  {#if R.outerBodies !== undefined}
+    {#each placedTransits as { point, display } (point.id)}
+      {@const glyph = toXY(display, R.outerBodies)}
+      {@const tickOuter = toXY(point.longitude, R.zodiacInner)}
+      {@const tickInner = toXY(point.longitude, R.outerBodies + 16)}
+      {@const dimmed = highlighted !== null && highlighted !== point.id}
+      <g class="corpo transito" opacity={dimmed ? 0.3 : 1}>
+        <line
+          x1={tickOuter.x}
+          y1={tickOuter.y}
+          x2={tickInner.x}
+          y2={tickInner.y}
+          stroke="var(--accento)"
+          stroke-width="1"
+        />
+        <text
+          x={glyph.x}
+          y={glyph.y}
+          class="glifo-corpo glifo-transito"
+          text-anchor="middle"
+          dominant-baseline="central"
+        >
+          {point.glyph}
+          <title>{point.label}</title>
+        </text>
+        {#if point.retrograde}
+          {@const mark = toXY(display, R.outerBodies - 20)}
+          <text
+            x={mark.x}
+            y={mark.y}
+            class="retrogrado"
+            text-anchor="middle"
+            dominant-baseline="central">℞</text
+          >
+        {/if}
+      </g>
+    {/each}
+  {/if}
+
+  <!-- Corpi del tema -->
+  {#each placedBodies as { point, display } (point.id)}
+    {@const glyph = toXY(display, R.bodies)}
+    {@const tickOuter = toXY(point.longitude, R.houses)}
+    {@const tickInner = toXY(point.longitude, R.bodies + 16)}
+    {@const dimmed = highlighted !== null && highlighted !== point.id}
     <g class="corpo" class:attenuato={dimmed} opacity={dimmed ? 0.3 : 1}>
       <!-- Trattino alla longitudine reale: il glifo può essere stato spostato -->
       <line
@@ -265,17 +263,21 @@
         x={glyph.x}
         y={glyph.y}
         class="glifo-corpo"
-        class:glifo-punto={body.id === 'fortuna'}
+        class:glifo-punto={point.id === 'fortuna'}
         text-anchor="middle"
         dominant-baseline="central"
       >
-        {body.glyph}
-        <title>{body.label}</title>
+        {point.glyph}
+        <title>{point.label}</title>
       </text>
-      {#if body.retrograde}
-        {@const mark = toXY(display, R_PLANET - 22)}
-        <text x={mark.x} y={mark.y} class="retrogrado" text-anchor="middle" dominant-baseline="central"
-          >℞</text
+      {#if point.retrograde}
+        {@const mark = toXY(display, R.bodies - 22)}
+        <text
+          x={mark.x}
+          y={mark.y}
+          class="retrogrado"
+          text-anchor="middle"
+          dominant-baseline="central">℞</text
         >
       {/if}
     </g>
@@ -297,6 +299,14 @@
   .glifo-corpo {
     font-size: 27px;
     fill: var(--testo);
+  }
+
+  /* I transitanti portano il colore dell'accento, lo stesso degli assi: sono
+     l'elemento mobile della carta, e vanno distinti a colpo d'occhio dai
+     corpi di nascita anche quando i glifi sono gli stessi. */
+  .glifo-transito {
+    font-size: 24px;
+    fill: var(--accento);
   }
 
   /*
