@@ -6,7 +6,8 @@
  */
 
 export { computeNatalChart } from './chart.js';
-export { computeTransits } from './transits.js';
+export { computeTransits, natalTargets } from './transits.js';
+export { findTransitPassages } from './passages.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
 export {
@@ -19,7 +20,11 @@ export {
 export { currentMoment, resolveTime, toJulianDay, type TimeResolution } from './time.js';
 export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
-export { formatChartCompact, formatTransitsCompact } from './format.js';
+export {
+  formatChartCompact,
+  formatPassagesCompact,
+  formatTransitsCompact,
+} from './format.js';
 export { ChartError, type ChartErrorCode } from './errors.js';
 
 export {
@@ -36,8 +41,10 @@ export {
   ASPECTS,
   BODIES,
   DEFAULT_BODIES,
+  DEFAULT_PASSAGE_BODIES,
   DEFAULT_TRANSIT_BODIES,
   HOUSE_SYSTEM_CODES,
+  MEAN_DAILY_MOTION,
   NATAL_POINT_NAMES,
   SIGN_ABBR,
   TRANSIT_ORB_BONUS,
@@ -63,6 +70,8 @@ export type {
   LocalMoment,
   NatalChart,
   NatalPointId,
+  PassageOptions,
+  PassageRange,
   PointAspect,
   ResolvedTime,
   Sect,
@@ -70,6 +79,7 @@ export type {
   TransitAspect,
   TransitChart,
   TransitMoment,
+  TransitPassage,
   TransitOptions,
   ZodiacSign,
 } from './types.js';

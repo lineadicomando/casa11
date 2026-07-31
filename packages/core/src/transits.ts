@@ -78,7 +78,7 @@ export function computeTransits(
     );
   }
 
-  const targets = resolveTargets(natal, options.targets, warnings);
+  const targets = natalTargets(natal, options.targets, warnings);
 
   const aspects = computeCrossAspects(transiting, targets, {
     minorAspects: options.minorAspects ?? false,
@@ -107,6 +107,9 @@ export function computeTransits(
 /**
  * I punti natali da bersagliare, con la loro longitudine.
  *
+ * Esportata perché serve identica al calendario dei passaggi: i bersagli di
+ * un istante e quelli di un anno sono gli stessi.
+ *
  * Hanno velocità nulla anche quando corrispondono a un corpo che nel tema si
  * muoveva: una posizione di nascita è ferma per sempre, e da questo dipende
  * il verso di `applying` — è il transito che si avvicina, non l'incontro.
@@ -115,7 +118,7 @@ export function computeTransits(
  * calcolati, un asse in un tema senza ora — produce un avviso e viene
  * saltato: è la stessa scelta che il motore fa per i corpi non calcolabili.
  */
-function resolveTargets(
+export function natalTargets(
   natal: NatalChart,
   requested: readonly NatalPointId[] | undefined,
   warnings: string[],

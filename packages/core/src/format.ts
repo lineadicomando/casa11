@@ -1,6 +1,13 @@
 import { NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
-import type { BirthData, NatalChart, NatalPointId, TransitChart } from './types.js';
+import type {
+  BirthData,
+  NatalChart,
+  NatalPointId,
+  PassageRange,
+  TransitChart,
+  TransitPassage,
+} from './types.js';
 
 /**
  * Rende il tema in forma tabellare compatta.
@@ -133,6 +140,57 @@ export function formatTransitsCompact(natal: NatalChart, transits: TransitChart)
   if (transits.warnings.length > 0) {
     lines.push('', 'AVVERTENZE');
     for (const warning of transits.warnings) lines.push(`- ${warning}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Rende in forma tabellare il calendario dei passaggi.
+ *
+ * Una riga per aspetto esatto, in ordine di tempo. La colonna del moto è
+ * quella che dà senso all'elenco: tre righe uguali a mesi di distanza, con
+ * una `R` in mezzo, sono un pianeta lento che passa e ripassa — e si legge
+ * come un periodo unico, non come tre fatti separati.
+ */
+export function formatPassagesCompact(
+  natal: NatalChart,
+  passages: readonly TransitPassage[],
+  range: PassageRange,
+  warnings: readonly string[] = [],
+): string {
+  const birth = natal.time.timeKnown
+    ? `${natal.input.date} ${natal.input.time}`
+    : `${natal.input.date} (ora ignota)`;
+
+  const lines = [
+    `PASSAGGI — dal ${range.from} al ${range.to} (${range.timezone})`,
+    `Tema natale: ${birth} — ${formatPlace(natal.input)}`,
+    '',
+  ];
+
+  if (passages.length === 0) {
+    lines.push('(nessun aspetto si perfeziona in questo arco di tempo)');
+    return lines.join('\n');
+  }
+
+  lines.push('Data e ora locali | transitante | aspetto | punto natale | moto | finestra');
+  for (const passage of passages) {
+    const window = passage.window
+      ? `${passage.window.start.slice(0, 10)} → ${passage.window.end.slice(0, 10)}`
+      : 'oltre i tre anni';
+
+    lines.push(
+      `${passage.local.slice(0, 16).replace('T', ' ')} ` +
+        `${nameOf(natal, passage.transiting).padEnd(11)} ${passage.aspect.padEnd(15)} ` +
+        `${natalPointName(natal, passage.natal).padEnd(11)} ` +
+        `${passage.retrograde ? 'R' : 'D'}  ${window}`,
+    );
+  }
+
+  if (warnings.length > 0) {
+    lines.push('', 'AVVERTENZE');
+    for (const warning of warnings) lines.push(`- ${warning}`);
   }
 
   return lines.join('\n');

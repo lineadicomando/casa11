@@ -2,10 +2,20 @@
 import { parseArgs } from 'node:util';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
-import { formatChartCompact, formatTransitsCompact } from './format.js';
+import { formatChartCompact, formatPassagesCompact, formatTransitsCompact } from './format.js';
+import { findTransitPassages } from './passages.js';
+import { DEFAULT_PASSAGE_BODIES } from './constants.js';
 import { currentMoment } from './time.js';
 import { computeTransits } from './transits.js';
-import type { BirthData, ChartOptions, HouseSystem, TransitMoment, TransitOptions } from './types.js';
+import type {
+  BirthData,
+  ChartOptions,
+  HouseSystem,
+  PassageOptions,
+  PassageRange,
+  TransitMoment,
+  TransitOptions,
+} from './types.js';
 
 const USAGE = `
 casa11 — calcolo del tema natale da riga di comando
@@ -34,6 +44,12 @@ Transiti
   --on <YYYY-MM-DD>     Giorno del transito. Se omesso, adesso
   --at <HH:mm>          Ora del transito. Se omessa, mezzogiorno locale
   --transit-tz <IANA>   Fuso del transito. Se omesso, quello di nascita
+
+Passaggi
+  --passages            Elenca gli istanti in cui i transiti si perfezionano
+  --from <YYYY-MM-DD>   Inizio dell'arco. Se omesso, oggi
+  --to <YYYY-MM-DD>     Fine dell'arco. Se omessa, un anno dopo l'inizio
+  --moon                Includi la Luna, esclusa perché ne perfeziona a migliaia
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -52,6 +68,10 @@ function main(argv: string[]): number {
       ephe: { type: 'string' },
       help: { type: 'boolean', default: false },
       transits: { type: 'boolean', default: false },
+      passages: { type: 'boolean', default: false },
+      from: { type: 'string' },
+      to: { type: 'string' },
+      moon: { type: 'boolean', default: false },
       on: { type: 'string' },
       at: { type: 'string' },
       'transit-tz': { type: 'string' },
@@ -95,6 +115,21 @@ function main(argv: string[]): number {
 
   const chart = computeNatalChart(birth, options);
 
+  if (values.passages) {
+    const range = passageRange(values, birth.timezone);
+    const passageOptions: PassageOptions = { minorAspects: values.minor };
+    if (values.ephe) passageOptions.ephemerisPath = values.ephe;
+    if (values.moon) passageOptions.bodies = [...DEFAULT_PASSAGE_BODIES, 'luna'];
+
+    const { passages, warnings } = findTransitPassages(chart, range, passageOptions);
+    process.stdout.write(
+      values.json
+        ? `${JSON.stringify({ chart, range, passages, warnings }, null, 2)}\n`
+        : `${formatPassagesCompact(chart, passages, range, warnings)}\n`,
+    );
+    return 0;
+  }
+
   if (!values.transits) {
     // Le opzioni del transito senza `--transits` verrebbero ignorate in
     // silenzio, e chi le ha scritte aspetterebbe un risultato che non arriva.
@@ -123,6 +158,28 @@ function main(argv: string[]): number {
       : `${formatTransitsCompact(chart, transits)}\n`,
   );
   return 0;
+}
+
+/**
+ * L'arco su cui cercare i passaggi.
+ *
+ * Senza `--from` si parte da oggi, che è la domanda che si fa quasi sempre;
+ * senza `--to` si arriva a un anno dopo, perché è la durata entro cui un
+ * pianeta lento completa il suo andirivieni su uno stesso punto.
+ */
+function passageRange(
+  values: { from?: string | undefined; to?: string | undefined; 'transit-tz'?: string | undefined },
+  birthTimezone: string,
+): PassageRange {
+  const timezone = values['transit-tz'] ?? birthTimezone;
+  const from = values.from ?? currentMoment(timezone).date;
+  const to = values.to ?? addYear(from);
+  return { from, to, timezone };
+}
+
+function addYear(date: string): string {
+  const [year, rest] = [date.slice(0, 4), date.slice(4)];
+  return `${Number(year) + 1}${rest}`;
 }
 
 /**

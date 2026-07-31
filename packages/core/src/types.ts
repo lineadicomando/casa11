@@ -321,6 +321,58 @@ export interface TransitAspect {
   retrograde: boolean;
 }
 
+/** L'arco di tempo su cui cercare i passaggi, in date locali. */
+export interface PassageRange {
+  /** Primo giorno, `YYYY-MM-DD`. */
+  from: string;
+  /** Ultimo giorno, incluso. */
+  to: string;
+  /** Fuso in cui vanno letti i due estremi. */
+  timezone: string;
+}
+
+export interface PassageOptions {
+  /** Corpi in transito. Default: `DEFAULT_PASSAGE_BODIES`, cioè senza la Luna. */
+  bodies?: BodyId[];
+  /** Punti natali da bersagliare. Default: i corpi del tema più Ascendente e Medio Cielo. */
+  targets?: NatalPointId[];
+  /** Includi gli aspetti minori. */
+  minorAspects?: boolean;
+  /** Orbite per aspetto: valgono per la finestra, non per l'istante esatto. */
+  orbs?: Partial<Record<AspectId, number>>;
+  /** Percorso della cartella con i file `.se1`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Un aspetto che si perfeziona: l'istante in cui il transitante raggiunge
+ * esattamente l'angolo, non l'intervallo in cui gli è vicino.
+ *
+ * Un corpo lento che passa in retrogradazione perfeziona lo stesso aspetto
+ * tre volte — avanti, indietro, avanti — e sono tre passaggi distinti, non
+ * uno lungo: è la struttura che rende leggibile un anno.
+ */
+export interface TransitPassage {
+  transiting: BodyId;
+  natal: NatalPointId;
+  aspect: AspectId;
+  /** Angolo esatto dell'aspetto in gradi. */
+  angle: number;
+  /** Istante UTC in cui l'aspetto è esatto, ISO 8601. */
+  exact: string;
+  /** Lo stesso istante nel fuso richiesto. */
+  local: string;
+  /** Il transitante è retrogrado in quel momento. */
+  retrograde: boolean;
+  /**
+   * Intervallo in cui l'aspetto resta entro l'orbita.
+   *
+   * Assente quando non si chiude entro tre anni: succede ai pianeti lenti,
+   * per cui il contatto dura più di quanto abbia senso chiamare finestra.
+   */
+  window?: { start: string; end: string };
+}
+
 export interface TransitChart {
   input: TransitMoment;
   time: ResolvedTime;

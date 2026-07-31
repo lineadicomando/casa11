@@ -113,6 +113,42 @@ export const NATAL_POINT_NAMES: Readonly<Record<Exclude<NatalPointId, BodyId>, s
   fortuna: 'Fortuna',
 };
 
+/**
+ * Corpi predefiniti del calendario dei passaggi.
+ *
+ * Come i transitanti, **meno la Luna**: percorre lo zodiaco in ventisette
+ * giorni, quindi perfeziona qualche migliaio di aspetti all'anno. Un elenco
+ * così non è un calendario, è rumore — e chi la vuole la chiede per nome.
+ */
+export const DEFAULT_PASSAGE_BODIES: readonly BodyId[] = DEFAULT_TRANSIT_BODIES.filter(
+  (id) => id !== 'luna',
+);
+
+/**
+ * Moto medio diurno in gradi, per corpo.
+ *
+ * Non serve al calcolo delle posizioni — quelle vengono dalle effemeridi — ma
+ * a scegliere ogni quanto campionare quando si cerca l'istante esatto di un
+ * aspetto: un passo buono per Plutone sprecherebbe migliaia di calcoli sulla
+ * Luna, e uno buono per la Luna mancherebbe i passaggi di Plutone.
+ */
+export const MEAN_DAILY_MOTION: Readonly<Record<BodyId, number>> = {
+  sole: 0.9856,
+  luna: 13.176,
+  mercurio: 1.383,
+  venere: 1.202,
+  marte: 0.524,
+  giove: 0.083,
+  saturno: 0.033,
+  urano: 0.012,
+  nettuno: 0.006,
+  plutone: 0.004,
+  'nodo-nord': 0.053,
+  'nodo-sud': 0.053,
+  lilith: 0.111,
+  chirone: 0.05,
+};
+
 /** Codici a un carattere attesi da `sweph.houses_ex`. */
 export const HOUSE_SYSTEM_CODES: Readonly<Record<HouseSystem, string>> = {
   placidus: 'P',
