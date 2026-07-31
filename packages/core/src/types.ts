@@ -183,17 +183,37 @@ export interface Angles {
   vertex?: number;
 }
 
-export interface Aspect {
+/**
+ * Un punto capace di formare aspetti.
+ *
+ * Non deve essere un corpo celeste: a un asse o a una cuspide bastano una
+ * longitudine e una velocità nulla. Il tipo esiste perché gli aspetti si
+ * calcolano anche fra insiemi appartenenti a **temi diversi** — i transiti
+ * aspettano le posizioni di nascita — e lì `CelestialBody` sarebbe una
+ * richiesta eccessiva.
+ */
+export interface AspectPoint<Id extends string = string> {
+  id: Id;
+  /** Longitudine eclittica in gradi decimali [0, 360). */
+  longitude: number;
+  /** Velocità in longitudine, gradi/giorno. Zero per un punto fermo. */
+  speed: number;
+}
+
+export interface PointAspect<From extends string = string, To extends string = From> {
   aspect: AspectId;
   /** Angolo esatto dell'aspetto in gradi. */
   angle: number;
-  from: BodyId;
-  to: BodyId;
+  from: From;
+  to: To;
   /** Scarto dall'angolo esatto, in gradi. */
   orb: number;
   /** `true` se l'aspetto si sta perfezionando, `false` se si sta separando. */
   applying: boolean;
 }
+
+/** Aspetto fra due corpi dello stesso tema. */
+export type Aspect = PointAspect<BodyId>;
 
 export interface NatalChart {
   input: BirthData;

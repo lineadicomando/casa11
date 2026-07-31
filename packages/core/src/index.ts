@@ -6,7 +6,7 @@
  */
 
 export { computeNatalChart } from './chart.js';
-export { computeAspects, type AspectOptions } from './aspects.js';
+export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
 export {
   computeBodies,
@@ -46,6 +46,7 @@ export type {
   Angles,
   Aspect,
   AspectId,
+  AspectPoint,
   BirthData,
   BodyId,
   CelestialBody,
@@ -55,6 +56,7 @@ export type {
   House,
   HouseSystem,
   NatalChart,
+  PointAspect,
   ResolvedTime,
   Sect,
   SiderealTime,
