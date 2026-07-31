@@ -146,10 +146,15 @@ tbody tr.evidenziato {
 }
 
 /* I glifi sono disegni, non testo: il corsivo di una riga li inclinerebbe
-   soltanto, senza che il font offra una vera variante. */
+   soltanto, senza che il font offra una vera variante.
+
+   `font-variant-emoji` raddoppia il selettore U+FE0E che i glifi già portano
+   (vedi `lib/glyphs.ts`): dove è supportato copre anche i font che ignorano
+   il selettore, altrove non fa nulla. */
 .glifo,
 .glifo-piccolo {
   font-style: normal;
+  font-variant-emoji: text;
 }
 
 .glifo {

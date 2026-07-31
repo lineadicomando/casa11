@@ -11,6 +11,7 @@
     CENTER,
     PADDING,
     SIZE,
+    arcPath,
     natalPointLongitude,
     natalWheelPoints,
     polar,
@@ -32,6 +33,9 @@
   }
 
   let { chart, transits = null, highlighted = null }: Props = $props();
+
+  /** Ampiezza minima dell'arco di una congiunzione, in gradi. */
+  const CONJUNCTION_MIN_SPAN = 5;
 
   const R = $derived(radiiFor(transits !== null));
 
@@ -154,7 +158,7 @@
       {@const inner = toXY(house.longitude, R.aspects)}
       {@const next = chart.houses[house.number % 12]!}
       {@const span = (next.longitude - house.longitude + 360) % 360}
-      {@const label = toXY(house.longitude + span / 2, (R.houses + R.aspects) / 2)}
+      {@const label = toXY(house.longitude + span / 2, R.houseNumbers)}
       <line
         x1={outer.x}
         y1={outer.y}
@@ -185,21 +189,35 @@
     {/each}
   {/if}
 
-  <!-- Linee degli aspetti -->
+  <!-- Aspetti: corda fra i due punti, arco quando sono congiunti -->
   <g class="aspetti">
     {#each lines as line, index (index)}
-      {@const from = toXY(line.from, R.aspects)}
-      {@const to = toXY(line.to, R.aspects)}
-      <line
-        x1={from.x}
-        y1={from.y}
-        x2={to.x}
-        y2={to.y}
-        stroke={ASPECT_COLOR[line.aspect]}
-        stroke-width={line.orb < 2 ? 1.8 : 1}
-        stroke-opacity={Math.max(0.2, 0.85 - line.orb / 12)}
-        stroke-dasharray={line.aspect === 'congiunzione' ? '4 3' : undefined}
-      />
+      {@const spessore = line.orb < 2 ? 1.8 : 1}
+      {@const opacita = Math.max(0.2, 0.85 - line.orb / 12)}
+      {#if line.aspect === 'congiunzione'}
+        <!-- Una corda fra due longitudini quasi uguali è invisibile: l'arco
+             la rende visibile e ne mostra l'ampiezza. -->
+        <path
+          d={arcPath(line.from, line.to, R.aspects, rotation, CONJUNCTION_MIN_SPAN)}
+          fill="none"
+          stroke={ASPECT_COLOR[line.aspect]}
+          stroke-width={spessore + 1.2}
+          stroke-opacity={opacita}
+          stroke-linecap="round"
+        />
+      {:else}
+        {@const from = toXY(line.from, R.aspects)}
+        {@const to = toXY(line.to, R.aspects)}
+        <line
+          x1={from.x}
+          y1={from.y}
+          x2={to.x}
+          y2={to.y}
+          stroke={ASPECT_COLOR[line.aspect]}
+          stroke-width={spessore}
+          stroke-opacity={opacita}
+        />
+      {/if}
     {/each}
   </g>
 
@@ -290,6 +308,9 @@
     height: auto;
     max-width: 44rem;
     font-family: system-ui, sans-serif;
+    /* Ereditata da tutti i glifi: raddoppia il selettore U+FE0E che le mappe
+       già portano, per i font che quello lo ignorano. Vedi `lib/glyphs.ts`. */
+    font-variant-emoji: text;
   }
 
   .glifo-segno {

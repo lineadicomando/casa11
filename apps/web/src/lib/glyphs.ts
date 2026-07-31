@@ -28,29 +28,40 @@ export function signOfLongitude(longitude: number): ZodiacSign {
 }
 
 /**
+ * Variante testuale, U+FE0E.
+ *
+ * I dodici simboli zodiacali stanno nel blocco a cui Unicode assegna
+ * presentazione **emoji** predefinita: senza questo selettore i font di
+ * sistema li disegnano come pittogrammi colorati, e la ruota si riempie di
+ * cerchietti. Va anche sui pianeti, dove ♀ e ♂ hanno lo stesso problema su
+ * parte delle piattaforme; sui simboli già testuali è ignorato.
+ */
+const TESTO = '\uFE0E';
+
+/**
  * Simboli astrologici Unicode: sono in tutti i font di sistema, quindi la
  * ruota non richiede un font dedicato né immagini.
  */
 export const BODY_GLYPH: Readonly<Record<BodyId, string>> = {
-  sole: '☉',
-  luna: '☽',
-  mercurio: '☿',
-  venere: '♀',
-  marte: '♂',
-  giove: '♃',
-  saturno: '♄',
-  urano: '♅',
-  nettuno: '♆',
-  plutone: '♇',
-  'nodo-nord': '☊',
-  'nodo-sud': '☋',
-  lilith: '⚸',
-  chirone: '⚷',
+  sole: `☉${TESTO}`,
+  luna: `☽${TESTO}`,
+  mercurio: `☿${TESTO}`,
+  venere: `♀${TESTO}`,
+  marte: `♂${TESTO}`,
+  giove: `♃${TESTO}`,
+  saturno: `♄${TESTO}`,
+  urano: `♅${TESTO}`,
+  nettuno: `♆${TESTO}`,
+  plutone: `♇${TESTO}`,
+  'nodo-nord': `☊${TESTO}`,
+  'nodo-sud': `☋${TESTO}`,
+  lilith: `⚸${TESTO}`,
+  chirone: `⚷${TESTO}`,
 };
 
 /** Punti calcolati, non corpi celesti. */
 export const POINT_GLYPH = {
-  fortuna: '⊗',
+  fortuna: `⊗${TESTO}`,
 } as const;
 
 export const BODY_LABEL: Readonly<Record<BodyId, string>> = {
@@ -71,20 +82,20 @@ export const BODY_LABEL: Readonly<Record<BodyId, string>> = {
 };
 
 /**
- * I bersagli natali che non sono corpi.
+ * Gli assi, che un simbolo astrologico non ce l'hanno.
  *
- * Gli assi non hanno un simbolo astrologico: nella colonna dei glifi ci va
- * la sigla con cui si nominano da sempre, che è comunque più breve del nome.
+ * Nella colonna dei glifi ci va la sigla con cui si nominano da sempre, che è
+ * comunque più breve del nome. Sono lettere e non disegni, quindi vogliono un
+ * corpo minore: `isNatalPointSigla` lo dice ai componenti.
  */
-const ANGLE_GLYPH: Readonly<Record<Exclude<NatalPointId, BodyId>, string>> = {
+const ANGLE_SIGLA = {
   ascendente: 'ASC',
   'medio-cielo': 'MC',
   discendente: 'DSC',
   'fondo-cielo': 'IC',
-  fortuna: POINT_GLYPH.fortuna,
-};
+} as const satisfies Partial<Record<NatalPointId, string>>;
 
-const ANGLE_LABEL: Readonly<Record<Exclude<NatalPointId, BodyId>, string>> = {
+const POINT_LABEL: Readonly<Partial<Record<NatalPointId, string>>> = {
   ascendente: 'Ascendente',
   'medio-cielo': 'Medio Cielo',
   discendente: 'Discendente',
@@ -92,54 +103,48 @@ const ANGLE_LABEL: Readonly<Record<Exclude<NatalPointId, BodyId>, string>> = {
   fortuna: 'Parte di Fortuna',
 };
 
-/** Le stesse mappe viste come parziali su tutti i bersagli possibili. */
-const ANGLE_GLYPHS: Readonly<Partial<Record<NatalPointId, string>>> = ANGLE_GLYPH;
-const ANGLE_LABELS: Readonly<Partial<Record<NatalPointId, string>>> = ANGLE_LABEL;
+/** La stessa mappa vista come parziale su tutti i bersagli possibili. */
+const SIGLE: Readonly<Partial<Record<NatalPointId, string>>> = ANGLE_SIGLA;
 
 export function natalPointGlyph(id: NatalPointId): string {
-  return ANGLE_GLYPHS[id] ?? BODY_GLYPH[id as BodyId] ?? id;
+  if (id === 'fortuna') return POINT_GLYPH.fortuna;
+  return SIGLE[id] ?? BODY_GLYPH[id as BodyId] ?? id;
 }
 
 export function natalPointLabel(id: NatalPointId): string {
-  return ANGLE_LABELS[id] ?? BODY_LABEL[id as BodyId] ?? id;
+  return POINT_LABEL[id] ?? BODY_LABEL[id as BodyId] ?? id;
 }
 
-/**
- * `true` quando al posto del glifo c'è una sigla di lettere.
- *
- * Le sigle vanno in corpo minore: alla dimensione dei simboli astrologici
- * sarebbero fuori scala. Si riconoscono dall'essere più lunghe di un
- * carattere, che è la differenza fra una parola e un disegno.
- */
+/** `true` quando al posto del glifo c'è una sigla di lettere. */
 export function isNatalPointSigla(id: NatalPointId): boolean {
-  return natalPointGlyph(id).length > 1;
+  return id in ANGLE_SIGLA;
 }
 
 export const SIGN_GLYPH: Readonly<Record<ZodiacSign, string>> = {
-  ariete: '♈',
-  toro: '♉',
-  gemelli: '♊',
-  cancro: '♋',
-  leone: '♌',
-  vergine: '♍',
-  bilancia: '♎',
-  scorpione: '♏',
-  sagittario: '♐',
-  capricorno: '♑',
-  acquario: '♒',
-  pesci: '♓',
+  ariete: `♈${TESTO}`,
+  toro: `♉${TESTO}`,
+  gemelli: `♊${TESTO}`,
+  cancro: `♋${TESTO}`,
+  leone: `♌${TESTO}`,
+  vergine: `♍${TESTO}`,
+  bilancia: `♎${TESTO}`,
+  scorpione: `♏${TESTO}`,
+  sagittario: `♐${TESTO}`,
+  capricorno: `♑${TESTO}`,
+  acquario: `♒${TESTO}`,
+  pesci: `♓${TESTO}`,
 };
 
 export const ASPECT_GLYPH: Readonly<Record<AspectId, string>> = {
-  congiunzione: '☌',
-  opposizione: '☍',
-  trigono: '△',
-  quadrato: '□',
-  sestile: '✶',
-  semisestile: '⚺',
-  quinconce: '⚻',
-  semiquadrato: '∠',
-  sesquiquadrato: '⚼',
+  congiunzione: `☌${TESTO}`,
+  opposizione: `☍${TESTO}`,
+  trigono: `△${TESTO}`,
+  quadrato: `□${TESTO}`,
+  sestile: `✶${TESTO}`,
+  semisestile: `⚺${TESTO}`,
+  quinconce: `⚻${TESTO}`,
+  semiquadrato: `∠${TESTO}`,
+  sesquiquadrato: `⚼${TESTO}`,
 };
 
 export type Element = 'fuoco' | 'terra' | 'aria' | 'acqua';

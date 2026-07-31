@@ -28,6 +28,15 @@ export interface WheelRadii {
   /** Dove cominciano le cuspidi: sotto l'anello esterno, se c'è. */
   houseSpanOuter: number;
   houses: number;
+  /**
+   * Raggio dei numeri delle case.
+   *
+   * Sta **fuori** dalla fascia dei corpi: alla loro stessa altezza un pianeta
+   * a metà casa finiva sopra il numero, e a metà casa i pianeti ci vanno
+   * spesso. Qui il numero è invece alla massima distanza dalle due cuspidi
+   * che lo delimitano, perché lo si disegna a metà del settore.
+   */
+  houseNumbers: number;
   bodies: number;
   aspects: number;
   /** Distanza angolare minima fra due glifi dell'anello dei corpi. */
@@ -41,6 +50,7 @@ const SINGLE: WheelRadii = {
   zodiacInner: 335,
   houseSpanOuter: 335,
   houses: 300,
+  houseNumbers: 316,
   bodies: 268,
   aspects: 232,
   separation: 7,
@@ -61,6 +71,7 @@ const DOUBLE: WheelRadii = {
   outerBodies: 306,
   houseSpanOuter: 282,
   houses: 258,
+  houseNumbers: 270,
   bodies: 228,
   aspects: 196,
   separation: 8,
@@ -88,6 +99,40 @@ export function polar(
     x: CENTER + radius * Math.cos(angle),
     y: CENTER - radius * Math.sin(angle),
   };
+}
+
+/**
+ * Percorso di un arco lungo il cerchio degli aspetti.
+ *
+ * Serve alle congiunzioni. Disegnate come corda, fra due longitudini che
+ * quasi coincidono, si riducono a un punto invisibile — e nei transiti la
+ * congiunzione è l'aspetto che conta di più. L'arco invece si vede, e la sua
+ * ampiezza **è** l'orbita: dice qualcosa invece di essere un espediente.
+ *
+ * `minSpan` gli dà una lunghezza minima, perché un'orbita di pochi primi
+ * resterebbe comunque invisibile.
+ */
+export function arcPath(
+  from: number,
+  to: number,
+  radius: number,
+  rotation: number,
+  minSpan = 0,
+): string {
+  const forward = (to - from + 360) % 360;
+  // Sempre per la via breve: fra due punti in aspetto l'arco lungo passerebbe
+  // dall'altra parte della ruota.
+  const [start, span] = forward <= 180 ? [from, forward] : [to, 360 - forward];
+
+  const widened = Math.max(span, minSpan);
+  const begin = start - (widened - span) / 2;
+  const end = begin + widened;
+
+  const a = polar(begin, radius, rotation);
+  const b = polar(end, radius, rotation);
+  // Longitudini crescenti girano in senso antiorario sullo schermo: per l'arco
+  // SVG è il verso negativo, quindi sweep 0.
+  return `M ${a.x} ${a.y} A ${radius} ${radius} 0 0 0 ${b.x} ${b.y}`;
 }
 
 /** Un corpo o un punto da disegnare sulla ruota. */

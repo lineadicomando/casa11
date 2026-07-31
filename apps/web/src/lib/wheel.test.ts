@@ -2,6 +2,7 @@ import type { CelestialBody, NatalChart, TransitChart } from '@undicesimacasa/co
 import { describe, expect, it } from 'vitest';
 import {
   CENTER,
+  arcPath,
   natalPointLongitude,
   natalWheelPoints,
   polar,
@@ -189,5 +190,69 @@ describe('natalPointLongitude', () => {
 
     expect(natalPointLongitude(senzaOra, 'ascendente')).toBeUndefined();
     expect(natalPointLongitude(senzaOra, 'chirone')).toBeUndefined();
+  });
+});
+
+describe('arcPath', () => {
+  const R = 200;
+
+  /** Gli estremi dell'arco: `M x y A r r 0 0 0 x y`. */
+  function estremi(path: string): { x: number; y: number }[] {
+    const n = (path.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    return [
+      { x: n[0]!, y: n[1]! },
+      { x: n[7]!, y: n[8]! },
+    ];
+  }
+
+  function vicino(a: { x: number; y: number }, b: { x: number; y: number }): void {
+    expect(a.x).toBeCloseTo(b.x, 6);
+    expect(a.y).toBeCloseTo(b.y, 6);
+  }
+
+  it('parte e arriva sulle due longitudini date', () => {
+    const [inizio, fine] = estremi(arcPath(100, 130, R, 0));
+
+    vicino(inizio!, polar(100, R, 0));
+    vicino(fine!, polar(130, R, 0));
+  });
+
+  it('prende sempre la via breve', () => {
+    // Fra 350° e 10° l'arco corto passa per lo zero dell'Ariete, non
+    // dall'altra parte della ruota.
+    const [inizio, fine] = estremi(arcPath(350, 10, R, 0));
+
+    vicino(inizio!, polar(350, R, 0));
+    vicino(fine!, polar(10, R, 0));
+  });
+
+  it('inverte gli estremi quando la via breve va all indietro', () => {
+    const [inizio, fine] = estremi(arcPath(130, 100, R, 0));
+
+    vicino(inizio!, polar(100, R, 0));
+    vicino(fine!, polar(130, R, 0));
+  });
+
+  it('dà un ampiezza minima a un arco che sarebbe invisibile', () => {
+    // È il caso della congiunzione stretta: due longitudini quasi uguali,
+    // che come corda darebbero un punto.
+    const [inizio, fine] = estremi(arcPath(100, 100.2, R, 0, 5));
+
+    vicino(inizio!, polar(97.6, R, 0));
+    vicino(fine!, polar(102.6, R, 0));
+  });
+
+  it('non stringe un arco già più ampio del minimo', () => {
+    expect(arcPath(100, 130, R, 0, 5)).toBe(arcPath(100, 130, R, 0));
+  });
+});
+
+describe('raggio dei numeri delle case', () => {
+  it('sta fuori dalla fascia dei corpi, in entrambe le ruote', () => {
+    // Alla stessa altezza dei glifi, un pianeta a metà casa finiva sopra il
+    // numero — e a metà casa i pianeti ci vanno spesso.
+    for (const radii of [radiiFor(false), radiiFor(true)]) {
+      expect(Math.abs(radii.houseNumbers - radii.bodies)).toBeGreaterThan(20);
+    }
   });
 });
