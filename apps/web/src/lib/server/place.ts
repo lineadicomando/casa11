@@ -75,7 +75,7 @@ export function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !timezone) {
     throw error(400, {
       message:
-        'Luogo di nascita non specificato: indica "locationId" oppure ' +
+        'Luogo non specificato: indica "locationId" oppure ' +
         'tutti e tre "latitude", "longitude" e "timezone".',
       code: 'LUOGO_MANCANTE',
     });

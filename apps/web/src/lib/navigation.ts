@@ -14,6 +14,7 @@ export const SECTIONS: readonly Section[] = [
   { href: '/', label: 'Tema natale' },
   { href: '/transiti', label: 'Transiti' },
   { href: '/cielo', label: 'Cielo' },
+  { href: '/elezione', label: 'Elezione' },
 ];
 
 /**

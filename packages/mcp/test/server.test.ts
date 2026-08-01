@@ -74,6 +74,16 @@ describe('superficie MCP', () => {
     expect(names).toContain('compute_transits');
     expect(names).toContain('find_transit_passages');
     expect(names).toContain('find_sky_events');
+    expect(names).toContain('find_election_hours');
+
+    const electionTool = tools.find((tool) => tool.name === 'find_election_hours');
+    // Il luogo è l'unico dato senza cui il tool non ha senso, e la descrizione
+    // deve dirlo: alba e tramonto non hanno un predefinito ragionevole.
+    expect(electionTool?.description).toMatch(/obbligatorio/i);
+    expect(electionTool?.description).toMatch(/ometti from/i);
+    // E deve chiudere la porta all'uso per cui verrebbe cercato per primo.
+    expect(electionTool?.description).toMatch(/sorteggio/i);
+    expect(electionTool?.inputSchema.required).toBeUndefined();
 
     const eventsTool = tools.find((tool) => tool.name === 'find_sky_events');
     // Anche qui la coppia va tenuta distinta: il calendario del cielo non è
@@ -551,5 +561,49 @@ describe('find_transit_passages', () => {
 
     expect(tool?.description).toMatch(/retrogradazione/i);
     expect(tool?.description).toMatch(/previsione/i);
+  });
+});
+
+describe('find_election_hours', () => {
+  it('elenca le ore planetarie di un luogo e i vuoti di corso', async () => {
+    const result = await client.callTool({
+      name: 'find_election_hours',
+      arguments: { latitude: 38.1166, longitude: 13.3636, timezone: 'Europe/Rome', from: '2029-08-24' },
+    });
+
+    const testo = textOf(result);
+    expect(testo).toContain('ELEZIONE');
+    expect(testo).toContain('ORE PLANETARIE');
+    expect(testo).toContain('LUNA VUOTA DI CORSO');
+    // Il 24 agosto 2029 è un venerdì: la prima ora dopo l'alba è di Venere.
+    expect(testo).toMatch(/06:34-07:40 Venere\s+d 1/);
+  });
+
+  it('rifiuta un arco più lungo di un mese', async () => {
+    const result = await client.callTool({
+      name: 'find_election_hours',
+      arguments: {
+        latitude: 38.1166,
+        longitude: 13.3636,
+        timezone: 'Europe/Rome',
+        from: '2029-08-01',
+        to: '2029-12-31',
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/massimo è 31/);
+  });
+
+  it('non calcola niente senza un luogo', async () => {
+    const result = await client.callTool({
+      name: 'find_election_hours',
+      arguments: { from: '2029-08-24' },
+    });
+
+    // Un luogo predefinito darebbe ore planetarie plausibili e di un'altra
+    // città: meglio un errore.
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/luogo/i);
   });
 });

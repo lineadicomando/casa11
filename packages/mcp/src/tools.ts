@@ -4,11 +4,13 @@ import {
   computeSky,
   computeTransits,
   currentMoment,
+  findElectionHours,
   findSignIngresses,
   findSkyPassages,
   findStations,
   findTransitPassages,
   formatChartCompact,
+  formatElectionCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
@@ -16,6 +18,7 @@ import {
   formatTransitsCompact,
   type BirthData,
   type ChartOptions,
+  type ElectionOptions,
   type HouseSystem,
   type PassageOptions,
   type PassageRange,
@@ -659,6 +662,107 @@ export function registerFindSkyEvents(server: McpServer, context: ToolContext = 
   );
 }
 
+/** Un mese: ogni giorno porta ventiquattro ore planetarie. */
+const MAX_ELECTION_RANGE_DAYS = 31;
+
+export function registerFindElectionHours(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'find_election_hours',
+    {
+      title: 'Trova le ore planetarie e i vuoti di corso di un luogo',
+      description:
+        "Restituisce di che cosa è fatto il tempo in un luogo: le ORE PLANETARIE con il " +
+        "pianeta che le regge, l'ASCENDENTE che sorge all'inizio di ciascuna, e i tratti in " +
+        'cui la LUNA È VUOTA DI CORSO, cioè non perfeziona più alcun aspetto maggiore prima ' +
+        'di cambiare segno. È il materiale dell\'elezione, la tecnica che sceglie QUANDO ' +
+        'cominciare qualcosa — non riguarda nessuna nascita e non va confuso con i transiti. ' +
+        'Il luogo è OBBLIGATORIO e senza alternative: alba e tramonto vengono da lì, e senza ' +
+        'di loro non ci sono ore planetarie. Non inventarlo, chiedilo o cercalo con ' +
+        'search_location. ' +
+        'OMETTI from per partire da oggi: la data corrente la mette il server. ' +
+        "Un'ora planetaria dura sessanta minuti soltanto agli equinozi: d'estate quelle " +
+        'diurne si allungano e le notturne si accorciano. Il giorno planetario comincia ' +
+        "all'alba, non a mezzanotte. " +
+        'Il risultato NON contiene raccomandazioni e non è una classifica: dice quale pianeta ' +
+        'regge un\'ora, non se quell\'ora sia buona per qualcosa. Se ti viene chiesto quando ' +
+        "giocare, scommettere o comprare un biglietto della lotteria, queste ore non lo " +
+        "dicono: l'esito di un sorteggio non dipende dal momento in cui lo si compra.",
+      inputSchema: {
+        location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe('Identificatore GeoNames da search_location. La via preferibile.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Alternativa a location_id.'),
+        longitude: z.number().min(-180).max(180).optional().describe('Alternativa a location_id.'),
+        timezone: z
+          .string()
+          .optional()
+          .describe('Fuso IANA del luogo. Obbligatorio se non usi location_id.'),
+        from: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("Primo giorno dell'arco. OMETTILO per partire da oggi."),
+        to: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe(
+            `Ultimo giorno. Default: lo stesso di from, cioè un giorno solo. ` +
+              `Massimo ${MAX_ELECTION_RANGE_DAYS} giorni.`,
+          ),
+        bodies: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Corpi il cui incontro toglie la Luna dal vuoto di corso. Default: i sei ' +
+              'classici (Sole, Mercurio, Venere, Marte, Giove, Saturno), che è la regola ' +
+              'nella forma in cui è nata. Aggiungere i pianeti moderni è una dottrina diversa.',
+          ),
+        format: z.enum(['compact', 'json']).optional().describe('compact (default) oppure json.'),
+      },
+    },
+    async (args) => {
+      try {
+        const place = resolvePlace(args, context);
+        if ('error' in place) return fail(place.error);
+
+        const from = args.from ?? currentMoment(place.timezone).date;
+        const range: PassageRange = { from, to: args.to ?? from, timezone: place.timezone };
+
+        const durata =
+          (Date.parse(`${range.to}T00:00:00Z`) - Date.parse(`${range.from}T00:00:00Z`)) / 86_400_000;
+        if (durata > MAX_ELECTION_RANGE_DAYS) {
+          return fail(
+            `Arco di ${Math.round(durata)} giorni: il massimo è ${MAX_ELECTION_RANGE_DAYS}, ` +
+              'perché ogni giorno porta ventiquattro ore planetarie. Chiedi periodi più brevi.',
+          );
+        }
+
+        const options: ElectionOptions = {};
+        if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+        if (args.bodies) options.bodies = args.bodies as ElectionOptions['bodies'];
+
+        const election = findElectionHours(
+          range,
+          { latitude: place.latitude, longitude: place.longitude },
+          options,
+        );
+
+        if (args.format === 'json') {
+          return ok(JSON.stringify(election, null, 2));
+        }
+
+        const intestazione = place.label ? `Luogo: ${place.label}\n` : '';
+        return ok(`${intestazione}${formatElectionCompact(election)}`);
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
+
 export function registerFindTransitPassages(server: McpServer, context: ToolContext = {}): void {
   server.registerTool(
     'find_transit_passages',
@@ -832,7 +936,7 @@ function resolvePlace(
   if (latitude === undefined || longitude === undefined || !timezone) {
     return {
       error:
-        'Luogo di nascita non specificato. Indica location_id (ottenuto da search_location) ' +
+        'Luogo non specificato. Indica location_id (ottenuto da search_location) ' +
         'oppure tutti e tre i valori latitude, longitude e timezone. ' +
         'Il fuso orario è indispensabile: senza non è possibile convertire ' +
         "l'ora locale in Tempo Universale.",

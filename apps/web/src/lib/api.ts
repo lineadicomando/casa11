@@ -11,12 +11,14 @@ import type {
   HouseSystem,
   NatalChart,
   PassageRange,
+  PlanetaryHour,
   SignIngress,
   SkyChart,
   SkyPassage,
   Station,
   TransitChart,
   TransitPassage,
+  VoidOfCourse,
 } from '@undicesimacasa/core';
 import type { Location } from '@undicesimacasa/geo';
 import type { BirthInput } from './birth';
@@ -143,6 +145,36 @@ export async function fetchSkyCalendar(
   return request<SkyCalendarResponse>(
     `/api/sky/calendar?${parameters}`,
     'Ricerca del calendario non riuscita',
+  );
+}
+
+export interface ElectionResponse {
+  range: PassageRange;
+  place: { label?: string; refined: boolean };
+  hours: PlanetaryHour[];
+  voids: VoidOfCourse[];
+  warnings: string[];
+}
+
+/**
+ * Compone i parametri dell'elezione.
+ *
+ * Il luogo è obbligatorio e non ha alternative: alba e tramonto vengono da lì.
+ * L'arco è corto per costruzione — ventiquattro ore planetarie al giorno
+ * riempiono in fretta uno schermo — e il fuso lo dà la località.
+ */
+export function electionParameters(location: Location, from: string, days: number): URLSearchParams {
+  return new URLSearchParams({
+    locationId: String(location.id),
+    from,
+    to: shiftDate(from, 'day', days),
+  });
+}
+
+export async function fetchElection(parameters: URLSearchParams): Promise<ElectionResponse> {
+  return request<ElectionResponse>(
+    `/api/election?${parameters}`,
+    'Calcolo dell\'elezione non riuscito',
   );
 }
 

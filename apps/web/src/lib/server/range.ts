@@ -40,15 +40,26 @@ export function resolvePassageRange(
    * nel cielo ce n'è una sola, e vale quello del motore.
    */
   dateCode = 'DATA_TRANSITO_NON_VALIDA',
+  /**
+   * Quanto vale l'arco quando `to` manca, e se un giorno solo sia un arco.
+   *
+   * `anno` per i calendari che guardano lontano: un pianeta lento chiude il
+   * suo andirivieni in quel giro di tempo. `giorno` per l'elezione, dove le
+   * righe sono ventiquattro al giorno e la domanda è quasi sempre su oggi —
+   * e dove `from` uguale a `to` non è un intervallo vuoto ma la richiesta
+   * più comune di tutte.
+   */
+  span: 'anno' | 'giorno' = 'anno',
 ): RequestedRange {
   const from = read(parameters, 'from', dateCode);
   const to = read(parameters, 'to', dateCode);
 
   const start = from ?? wallClock(now, timezone).date;
-  const end = to ?? addYear(start);
+  const end = to ?? (span === 'giorno' ? start : addYear(start));
 
   const durata = (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / GIORNO;
-  if (!Number.isFinite(durata) || durata <= 0) {
+  const minimo = span === 'giorno' ? 0 : 1;
+  if (!Number.isFinite(durata) || durata < minimo) {
     throw error(400, {
       message: `Intervallo vuoto: "${end}" non è successivo a "${start}".`,
       code: 'INTERVALLO_NON_VALIDO',
