@@ -64,7 +64,7 @@ function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
 }
 
 describe('superficie MCP', () => {
-  it('espone i cinque tool con descrizione e schema', async () => {
+  it('espone i sei tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
@@ -73,6 +73,14 @@ describe('superficie MCP', () => {
     expect(names).toContain('compute_sky');
     expect(names).toContain('compute_transits');
     expect(names).toContain('find_transit_passages');
+    expect(names).toContain('find_sky_events');
+
+    const eventsTool = tools.find((tool) => tool.name === 'find_sky_events');
+    // Anche qui la coppia va tenuta distinta: il calendario del cielo non è
+    // quello di una persona.
+    expect(eventsTool?.description).toMatch(/find_transit_passages/);
+    expect(eventsTool?.description).toMatch(/ometti from/i);
+    expect(eventsTool?.inputSchema.required).toBeUndefined();
 
     const skyTool = tools.find((tool) => tool.name === 'compute_sky');
     // La descrizione deve tenere separate le due domande: senza una nascita
@@ -412,6 +420,78 @@ describe('compute_sky', () => {
 
     const oggi = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' });
     expect(JSON.parse(textOf(result)).input.date).toBe(oggi);
+  });
+});
+
+describe('find_sky_events', () => {
+  it('elenca incontri, ingressi e stazioni di un arco', async () => {
+    const result = await client.callTool({
+      name: 'find_sky_events',
+      arguments: {
+        from: '2026-01-01',
+        to: '2026-12-31',
+        timezone: 'Europe/Rome',
+        bodies: ['saturno', 'nettuno'],
+      },
+    });
+
+    const testo = textOf(result);
+    expect(testo).toContain('INCONTRI IN CIELO');
+    expect(testo).toContain('EVENTI DEL CIELO');
+    // La congiunzione fra Saturno e Nettuno del 20 febbraio 2026, e l'ingresso
+    // di entrambi in Ariete: tre righe che descrivono lo stesso periodo.
+    expect(testo).toMatch(/2026-02-20 .*Saturno .*congiunzione .*Nettuno/);
+    expect(testo).toMatch(/Nettuno .*pesci → ariete/);
+  });
+
+  it('restringe l elenco a quel che è stato chiesto', async () => {
+    const result = await client.callTool({
+      name: 'find_sky_events',
+      arguments: { from: '2026-01-01', to: '2026-06-30', include: ['stazioni'] },
+    });
+
+    const testo = textOf(result);
+    expect(testo).toContain('STAZIONI');
+    expect(testo).not.toContain('INCONTRI IN CIELO');
+  });
+
+  it('trova le lunazioni quando la Luna è chiesta per nome', async () => {
+    const result = await client.callTool({
+      name: 'find_sky_events',
+      arguments: {
+        from: '2026-01-01',
+        to: '2026-01-31',
+        bodies: ['sole', 'luna'],
+        include: ['incontri'],
+        format: 'json',
+      },
+    });
+
+    const { passages } = JSON.parse(textOf(result));
+    const noviluni = passages.filter(
+      (p: { aspect: string }) => p.aspect === 'congiunzione',
+    );
+    expect(noviluni[0].exact).toBe('2026-01-18T19:52Z');
+  });
+
+  it('parte da oggi quando l arco non è indicato', async () => {
+    const result = await client.callTool({
+      name: 'find_sky_events',
+      arguments: { include: ['ingressi'], bodies: ['plutone'], format: 'json' },
+    });
+
+    const { range } = JSON.parse(textOf(result));
+    expect(range.from).toBe(new Date().toISOString().slice(0, 10));
+  });
+
+  it('rifiuta un arco oltre i tre anni suggerendo come rimediare', async () => {
+    const result = await client.callTool({
+      name: 'find_sky_events',
+      arguments: { from: '2026-01-01', to: '2036-01-01' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/tre anni/);
   });
 });
 

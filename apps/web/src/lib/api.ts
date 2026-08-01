@@ -11,7 +11,10 @@ import type {
   HouseSystem,
   NatalChart,
   PassageRange,
+  SignIngress,
   SkyChart,
+  SkyPassage,
+  Station,
   TransitChart,
   TransitPassage,
 } from '@undicesimacasa/core';
@@ -108,6 +111,38 @@ export function skyParameters(
 
 export async function fetchSky(parameters: URLSearchParams): Promise<SkyResponse> {
   return request<SkyResponse>(`/api/sky?${parameters}`, 'Calcolo del cielo non riuscito');
+}
+
+export interface SkyCalendarResponse {
+  range: PassageRange;
+  passages: SkyPassage[];
+  ingresses: SignIngress[];
+  stations: Station[];
+  warnings: string[];
+}
+
+/**
+ * Compone i parametri del calendario del cielo.
+ *
+ * Non porta il luogo, che qui non serve a niente: un incontro fra due pianeti
+ * avviene alla stessa ora ovunque lo si guardi. Resta il fuso, perché è in
+ * quello che le date vanno lette.
+ */
+export function skyCalendarParameters(moment: MomentInput, months: number): URLSearchParams {
+  return new URLSearchParams({
+    from: moment.date,
+    to: addMonths(moment.date, months),
+    timezone: moment.timezone,
+  });
+}
+
+export async function fetchSkyCalendar(
+  parameters: URLSearchParams,
+): Promise<SkyCalendarResponse> {
+  return request<SkyCalendarResponse>(
+    `/api/sky/calendar?${parameters}`,
+    'Ricerca del calendario non riuscita',
+  );
 }
 
 export interface TransitsResponse extends ChartResponse {

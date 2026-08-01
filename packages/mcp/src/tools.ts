@@ -4,10 +4,15 @@ import {
   computeSky,
   computeTransits,
   currentMoment,
+  findSignIngresses,
+  findSkyPassages,
+  findStations,
   findTransitPassages,
   formatChartCompact,
   formatPassagesCompact,
   formatSkyCompact,
+  formatSkyEventsCompact,
+  formatSkyPassagesCompact,
   formatTransitsCompact,
   type BirthData,
   type ChartOptions,
@@ -15,8 +20,10 @@ import {
   type PassageOptions,
   type PassageRange,
   type Place,
+  type SkyEventOptions,
   type SkyMoment,
   type SkyOptions,
+  type SkyPassageOptions,
   type TransitMoment,
   type TransitOptions,
 } from '@undicesimacasa/core';
@@ -512,6 +519,145 @@ function resolveObservation(
 
 /** Tre anni: oltre, la ricerca costa più di quanto valga il risultato. */
 const MAX_RANGE_DAYS = 1096;
+
+const SKY_EVENT_KINDS = ['incontri', 'ingressi', 'stazioni'] as const;
+
+export function registerFindSkyEvents(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'find_sky_events',
+    {
+      title: 'Trova che cosa succede in cielo',
+      description:
+        "Elenca che cosa accade in cielo nell'arco di tempo indicato, senza riferirlo a " +
+        'nessuna nascita: gli INCONTRI fra due corpi (compresi noviluni e pleniluni, che ' +
+        'sono la congiunzione e l\'opposizione fra Sole e Luna), gli INGRESSI nei segni e le ' +
+        'STAZIONI, cioè quando un pianeta si ferma e inverte il moto. ' +
+        'Sta a find_transit_passages come compute_sky sta a compute_transits: qui non c\'è ' +
+        'nessuno a cui riferire gli eventi. Se hai i dati di nascita e la domanda riguarda ' +
+        'quella persona, il tool giusto è find_transit_passages. ' +
+        'OMETTI from per partire da oggi: la data corrente la mette il server. ' +
+        'La Luna è esclusa per impostazione predefinita perché cambia segno ogni due giorni ' +
+        'e mezzo: chiedila per nome in bodies se ti servono le lunazioni. ' +
+        'Un ingresso non è sempre un progresso: un pianeta che retrograda rientra nel segno ' +
+        'da cui era uscito, e i tre attraversamenti sono un passaggio solo. ' +
+        "Restano istanti astronomici, non eventi che accadranno a qualcuno.",
+      inputSchema: {
+        from: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("Primo giorno dell'arco. OMETTILO per partire da oggi."),
+        to: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe(`Ultimo giorno. Default: un anno dopo l'inizio. Massimo ${MAX_RANGE_DAYS} giorni.`),
+        timezone: z
+          .string()
+          .optional()
+          .describe('Fuso IANA in cui leggere le date e gli istanti restituiti. Default: UTC.'),
+        include: z
+          .array(z.enum(SKY_EVENT_KINDS))
+          .optional()
+          .describe(
+            'Che cosa elencare. Default: tutto. Restringere accorcia la risposta quando ' +
+              'la domanda riguarda una cosa sola, es. ["ingressi"].',
+          ),
+        bodies: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Corpi da seguire, es. ["saturno", "nettuno"] oppure ["sole", "luna"] per le ' +
+              'lunazioni. Default: tutti tranne la Luna. Restringere rende leggibile un arco lungo.',
+          ),
+        minor_aspects: z
+          .boolean()
+          .optional()
+          .describe('Includi anche gli aspetti minori fra gli incontri. Default: false.'),
+        format: z.enum(['compact', 'json']).optional().describe('compact (default) oppure json.'),
+      },
+    },
+    async (args) => {
+      try {
+        const timezone = args.timezone ?? 'UTC';
+        const range = passageRange({ ...args, timezone_range: timezone }, timezone);
+
+        const durata =
+          (Date.parse(`${range.to}T00:00:00Z`) - Date.parse(`${range.from}T00:00:00Z`)) / 86_400_000;
+        if (durata > MAX_RANGE_DAYS) {
+          return fail(
+            `Arco di ${Math.round(durata)} giorni: il massimo è ${MAX_RANGE_DAYS}, cioè tre anni. ` +
+              "Chiedi periodi più brevi, uno dopo l'altro, oppure restringi bodies.",
+          );
+        }
+
+        const kinds = new Set<string>(args.include ?? SKY_EVENT_KINDS);
+
+        const passageOptions: SkyPassageOptions = { minorAspects: args.minor_aspects ?? false };
+        const eventOptions: SkyEventOptions = {};
+        if (context.ephemerisPath) {
+          passageOptions.ephemerisPath = context.ephemerisPath;
+          eventOptions.ephemerisPath = context.ephemerisPath;
+        }
+        if (args.bodies) {
+          passageOptions.bodies = args.bodies as SkyPassageOptions['bodies'];
+          eventOptions.bodies = args.bodies as SkyEventOptions['bodies'];
+        }
+
+        const incontri = kinds.has('incontri')
+          ? findSkyPassages(range, passageOptions)
+          : { passages: [], warnings: [] };
+        const ingressi = kinds.has('ingressi')
+          ? findSignIngresses(range, eventOptions)
+          : { ingresses: [], warnings: [] };
+        const stazioni = kinds.has('stazioni')
+          ? findStations(range, eventOptions)
+          : { stations: [], warnings: [] };
+
+        // Le tre ricerche attraversano gli stessi corpi: le avvertenze
+        // uscirebbero identiche, e ripeterle non aggiunge niente.
+        const warnings = [
+          ...new Set([...incontri.warnings, ...ingressi.warnings, ...stazioni.warnings]),
+        ];
+
+        if (args.format === 'json') {
+          return ok(
+            JSON.stringify(
+              {
+                range,
+                passages: incontri.passages,
+                ingresses: ingressi.ingresses,
+                stations: stazioni.stations,
+                warnings,
+              },
+              null,
+              2,
+            ),
+          );
+        }
+
+        const parti: string[] = [];
+        if (kinds.has('incontri')) {
+          parti.push(formatSkyPassagesCompact(incontri.passages, range, warnings));
+        }
+        if (kinds.has('ingressi') || kinds.has('stazioni')) {
+          parti.push(
+            formatSkyEventsCompact(
+              ingressi.ingresses,
+              stazioni.stations,
+              range,
+              kinds.has('incontri') ? [] : warnings,
+            ),
+          );
+        }
+
+        return ok(parti.join('\n\n'));
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
 
 export function registerFindTransitPassages(server: McpServer, context: ToolContext = {}): void {
   server.registerTool(

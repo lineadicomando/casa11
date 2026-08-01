@@ -2,7 +2,14 @@
   import type { HouseSystem, SkyChart } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
   import { onMount } from 'svelte';
-  import { fetchSky, RequestError, skyParameters } from '$lib/api';
+  import {
+    fetchSky,
+    fetchSkyCalendar,
+    RequestError,
+    skyCalendarParameters,
+    skyParameters,
+    type SkyCalendarResponse,
+  } from '$lib/api';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import AspectTable from '$lib/components/AspectTable.svelte';
   import BodyTable from '$lib/components/BodyTable.svelte';
@@ -10,6 +17,8 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
+  import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
+  import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
 
   let moment = $state(nowMoment());
@@ -22,6 +31,12 @@
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   let highlighted = $state<string | null>(null);
+
+  /** Il calendario è una seconda richiesta: costa, e non tutti lo vogliono. */
+  const MESI = 12;
+  let calendar = $state<SkyCalendarResponse | null>(null);
+  let loadingCalendar = $state(false);
+  let calendarError = $state<string | null>(null);
 
   const canSubmit = $derived(isCompleteMoment(moment));
 
@@ -44,6 +59,9 @@
       const body = await fetchSky(skyParameters(moment, { houseSystem, minorAspects }, location));
       sky = body.sky;
       placeLabel = body.place?.label ?? null;
+      // Il calendario partiva dal giorno precedente: si ricomincia da capo.
+      calendar = null;
+      calendarError = null;
     } catch (cause) {
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo del cielo non riuscito.';
@@ -56,6 +74,20 @@
   function submit(event: SubmitEvent): void {
     event.preventDefault();
     void load();
+  }
+
+  async function loadCalendar(): Promise<void> {
+    loadingCalendar = true;
+    calendarError = null;
+
+    try {
+      calendar = await fetchSkyCalendar(skyCalendarParameters(moment, MESI));
+    } catch (cause) {
+      calendarError =
+        cause instanceof RequestError ? cause.message : 'Ricerca del calendario non riuscita.';
+    } finally {
+      loadingCalendar = false;
+    }
   }
 
   function selectLocation(chosen: Location | null): void {
@@ -151,6 +183,37 @@
         <AspectTable aspects={sky.aspects} bind:highlighted />
       </div>
     </div>
+
+    <section class="calendario">
+      {#if calendar}
+        <div class="due">
+          <SkyPassageTable
+            passages={calendar.passages}
+            title="Incontri nei prossimi {MESI} mesi"
+          />
+          <SkyMotionTable ingresses={calendar.ingresses} stations={calendar.stations} />
+        </div>
+        <p class="suggerimento">
+          Il momento in cui due corpi formano un aspetto esatto, e quello in cui un corpo
+          cambia segno o inverte il moto. Qui il luogo non conta: un incontro fra due
+          pianeti avviene alla stessa ora ovunque lo si guardi. La Luna è esclusa — da
+          sola cambierebbe segno ogni due giorni e mezzo.
+        </p>
+      {:else}
+        <button
+          type="button"
+          class="secondario"
+          onclick={loadCalendar}
+          disabled={loadingCalendar}
+        >
+          {loadingCalendar ? 'Cerco…' : `Che cosa succede nei prossimi ${MESI} mesi?`}
+        </button>
+      {/if}
+
+      {#if calendarError}
+        <p class="errore" role="alert">{calendarError}</p>
+      {/if}
+    </section>
   </section>
 {/if}
 
@@ -260,5 +323,46 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+  }
+
+  .calendario {
+    display: block;
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--linea);
+  }
+
+  /* Incontri e movimenti sono due elenchi indipendenti, non due colonne dello
+     stesso: affiancarli evita di dover scorrere l'uno per arrivare all'altro. */
+  .due {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 60rem) {
+    .due {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .secondario {
+    padding: 0.5rem 1.1rem;
+    background: none;
+    color: var(--accento);
+    border: 1px solid var(--linea-forte);
+    border-radius: var(--raggio);
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .secondario:hover {
+    border-color: var(--accento);
+  }
+
+  .secondario:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

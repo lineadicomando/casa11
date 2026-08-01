@@ -4,6 +4,7 @@ import {
   registerComputeNatalChart,
   registerComputeSky,
   registerComputeTransits,
+  registerFindSkyEvents,
   registerFindTransitPassages,
   registerSearchLocation,
   type ToolContext,
@@ -29,7 +30,8 @@ export function createServer(context: ToolContext = {}): McpServer {
         'compute_transits. Data e ora vanno passate in ora locale, come segnate sul documento ' +
         'di nascita. Per sapere quando un transito diventa esatto, e quante volte, c\'è ' +
         'find_transit_passages. Senza una nascita non esistono transiti ma solo il cielo: ' +
-        'per quello c\'è compute_sky, che non chiede né data di nascita né luogo. ' +
+        'per quello c\'è compute_sky, che non chiede né data di nascita né luogo, e ' +
+        'find_sky_events per gli incontri, gli ingressi e le stazioni di un periodo. ' +
         'Per il presente ometti sempre la data: la data corrente la mette il server. ' +
         "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
     },
@@ -40,6 +42,7 @@ export function createServer(context: ToolContext = {}): McpServer {
   registerComputeSky(server, context);
   registerComputeTransits(server, context);
   registerFindTransitPassages(server, context);
+  registerFindSkyEvents(server, context);
   registerReferenceResources(server);
 
   return server;

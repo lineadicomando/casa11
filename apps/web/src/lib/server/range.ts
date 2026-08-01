@@ -34,9 +34,15 @@ export function resolvePassageRange(
   parameters: URLSearchParams,
   timezone: string,
   now: Date = new Date(),
+  /**
+   * Codice con cui rifiutare una data malformata. Nei passaggi natali le date
+   * in gioco sono due — la nascita e l'arco — e il codice deve dire quale;
+   * nel cielo ce n'è una sola, e vale quello del motore.
+   */
+  dateCode = 'DATA_TRANSITO_NON_VALIDA',
 ): RequestedRange {
-  const from = read(parameters, 'from');
-  const to = read(parameters, 'to');
+  const from = read(parameters, 'from', dateCode);
+  const to = read(parameters, 'to', dateCode);
 
   const start = from ?? wallClock(now, timezone).date;
   const end = to ?? addYear(start);
@@ -60,14 +66,14 @@ export function resolvePassageRange(
   return { range: { from: start, to: end, timezone }, explicit: from !== null };
 }
 
-function read(parameters: URLSearchParams, name: string): string | null {
+function read(parameters: URLSearchParams, name: string, code: string): string | null {
   const value = parameters.get(name);
   if (value === null || value === '') return null;
 
   if (!DATE_PATTERN.test(value)) {
     throw error(400, {
       message: `Valore di "${name}" non valido: atteso il formato YYYY-MM-DD.`,
-      code: 'DATA_TRANSITO_NON_VALIDA',
+      code,
     });
   }
   return value;
