@@ -81,8 +81,9 @@
    */
   let ultima = 0;
 
-  async function load(): Promise<void> {
-    if (!canSubmit) return;
+  /** `true` se il cielo a schermo è quello che questa chiamata ha chiesto. */
+  async function load(): Promise<boolean> {
+    if (!canSubmit) return false;
 
     const richiesta = ++ultima;
     loading = true;
@@ -90,25 +91,30 @@
 
     try {
       const body = await fetchSky(skyParameters(moment, { houseSystem, minorAspects }, location));
-      if (richiesta !== ultima) return;
+      if (richiesta !== ultima) return false;
       sky = body.sky;
       placeLabel = body.place?.label ?? null;
       // Il calendario partiva dal giorno precedente: si ricomincia da capo.
       calendar = null;
       calendarError = null;
+      return true;
     } catch (cause) {
-      if (richiesta !== ultima) return;
+      if (richiesta !== ultima) return false;
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo del cielo non riuscito.';
       sky = null;
+      return false;
     } finally {
       if (richiesta === ultima) loading = false;
     }
   }
 
-  function submit(event: SubmitEvent): void {
+  async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    void load();
+    // Premere «Calcola» vuol dire «ho finito di impostare»: il modulo si
+    // ritira e lascia lo schermo al risultato. Se il calcolo fallisce resta
+    // aperto, perché la cosa da correggere sta dentro i dettagli.
+    if (await load()) aperto = false;
   }
 
   async function loadCalendar(): Promise<void> {

@@ -74,17 +74,23 @@
    */
   let ultima = 0;
 
-  function submit(event: SubmitEvent): void {
+  async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    void calcola();
+    // Premere «Calcola» vuol dire «ho finito di impostare»: il modulo si
+    // ritira e lascia lo schermo al risultato. Se il calcolo fallisce resta
+    // aperto, perché la cosa da correggere sta dentro i dettagli.
+    if (await calcola()) aperto = false;
   }
 
   /**
    * Il passo ricalcola con quello che c'è nel modulo in quel momento, nascita
    * compresa: una freccia è un invio come un altro, e non congela il modulo.
+   *
+   * Restituisce `true` se il quadro a schermo è quello che questa chiamata ha
+   * chiesto — e non quello di una richiesta più recente che l'ha scavalcata.
    */
-  async function calcola(): Promise<void> {
-    if (!canSubmit) return;
+  async function calcola(): Promise<boolean> {
+    if (!canSubmit) return false;
 
     const richiesta = ++ultima;
     loading = true;
@@ -94,19 +100,21 @@
       const body = await fetchTransits(
         transitParameters(birth, { houseSystem, minorAspects }, transit),
       );
-      if (richiesta !== ultima) return;
+      if (richiesta !== ultima) return false;
       chart = body.chart;
       transits = body.transits;
       placeLabel = body.place?.label ?? null;
       // Il calendario riguardava l'istante precedente: si ricomincia da capo.
       passages = null;
       passagesError = null;
+      return true;
     } catch (cause) {
-      if (richiesta !== ultima) return;
+      if (richiesta !== ultima) return false;
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo dei transiti non riuscito.';
       chart = null;
       transits = null;
+      return false;
     } finally {
       if (richiesta === ultima) loading = false;
     }
