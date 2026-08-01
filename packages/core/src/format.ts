@@ -10,8 +10,10 @@ import type {
   NatalPointId,
   PassageRange,
   Place,
+  SignIngress,
   SkyChart,
   SkyPassage,
+  Station,
   TransitChart,
   TransitPassage,
 } from './types.js';
@@ -175,6 +177,50 @@ export function formatSkyPassagesCompact(
       `${passage.local.slice(0, 16).replace('T', ' ')} ` +
         `${bodyName(passage.faster).padEnd(11)} ${passage.aspect.padEnd(15)} ` +
         `${bodyName(passage.slower).padEnd(11)} ${motion}  ${window}`,
+    );
+  }
+
+  lines.push(...warningLines(warnings));
+
+  return lines.join('\n');
+}
+
+/**
+ * Rende in forma tabellare ingressi e stazioni.
+ *
+ * Le due tabelle stanno insieme perché rispondono alla stessa domanda — che
+ * cosa cambia nel cielo in questo periodo — e perché spesso si spiegano a
+ * vicenda: un pianeta che si ferma appena dentro un segno lo lascerà di nuovo.
+ */
+export function formatSkyEventsCompact(
+  ingresses: readonly SignIngress[],
+  stations: readonly Station[],
+  range: PassageRange,
+  warnings: readonly string[] = [],
+): string {
+  const lines = [`EVENTI DEL CIELO — dal ${range.from} al ${range.to} (${range.timezone})`];
+
+  lines.push('', 'INGRESSI NEI SEGNI');
+  if (ingresses.length === 0) {
+    lines.push('(nessuno in questo arco di tempo)');
+  }
+  for (const ingress of ingresses) {
+    lines.push(
+      `${ingress.local.slice(0, 16).replace('T', ' ')} ` +
+        `${bodyName(ingress.body).padEnd(11)} ${ingress.from} → ${ingress.sign}` +
+        `${ingress.retrograde ? '  (all\'indietro)' : ''}`,
+    );
+  }
+
+  lines.push('', 'STAZIONI');
+  if (stations.length === 0) {
+    lines.push('(nessuna in questo arco di tempo)');
+  }
+  for (const station of stations) {
+    lines.push(
+      `${station.local.slice(0, 16).replace('T', ' ')} ` +
+        `${bodyName(station.body).padEnd(11)} ${station.direction.padEnd(11)} ` +
+        `${formatZodiacal(station.longitude)}`,
     );
   }
 

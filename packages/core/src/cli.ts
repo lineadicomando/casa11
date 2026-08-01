@@ -6,10 +6,12 @@ import {
   formatChartCompact,
   formatPassagesCompact,
   formatSkyCompact,
+  formatSkyEventsCompact,
   formatSkyPassagesCompact,
   formatTransitsCompact,
 } from './format.js';
 import { findTransitPassages } from './passages.js';
+import { findSignIngresses, findStations } from './sky-events.js';
 import { findSkyPassages } from './sky-passages.js';
 import { DEFAULT_PASSAGE_BODIES } from './constants.js';
 import { computeSky } from './sky.js';
@@ -22,6 +24,7 @@ import type {
   PassageOptions,
   PassageRange,
   SkyMoment,
+  SkyEventOptions,
   SkyOptions,
   SkyPassageOptions,
   TransitMoment,
@@ -74,6 +77,7 @@ Cielo
                         assi e case, che vogliono anche l'ora
   --sky --passages      Il calendario degli incontri fra i corpi in cielo,
                         con --from, --to e --moon come sopra
+  --sky --events        Ingressi nei segni e stazioni, con --from e --to
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -94,6 +98,7 @@ function main(argv: string[]): number {
       transits: { type: 'boolean', default: false },
       passages: { type: 'boolean', default: false },
       sky: { type: 'boolean', default: false },
+      events: { type: 'boolean', default: false },
       from: { type: 'string' },
       to: { type: 'string' },
       moon: { type: 'boolean', default: false },
@@ -116,7 +121,18 @@ function main(argv: string[]): number {
       process.stderr.write('--sky non si combina con --transits: un transito vuole un tema.\n');
       return 2;
     }
-    return values.passages ? printSkyPassages(values) : printSky(values);
+    if (values.passages && values.events) {
+      process.stderr.write('--passages e --events sono due elenchi diversi: chiedine uno.\n');
+      return 2;
+    }
+    if (values.passages) return printSkyPassages(values);
+    if (values.events) return printSkyEvents(values);
+    return printSky(values);
+  }
+
+  if (values.events) {
+    process.stderr.write('--events richiede --sky: ingressi e stazioni non hanno un tema.\n');
+    return 2;
   }
 
   const missing = (['date', 'lat', 'lon', 'tz'] as const).filter((key) => !values[key]);
@@ -268,6 +284,40 @@ function printSkyPassages(values: {
     values.json
       ? `${JSON.stringify({ range, passages, warnings }, null, 2)}\n`
       : `${formatSkyPassagesCompact(passages, range, warnings)}\n`,
+  );
+  return 0;
+}
+
+/**
+ * Stampa ingressi e stazioni dell'arco.
+ *
+ * Sono gli eventi di un corpo solo: non c'è nessuna coppia, e quindi nemmeno
+ * la Luna da escludere per rumore — anche se resta fuori dai predefiniti,
+ * dove cambierebbe segno ogni due giorni e mezzo.
+ */
+function printSkyEvents(values: {
+  from?: string | undefined;
+  to?: string | undefined;
+  tz?: string | undefined;
+  ephe?: string | undefined;
+  moon: boolean;
+  json: boolean;
+}): number {
+  const timezone = values.tz ?? systemTimezone();
+  const range = passageRange({ from: values.from, to: values.to }, timezone);
+
+  const options: SkyEventOptions = {};
+  if (values.ephe) options.ephemerisPath = values.ephe;
+  if (values.moon) options.bodies = [...DEFAULT_PASSAGE_BODIES, 'luna'];
+
+  const { ingresses, warnings } = findSignIngresses(range, options);
+  const { stations, warnings: more } = findStations(range, options);
+  const tutte = [...new Set([...warnings, ...more])];
+
+  process.stdout.write(
+    values.json
+      ? `${JSON.stringify({ range, ingresses, stations, warnings: tutte }, null, 2)}\n`
+      : `${formatSkyEventsCompact(ingresses, stations, range, tutte)}\n`,
   );
   return 0;
 }

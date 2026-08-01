@@ -483,6 +483,56 @@ export interface SkyPassage {
   window?: { start: string; end: string };
 }
 
+export interface SkyEventOptions {
+  /** Corpi da seguire. Default: `DEFAULT_PASSAGE_BODIES`, cioè senza la Luna. */
+  bodies?: BodyId[];
+  /** Percorso della cartella con i file `.se1`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Il passaggio di un corpo da un segno al successivo.
+ *
+ * Non è sempre un progresso: un pianeta che retrograda rientra nel segno da
+ * cui era uscito, e più tardi lo lascia di nuovo. Ogni attraversamento è un
+ * evento a sé, e `from` dice da dove arriva proprio perché il verso non è
+ * scontato.
+ */
+export interface SignIngress {
+  body: BodyId;
+  /** Il segno in cui entra. */
+  sign: ZodiacSign;
+  /** Il segno che lascia. */
+  from: ZodiacSign;
+  /** Istante UTC dell'attraversamento, ISO 8601. */
+  exact: string;
+  /** Lo stesso istante nel fuso richiesto. */
+  local: string;
+  /** `true` se entra andando all'indietro. */
+  retrograde: boolean;
+}
+
+/**
+ * L'istante in cui un corpo si ferma e inverte il moto.
+ *
+ * La longitudine è parte dell'evento e non un dettaglio: è il grado su cui il
+ * pianeta indugia per giorni, e su cui tornerà due volte.
+ */
+export interface Station {
+  body: BodyId;
+  /** `retrograda` quando comincia a tornare indietro, `diretta` quando riprende. */
+  direction: 'retrograda' | 'diretta';
+  /** Istante UTC della stazione, ISO 8601. */
+  exact: string;
+  /** Lo stesso istante nel fuso richiesto. */
+  local: string;
+  /** Longitudine eclittica in cui si ferma. */
+  longitude: number;
+  sign: ZodiacSign;
+  /** Posizione all'interno del segno, [0, 30). */
+  signDegree: number;
+}
+
 export interface TransitChart {
   input: TransitMoment;
   time: ResolvedTime;

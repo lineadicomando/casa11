@@ -10,6 +10,7 @@ export { computeSky } from './sky.js';
 export { computeTransits, natalTargets } from './transits.js';
 export { findTransitPassages } from './passages.js';
 export { findSkyPassages } from './sky-passages.js';
+export { findSignIngresses, findStations } from './sky-events.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
 export {
@@ -32,6 +33,7 @@ export {
   formatChartCompact,
   formatPassagesCompact,
   formatSkyCompact,
+  formatSkyEventsCompact,
   formatSkyPassagesCompact,
   formatTransitsCompact,
 } from './format.js';
@@ -91,8 +93,11 @@ export type {
   SkyChart,
   SkyMoment,
   SkyOptions,
+  SkyEventOptions,
   SkyPassage,
   SkyPassageOptions,
+  SignIngress,
+  Station,
   TransitAspect,
   TransitChart,
   TransitMoment,
