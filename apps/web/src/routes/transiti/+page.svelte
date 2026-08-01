@@ -161,8 +161,19 @@
       compact={!aperto}
     />
 
-    <button type="button" class="commuta" aria-expanded={aperto} onclick={commuta}>
-      {aperto ? 'Chiudi' : 'Nascita e opzioni'}
+    <!-- La forma segue il mestiere. Aperto, il pulsante chiude, e una X lo dice
+         da sé stando nell'angolo come in una finestra. Chiuso, il mestiere è
+         l'opposto e nessun simbolo lo esprime: solo il testo dice che cosa c'è
+         dietro. L'angolo però è lo stesso, perché la striscia è alta una riga. -->
+    <button
+      type="button"
+      class="commuta"
+      class:chiusura={aperto}
+      aria-expanded={aperto}
+      aria-label={aperto ? 'Chiudi i dettagli' : undefined}
+      onclick={commuta}
+    >
+      {aperto ? '×' : 'Nascita e opzioni'}
     </button>
   </div>
 
@@ -272,6 +283,8 @@
     border: 1px solid var(--linea);
     border-radius: var(--raggio);
     padding: 1.5rem;
+    /* Riferimento per la X, che sta nell'angolo del riquadro e non nella riga. */
+    position: relative;
   }
 
   /* Chiuso, il modulo resta appeso in cima alla pagina: le frecce servono
@@ -309,6 +322,36 @@
 
   .commuta:hover {
     border-color: var(--accento);
+  }
+
+  /* Fuori dal flusso: è arredo del riquadro, non una terza colonna nella riga
+     dei campi, che è il modo in cui si faceva notare prima. */
+  .commuta.chiusura {
+    position: absolute;
+    top: 0.7rem;
+    /* Lo stesso scostamento del padding della striscia: così il pulsante non
+       si sposta di lato passando da una forma all'altra. */
+    right: 1rem;
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--testo-tenue);
+    border-color: transparent;
+  }
+
+  .commuta.chiusura:hover {
+    color: var(--accento);
+    border-color: var(--linea-forte);
+  }
+
+  /* Aperto, la X occupa l'angolo senza stare nella riga: i campi devono
+     lasciarle il posto, o il campo dell'ora le finirebbe sotto. */
+  .modulo:not(.chiuso) .testa {
+    padding-right: 2.5rem;
   }
 
   .dettagli {
