@@ -6,6 +6,7 @@
  */
 
 export { computeNatalChart } from './chart.js';
+export { computeSky } from './sky.js';
 export { computeTransits, natalTargets } from './transits.js';
 export { findTransitPassages } from './passages.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
@@ -17,12 +18,19 @@ export {
   resetEphemerisCache,
   type EphemerisContext,
 } from './ephemeris.js';
-export { currentMoment, resolveTime, toJulianDay, type TimeResolution } from './time.js';
+export {
+  currentMoment,
+  resolveTime,
+  systemTimezone,
+  toJulianDay,
+  type TimeResolution,
+} from './time.js';
 export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
 export {
   formatChartCompact,
   formatPassagesCompact,
+  formatSkyCompact,
   formatTransitsCompact,
 } from './format.js';
 export { ChartError, type ChartErrorCode } from './errors.js';
@@ -72,10 +80,14 @@ export type {
   NatalPointId,
   PassageOptions,
   PassageRange,
+  Place,
   PointAspect,
   ResolvedTime,
   Sect,
   SiderealTime,
+  SkyChart,
+  SkyMoment,
+  SkyOptions,
   TransitAspect,
   TransitChart,
   TransitMoment,

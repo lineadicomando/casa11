@@ -2,10 +2,16 @@
 import { parseArgs } from 'node:util';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
-import { formatChartCompact, formatPassagesCompact, formatTransitsCompact } from './format.js';
+import {
+  formatChartCompact,
+  formatPassagesCompact,
+  formatSkyCompact,
+  formatTransitsCompact,
+} from './format.js';
 import { findTransitPassages } from './passages.js';
 import { DEFAULT_PASSAGE_BODIES } from './constants.js';
-import { currentMoment } from './time.js';
+import { computeSky } from './sky.js';
+import { currentMoment, systemTimezone } from './time.js';
 import { computeTransits } from './transits.js';
 import type {
   BirthData,
@@ -13,6 +19,8 @@ import type {
   HouseSystem,
   PassageOptions,
   PassageRange,
+  SkyMoment,
+  SkyOptions,
   TransitMoment,
   TransitOptions,
 } from './types.js';
@@ -23,6 +31,7 @@ casa11 — calcolo del tema natale da riga di comando
   casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
   casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome \\
          --transits --on 2026-08-15
+  casa11 --sky
 
 Opzioni
   --date <YYYY-MM-DD>   Data di nascita locale (obbligatoria)
@@ -50,6 +59,16 @@ Passaggi
   --from <YYYY-MM-DD>   Inizio dell'arco. Se omesso, oggi
   --to <YYYY-MM-DD>     Fine dell'arco. Se omessa, un anno dopo l'inizio
   --moon                Includi la Luna, esclusa perché ne perfeziona a migliaia
+
+Cielo
+  --sky                 Il cielo di un istante, senza nessun tema natale.
+                        Non richiede né data di nascita né luogo
+  --on <YYYY-MM-DD>     Giorno. Se omesso, adesso
+  --at <HH:mm>          Ora. Se omessa, mezzogiorno locale
+  --tz <IANA>           Fuso in cui leggere e scrivere l'istante.
+                        Se omesso, quello di sistema
+  --lat --lon           Luogo da cui si guarda: facoltativo, serve solo ad
+                        assi e case, che vogliono anche l'ora
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -69,6 +88,7 @@ function main(argv: string[]): number {
       help: { type: 'boolean', default: false },
       transits: { type: 'boolean', default: false },
       passages: { type: 'boolean', default: false },
+      sky: { type: 'boolean', default: false },
       from: { type: 'string' },
       to: { type: 'string' },
       moon: { type: 'boolean', default: false },
@@ -82,6 +102,16 @@ function main(argv: string[]): number {
   if (values.help) {
     process.stdout.write(USAGE);
     return 0;
+  }
+
+  // Il cielo si calcola prima di controllare i dati di nascita: è la sola
+  // domanda del programma che non ne ha bisogno.
+  if (values.sky) {
+    if (values.transits || values.passages) {
+      process.stderr.write('--sky non si combina con --transits né con --passages.\n');
+      return 2;
+    }
+    return printSky(values);
   }
 
   const missing = (['date', 'lat', 'lon', 'tz'] as const).filter((key) => !values[key]);
@@ -136,7 +166,7 @@ function main(argv: string[]): number {
     const orphans = (['on', 'at', 'transit-tz'] as const).filter((key) => values[key]);
     if (orphans.length > 0) {
       process.stderr.write(
-        `${orphans.map((o) => `--${o}`).join(', ')} richiede --transits.\n`,
+        `${orphans.map((o) => `--${o}`).join(', ')} richiede --transits oppure --sky.\n`,
       );
       return 2;
     }
@@ -147,7 +177,7 @@ function main(argv: string[]): number {
     return 0;
   }
 
-  const moment = transitMoment(values, birth.timezone);
+  const moment = momentFrom(values, birth.timezone);
   const transitOptions: TransitOptions = { minorAspects: values.minor };
   if (values.ephe) transitOptions.ephemerisPath = values.ephe;
 
@@ -156,6 +186,52 @@ function main(argv: string[]): number {
     values.json
       ? `${JSON.stringify({ chart, transits }, null, 2)}\n`
       : `${formatTransitsCompact(chart, transits)}\n`,
+  );
+  return 0;
+}
+
+/**
+ * Stampa il cielo di un istante.
+ *
+ * Nessun parametro è obbligatorio, ed è il punto: `casa11 --sky` risponde
+ * subito. Il fuso, se non indicato, è quello della macchina — non sposta il
+ * cielo, decide solo come vengono scritte data e ora.
+ */
+function printSky(values: {
+  on?: string | undefined;
+  at?: string | undefined;
+  tz?: string | undefined;
+  'transit-tz'?: string | undefined;
+  lat?: string | undefined;
+  lon?: string | undefined;
+  houses?: string | undefined;
+  ephe?: string | undefined;
+  minor: boolean;
+  json: boolean;
+}): number {
+  if (values['transit-tz']) {
+    process.stderr.write('Con --sky il fuso si indica con --tz.\n');
+    return 2;
+  }
+  // Mezzo luogo non è un luogo: senza una delle due coordinate assi e case
+  // uscirebbero calcolati su un meridiano arbitrario.
+  if (Boolean(values.lat) !== Boolean(values.lon)) {
+    process.stderr.write('--lat e --lon vanno indicati insieme.\n');
+    return 2;
+  }
+
+  const moment: SkyMoment = momentFrom(values, values.tz ?? systemTimezone());
+
+  const options: SkyOptions = { minorAspects: values.minor };
+  if (values.houses) options.houseSystem = values.houses as HouseSystem;
+  if (values.ephe) options.ephemerisPath = values.ephe;
+  if (values.lat && values.lon) {
+    options.place = { latitude: Number(values.lat), longitude: Number(values.lon) };
+  }
+
+  const sky = computeSky(moment, options);
+  process.stdout.write(
+    values.json ? `${JSON.stringify(sky, null, 2)}\n` : `${formatSkyCompact(sky)}\n`,
   );
   return 0;
 }
@@ -183,17 +259,17 @@ function addYear(date: string): string {
 }
 
 /**
- * L'istante del transito.
+ * L'istante di cui si vuole il cielo, che sia in rapporto a un tema o no.
  *
  * Senza `--on` vale adesso, ora compresa: chi non indica un giorno vuole il
  * cielo di questo momento. Con un giorno ma senza `--at` decide il motore,
  * che ripiega su mezzogiorno e lo dichiara fra le avvertenze.
  */
-function transitMoment(
+function momentFrom(
   values: { on?: string | undefined; at?: string | undefined; 'transit-tz'?: string | undefined },
-  birthTimezone: string,
+  fallbackTimezone: string,
 ): TransitMoment {
-  const timezone = values['transit-tz'] ?? birthTimezone;
+  const timezone = values['transit-tz'] ?? fallbackTimezone;
 
   if (!values.on) {
     const now = currentMoment(timezone);

@@ -116,6 +116,17 @@ export function currentMoment(timezone: string): LocalMoment {
   };
 }
 
+/**
+ * Il fuso orario del sistema su cui gira il processo.
+ *
+ * Non cambia il cielo — l'istante è uno solo, ovunque lo si guardi — ma
+ * decide come vengono scritte data e ora. Esiste perché chiedere il cielo di
+ * adesso non debba costringere a dichiarare anche dove si è.
+ */
+export function systemTimezone(): string {
+  return DateTime.local().zoneName ?? 'UTC';
+}
+
 function normalizeTime(time: string): string {
   return time.length === 5 ? `${time}:00` : time;
 }

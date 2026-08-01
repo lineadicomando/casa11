@@ -1,8 +1,8 @@
 import { computeAspects } from './aspects.js';
 import { DEFAULT_BODIES } from './constants.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
-import { ChartError } from './errors.js';
 import { computeHouses, houseOf } from './houses.js';
+import { validatePlace } from './place.js';
 import { chartSect, computePartOfFortune } from './points.js';
 import { localSiderealTime } from './sidereal.js';
 import { resolveTime } from './time.js';
@@ -27,7 +27,7 @@ import type { BirthData, ChartOptions, NatalChart } from './types.js';
  * ```
  */
 export function computeNatalChart(birth: BirthData, options: ChartOptions = {}): NatalChart {
-  validateCoordinates(birth);
+  validatePlace(birth);
 
   const houseSystem = options.houseSystem ?? 'placidus';
   const bodyIds = options.bodies ?? DEFAULT_BODIES;
@@ -102,19 +102,4 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
   }
 
   return chart;
-}
-
-function validateCoordinates(birth: BirthData): void {
-  if (!Number.isFinite(birth.latitude) || birth.latitude < -90 || birth.latitude > 90) {
-    throw new ChartError(
-      'COORDINATE_NON_VALIDE',
-      `Latitudine ${birth.latitude} fuori intervallo: attesa fra -90 e 90.`,
-    );
-  }
-  if (!Number.isFinite(birth.longitude) || birth.longitude < -180 || birth.longitude > 180) {
-    throw new ChartError(
-      'COORDINATE_NON_VALIDE',
-      `Longitudine ${birth.longitude} fuori intervallo: attesa fra -180 e 180.`,
-    );
-  }
 }

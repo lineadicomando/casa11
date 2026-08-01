@@ -1,10 +1,15 @@
 import { NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
 import type {
-  BirthData,
+  Angles,
+  Aspect,
+  CelestialBody,
+  House,
   NatalChart,
   NatalPointId,
   PassageRange,
+  Place,
+  SkyChart,
   TransitChart,
   TransitPassage,
 } from './types.js';
@@ -34,12 +39,7 @@ export function formatChartCompact(chart: NatalChart): string {
       (chart.sect ? ` | Settore: ${chart.sect}` : ''),
   );
 
-  lines.push('', 'CORPI');
-  for (const body of chart.bodies) {
-    const retro = body.retrograde ? ' R' : '  ';
-    const house = body.house !== undefined ? ` casa ${String(body.house).padStart(2)}` : '';
-    lines.push(`${body.name.padEnd(11)} ${formatZodiacal(body.longitude).padEnd(11)}${retro}${house}`);
-  }
+  lines.push('', 'CORPI', ...bodyLines(chart.bodies));
 
   if (chart.partOfFortune) {
     const house =
@@ -49,42 +49,50 @@ export function formatChartCompact(chart: NatalChart): string {
     );
   }
 
-  if (chart.angles) {
-    lines.push('', 'ASSI');
-    lines.push(`ASC ${formatZodiacal(chart.angles.ascendant)}   MC  ${formatZodiacal(chart.angles.midheaven)}`);
-    lines.push(`DSC ${formatZodiacal(chart.angles.descendant)}   IC  ${formatZodiacal(chart.angles.imumCoeli)}`);
+  if (chart.angles) lines.push('', 'ASSI', ...angleLines(chart.angles));
+  if (chart.houses.length > 0) lines.push('', 'CUSPIDI', ...cuspLines(chart.houses));
+
+  lines.push('', 'ASPETTI', ...aspectLines(chart));
+  lines.push(...warningLines(chart.warnings));
+
+  return lines.join('\n');
+}
+
+/**
+ * Rende in forma tabellare il cielo di un istante.
+ *
+ * L'intestazione dice che cosa manca e perché: senza luogo non ci sono assi
+ * né case, e chi legge non deve chiedersi se siano stati dimenticati.
+ */
+export function formatSkyCompact(sky: SkyChart): string {
+  const { input, time } = sky;
+
+  const when = time.timeKnown
+    ? `${input.date} ${input.time} (${input.timezone}, UTC${formatOffset(time.offsetMinutes)})`
+    : `${input.date} (ora non indicata, mezzogiorno locale)`;
+
+  const lines = [
+    `CIELO — ${when}`,
+    `Effemeridi: ${sky.ephemerisMode} | UT: ${time.utc}`,
+  ];
+
+  if (sky.place) {
+    const details = [`Luogo: ${formatPlace(sky.place)}`];
+    if (sky.houseSystem) details.push(`Case: ${sky.houseSystem}`);
+    if (sky.siderealTime) details.push(`Tempo siderale: ${sky.siderealTime.formatted}`);
+    if (sky.sect) details.push(`Settore: ${sky.sect}`);
+    lines.push(details.join(' | '));
+  } else {
+    lines.push('Senza luogo: posizioni valide ovunque, nessun asse e nessuna casa.');
   }
 
-  if (chart.houses.length > 0) {
-    lines.push('', 'CUSPIDI');
-    for (let i = 0; i < chart.houses.length; i += 3) {
-      lines.push(
-        chart.houses
-          .slice(i, i + 3)
-          .map((h) => `${String(h.number).padStart(2)}. ${formatZodiacal(h.longitude).padEnd(11)}`)
-          .join(' '),
-      );
-    }
-  }
+  lines.push('', 'CORPI', ...bodyLines(sky.bodies));
 
-  lines.push('', 'ASPETTI');
-  if (chart.aspects.length === 0) {
-    lines.push('(nessuno entro le orbite previste)');
-  }
-  for (const aspect of chart.aspects) {
-    const from = nameOf(chart, aspect.from);
-    const to = nameOf(chart, aspect.to);
-    const direction = aspect.applying ? 'applicativo' : 'separativo';
-    lines.push(
-      `${from.padEnd(11)} ${aspect.aspect.padEnd(15)} ${to.padEnd(11)} ` +
-        `${formatDegrees(aspect.orb).padStart(7)}  ${direction}`,
-    );
-  }
+  if (sky.angles) lines.push('', 'ASSI', ...angleLines(sky.angles));
+  if (sky.houses.length > 0) lines.push('', 'CUSPIDI', ...cuspLines(sky.houses));
 
-  if (chart.warnings.length > 0) {
-    lines.push('', 'AVVERTENZE');
-    for (const warning of chart.warnings) lines.push(`- ${warning}`);
-  }
+  lines.push('', 'ASPETTI', ...aspectLines(sky));
+  lines.push(...warningLines(sky.warnings));
 
   return lines.join('\n');
 }
@@ -113,15 +121,8 @@ export function formatTransitsCompact(natal: NatalChart, transits: TransitChart)
     `Case natali: ${natal.houseSystem} | Effemeridi: ${transits.ephemerisMode} | UT: ${time.utc}`,
   );
 
-  lines.push('', 'IN TRANSITO');
-  for (const body of transits.transiting) {
-    const retro = body.retrograde ? ' R' : '  ';
-    // La casa è quella natale in cui il transito cade: è il senso della colonna.
-    const house = body.house !== undefined ? ` casa ${String(body.house).padStart(2)}` : '';
-    lines.push(
-      `${body.name.padEnd(11)} ${formatZodiacal(body.longitude).padEnd(11)}${retro}${house}`,
-    );
-  }
+  // La casa è quella natale in cui il transito cade: è il senso della colonna.
+  lines.push('', 'IN TRANSITO', ...bodyLines(transits.transiting));
 
   lines.push('', 'ASPETTI (in transito → natale)');
   if (transits.aspects.length === 0) {
@@ -137,10 +138,7 @@ export function formatTransitsCompact(natal: NatalChart, transits: TransitChart)
     );
   }
 
-  if (transits.warnings.length > 0) {
-    lines.push('', 'AVVERTENZE');
-    for (const warning of transits.warnings) lines.push(`- ${warning}`);
-  }
+  lines.push(...warningLines(transits.warnings));
 
   return lines.join('\n');
 }
@@ -188,15 +186,60 @@ export function formatPassagesCompact(
     );
   }
 
-  if (warnings.length > 0) {
-    lines.push('', 'AVVERTENZE');
-    for (const warning of warnings) lines.push(`- ${warning}`);
-  }
+  lines.push(...warningLines(warnings));
 
   return lines.join('\n');
 }
 
-function nameOf(chart: NatalChart, id: string): string {
+/** Una riga per corpo: nome, posizione zodiacale, moto, casa se c'è. */
+function bodyLines(bodies: readonly CelestialBody[]): string[] {
+  return bodies.map((body) => {
+    const retro = body.retrograde ? ' R' : '  ';
+    const house = body.house !== undefined ? ` casa ${String(body.house).padStart(2)}` : '';
+    return `${body.name.padEnd(11)} ${formatZodiacal(body.longitude).padEnd(11)}${retro}${house}`;
+  });
+}
+
+function angleLines(angles: Angles): string[] {
+  return [
+    `ASC ${formatZodiacal(angles.ascendant)}   MC  ${formatZodiacal(angles.midheaven)}`,
+    `DSC ${formatZodiacal(angles.descendant)}   IC  ${formatZodiacal(angles.imumCoeli)}`,
+  ];
+}
+
+/** Le dodici cuspidi, tre per riga: dodici righe da sole occuperebbero uno schermo. */
+function cuspLines(houses: readonly House[]): string[] {
+  const lines: string[] = [];
+  for (let i = 0; i < houses.length; i += 3) {
+    lines.push(
+      houses
+        .slice(i, i + 3)
+        .map((h) => `${String(h.number).padStart(2)}. ${formatZodiacal(h.longitude).padEnd(11)}`)
+        .join(' '),
+    );
+  }
+  return lines;
+}
+
+function aspectLines(chart: { bodies: readonly CelestialBody[]; aspects: readonly Aspect[] }): string[] {
+  if (chart.aspects.length === 0) return ['(nessuno entro le orbite previste)'];
+
+  return chart.aspects.map((aspect) => {
+    const direction = aspect.applying ? 'applicativo' : 'separativo';
+    return (
+      `${nameOf(chart, aspect.from).padEnd(11)} ${aspect.aspect.padEnd(15)} ` +
+      `${nameOf(chart, aspect.to).padEnd(11)} ` +
+      `${formatDegrees(aspect.orb).padStart(7)}  ${direction}`
+    );
+  });
+}
+
+function warningLines(warnings: readonly string[]): string[] {
+  if (warnings.length === 0) return [];
+  return ['', 'AVVERTENZE', ...warnings.map((warning) => `- ${warning}`)];
+}
+
+function nameOf(chart: { bodies: readonly CelestialBody[] }, id: string): string {
   return chart.bodies.find((body) => body.id === id)?.name ?? id;
 }
 
@@ -208,8 +251,8 @@ function natalPointName(chart: NatalChart, id: NatalPointId): string {
   return POINT_NAMES[id] ?? nameOf(chart, id);
 }
 
-function formatPlace(birth: BirthData): string {
-  return `${formatCoordinate(birth.latitude, 'N', 'S')} ${formatCoordinate(birth.longitude, 'E', 'O')}`;
+function formatPlace(place: Place): string {
+  return `${formatCoordinate(place.latitude, 'N', 'S')} ${formatCoordinate(place.longitude, 'E', 'O')}`;
 }
 
 function formatCoordinate(value: number, positive: string, negative: string): string {

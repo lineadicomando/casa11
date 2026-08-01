@@ -78,20 +78,34 @@ export interface LocalMoment {
   timezone: string;
 }
 
-/** Dati di nascita in ora **locale**: la conversione a UT è fatta dal motore. */
-export interface BirthData extends LocalMoment {
-  /**
-   * Ora locale, formato `HH:mm` o `HH:mm:ss`.
-   * Se omessa la carta viene calcolata a mezzogiorno locale e le case,
-   * gli assi e la posizione della Luna vanno considerati indicativi.
-   */
-  time?: string;
+/**
+ * Un punto sulla superficie terrestre.
+ *
+ * Le longitudini eclittiche sono geocentriche: a Roma e a Tokyo un pianeta è
+ * allo stesso grado dello zodiaco. Il luogo serve soltanto a orientare il
+ * cielo rispetto all'orizzonte, cioè agli assi e alle case.
+ *
+ * È un tipo a sé, e non due campi sciolti, perché latitudine e longitudine
+ * non hanno senso separate: una firma che le accettasse singolarmente
+ * lascerebbe passare mezzo luogo.
+ */
+export interface Place {
   /** Latitudine in gradi decimali, positiva a Nord. */
   latitude: number;
   /** Longitudine in gradi decimali, positiva a Est. */
   longitude: number;
   /** Altitudine in metri sul livello del mare (usata solo dal sistema topocentrico). */
   altitude?: number;
+}
+
+/** Dati di nascita in ora **locale**: la conversione a UT è fatta dal motore. */
+export interface BirthData extends LocalMoment, Place {
+  /**
+   * Ora locale, formato `HH:mm` o `HH:mm:ss`.
+   * Se omessa la carta viene calcolata a mezzogiorno locale e le case,
+   * gli assi e la posizione della Luna vanno considerati indicativi.
+   */
+  time?: string;
 }
 
 export interface ChartOptions {
@@ -257,6 +271,55 @@ export interface NatalChart {
    * Avvertimenti non bloccanti: ora ambigua o inesistente per il cambio
    * ora legale, ripiego sulle effemeridi Moshier, corpi non calcolabili,
    * sistema di case non applicabile alla latitudine.
+   */
+  warnings: string[];
+}
+
+/** L'istante di cui si vuole il cielo, in ora locale. */
+export type SkyMoment = LocalMoment;
+
+export interface SkyOptions {
+  /** Luogo di osservazione. Se assente: niente assi, niente case. */
+  place?: Place;
+  /** Sistema di domificazione. Default: `placidus`. Vale solo con un luogo. */
+  houseSystem?: HouseSystem;
+  /** Includi gli aspetti minori. */
+  minorAspects?: boolean;
+  /** Corpi da calcolare. Default: tutti tranne Chirone e Lilith. */
+  bodies?: BodyId[];
+  /** Percorso della cartella con i file `.se1`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Il cielo a un istante, senza nessuna nascita a cui riferirlo.
+ *
+ * Non è un `NatalChart` con la data di oggi: quello pretende un luogo, e qui
+ * il luogo è facoltativo. Non sono transiti: un transito è un rapporto con un
+ * tema, e qui il tema non c'è. È la pagina di un'effemeride.
+ */
+export interface SkyChart {
+  input: SkyMoment;
+  /** Il luogo da cui il cielo è guardato, se ne è stato indicato uno. */
+  place?: Place;
+  time: ResolvedTime;
+  ephemerisMode: EphemerisMode;
+  bodies: CelestialBody[];
+  /** Vuoto senza luogo o senza ora: in un giorno le cuspidi fanno un giro intero. */
+  houses: House[];
+  /** Assente alle stesse condizioni delle case. */
+  angles?: Angles;
+  /** Presente solo se le case sono state calcolate. */
+  houseSystem?: HouseSystem;
+  /** Presente solo con un luogo: è locale, dipende dalla longitudine. */
+  siderealTime?: SiderealTime;
+  /** Diurno se il Sole è sopra l'orizzonte. Richiede gli assi. */
+  sect?: Sect;
+  /** Aspetti reciproci fra i corpi, con le orbite di un tema. */
+  aspects: Aspect[];
+  /**
+   * Avvertimenti non bloccanti: ora non indicata, luogo senza ora, ripiego
+   * sulle effemeridi Moshier, corpi non calcolabili.
    */
   warnings: string[];
 }
