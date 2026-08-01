@@ -21,6 +21,7 @@
   import PassageTable from '$lib/components/PassageTable.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
+  import { tick } from 'svelte';
 
   let birth = $state(emptyBirthInput());
   let transit = $state(nowMoment());
@@ -33,6 +34,28 @@
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   let highlighted = $state<string | null>(null);
+
+  /**
+   * Se il modulo mostri anche il resto di sé.
+   *
+   * Aperto all'inizio: senza una nascita non c'è niente da calcolare, e la
+   * nascita sta fra i dettagli.
+   */
+  let aperto = $state(true);
+  let modulo = $state<HTMLFormElement | null>(null);
+
+  async function commuta(): Promise<void> {
+    aperto = !aperto;
+    if (!aperto) return;
+
+    // Aprendosi il modulo smette di stare appeso in cima e torna al suo posto
+    // nella pagina: chi era sceso a leggere il risultato se lo vedrebbe
+    // sparire verso l'alto proprio mentre chiede di modificarlo. Va aspettato
+    // l'aggiornamento, però: finché è ancora appeso, portarlo in vista è
+    // un'operazione che non sposta niente.
+    await tick();
+    modulo?.scrollIntoView({ block: 'start' });
+  }
 
   /** Il calendario è una seconda richiesta: costa, e non tutti lo vogliono. */
   const MESI = 12;
@@ -116,17 +139,35 @@
   Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita.
 </p>
 
-<form onsubmit={submit} class="modulo">
-  <BirthForm bind:value={birth}>
-    {#snippet options()}
-      <MomentFields bind:value={transit} what="del transito" id="transito" onstep={calcola} />
-      <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
-    {/snippet}
-  </BirthForm>
+<!-- `novalidate` perché un modulo che si chiude porta con sé campi obbligatori
+     che il browser non può né mostrare né mettere a fuoco: la completezza la
+     sa già `canSubmit`, che tiene spento il pulsante. -->
+<form onsubmit={submit} class="modulo" class:chiuso={!aperto} bind:this={modulo} novalidate>
+  <div class="testa">
+    <MomentFields
+      bind:value={transit}
+      what="del transito"
+      id="transito"
+      onstep={calcola}
+      compact={!aperto}
+    />
 
-  <button type="submit" class="invia" disabled={!canSubmit || loading}>
-    {loading ? 'Calcolo…' : 'Calcola i transiti'}
-  </button>
+    <button type="button" class="commuta" aria-expanded={aperto} onclick={commuta}>
+      {aperto ? 'Chiudi' : 'Nascita e opzioni'}
+    </button>
+  </div>
+
+  <div class="dettagli" hidden={!aperto}>
+    <BirthForm bind:value={birth}>
+      {#snippet options()}
+        <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
+      {/snippet}
+    </BirthForm>
+
+    <button type="submit" class="invia" disabled={!canSubmit || loading}>
+      {loading ? 'Calcolo…' : 'Calcola i transiti'}
+    </button>
+  </div>
 </form>
 
 {#if errorMessage}
@@ -230,6 +271,47 @@
     border: 1px solid var(--linea);
     border-radius: var(--raggio);
     padding: 1.5rem;
+  }
+
+  /* Chiuso, il modulo resta appeso in cima alla pagina: le frecce servono
+     mentre si guarda il risultato, che comincia sotto la piega. Chiuderlo e
+     basta avvicinerebbe il risultato senza togliere lo scorrimento. */
+  .modulo.chiuso {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 0.7rem 1rem;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.09);
+  }
+
+  .testa {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .modulo.chiuso .testa {
+    align-items: center;
+  }
+
+  .commuta {
+    flex: none;
+    padding: 0.35rem 0.8rem;
+    background: none;
+    color: var(--accento);
+    border: 1px solid var(--linea-forte);
+    border-radius: var(--raggio);
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .commuta:hover {
+    border-color: var(--accento);
+  }
+
+  .dettagli {
+    margin-top: 1.5rem;
   }
 
   .invia {
