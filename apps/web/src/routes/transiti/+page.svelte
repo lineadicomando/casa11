@@ -134,10 +134,19 @@
   <title>Transiti — undicesimacasa</title>
 </svelte:head>
 
-<h1>Transiti</h1>
-<p class="sottotitolo">
-  Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita.
-</p>
+<!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
+     Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
+<h1 class="nascosto">Transiti</h1>
+
+{#if aperto}
+  <!-- Sparisce insieme ai dettagli del modulo. È la sola riga che distingue
+       questa sezione dal cielo — «con un tema di nascita», non «fra loro» — e
+       serve finché si sta impostando; chi ha chiuso il modulo per sfogliare ha
+       già dimostrato di sapere dove si trova. -->
+  <p class="sottotitolo">
+    Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita.
+  </p>
+{/if}
 
 <!-- `novalidate` perché un modulo che si chiude porta con sé campi obbligatori
      che il browser non può né mostrare né mettere a fuoco: la completezza la
@@ -252,18 +261,10 @@
 {/if}
 
 <style>
-  h1 {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(2rem, 5vw, 2.75rem);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    margin: 0 0 0.35rem;
-  }
-
   .sottotitolo {
-    margin: 0 0 2rem;
+    margin: 0 0 1.1rem;
     color: var(--testo-tenue);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .modulo {

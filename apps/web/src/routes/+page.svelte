@@ -45,10 +45,14 @@
   <title>Tema natale — undicesimacasa</title>
 </svelte:head>
 
-<h1>Tema natale</h1>
-<p class="sottotitolo">
-  Posizioni planetarie, case e aspetti. Calcolo con Swiss Ephemeris, fusi orari storici.
-</p>
+<!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
+     Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
+<h1 class="nascosto">Tema natale</h1>
+
+<!-- Qui il modulo non si chiude, quindi il sottotitolo resta: si accorcia a
+     quello che il titolo non dice già. La provenienza delle effemeridi la
+     dichiara il piè di pagina, e non c'è ragione di dirla due volte. -->
+<p class="sottotitolo">Posizioni planetarie, case e aspetti.</p>
 
 <form onsubmit={submit} class="modulo">
   <BirthForm bind:value={birth}>
@@ -113,18 +117,11 @@
 {/if}
 
 <style>
-  h1 {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(2rem, 5vw, 2.75rem);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    margin: 0 0 0.35rem;
-  }
 
   .sottotitolo {
-    margin: 0 0 2rem;
+    margin: 0 0 1.1rem;
     color: var(--testo-tenue);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .modulo {

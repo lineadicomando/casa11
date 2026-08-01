@@ -175,6 +175,21 @@ tbody tr.evidenziato {
   color: var(--testo-tenue);
 }
 
+/* Tolto alla vista, non alla lettura.
+   Lo usano il titolo di sezione — che il menù già dice, ma che una pagina
+   deve avere perché chi naviga per intestazioni parta da qualche parte — e le
+   etichette dei campi nella striscia, dove lo spazio non c'è. */
+.nascosto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .nota,
 .errore {
   margin: 1rem 0 0;
