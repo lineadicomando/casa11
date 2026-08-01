@@ -22,6 +22,7 @@ import type { Location } from '@undicesimacasa/geo';
 import type { BirthInput } from './birth';
 import { refinedCoordinates } from './birth';
 import type { MomentInput } from './moment';
+import { shiftDate } from './moment';
 
 /** Errore con un messaggio già presentabile a schermo. */
 export class RequestError extends Error {
@@ -131,7 +132,7 @@ export interface SkyCalendarResponse {
 export function skyCalendarParameters(moment: MomentInput, months: number): URLSearchParams {
   return new URLSearchParams({
     from: moment.date,
-    to: addMonths(moment.date, months),
+    to: shiftDate(moment.date, 'month', months),
     timezone: moment.timezone,
   });
 }
@@ -197,7 +198,7 @@ export function passageParameters(
   const parameters = chartParameters(birth, options);
 
   parameters.set('from', transit.date);
-  parameters.set('to', addMonths(transit.date, months));
+  parameters.set('to', shiftDate(transit.date, 'month', months));
   parameters.set('transitTimezone', transit.timezone);
 
   return parameters;
@@ -208,13 +209,6 @@ export async function fetchPassages(parameters: URLSearchParams): Promise<Passag
     `/api/transits/passages?${parameters}`,
     'Ricerca dei passaggi non riuscita',
   );
-}
-
-/** Stessa data, `months` mesi dopo. Il 31 diventa il primo del mese seguente. */
-function addMonths(date: string, months: number): string {
-  const next = new Date(`${date}T00:00:00Z`);
-  next.setUTCMonth(next.getUTCMonth() + months);
-  return next.toISOString().slice(0, 10);
 }
 
 async function request<T>(url: string, fallback: string): Promise<T> {
