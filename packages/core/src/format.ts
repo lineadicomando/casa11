@@ -5,6 +5,7 @@ import type {
   Aspect,
   BodyId,
   CelestialBody,
+  ElectionResult,
   House,
   NatalChart,
   NatalPointId,
@@ -273,6 +274,71 @@ export function formatPassagesCompact(
   }
 
   lines.push(...warningLines(warnings));
+
+  return lines.join('\n');
+}
+
+/**
+ * Rende in forma tabellare il calendario elettivo.
+ *
+ * Le ore vanno raggruppate per giorno perché è così che si consultano, e la
+ * durata va scritta accanto a ciascuna: sono ore che non durano un'ora, e
+ * vederne una da settantotto minuti accanto a una da quarantadue dice della
+ * stagione più di qualunque didascalia.
+ *
+ * I vuoti di corso stanno in coda e non dentro le righe: sono intervalli loro,
+ * che tagliano le ore invece di allinearvisi.
+ */
+export function formatElectionCompact(election: ElectionResult): string {
+  const { range, place, hours, voids } = election;
+  const lines = [
+    `ELEZIONE — dal ${range.from} al ${range.to} (${range.timezone})`,
+    `Luogo: ${formatPlace(place)}`,
+  ];
+
+  if (hours.length === 0) {
+    lines.push('', '(nessuna ora planetaria calcolabile in questo arco)');
+    lines.push(...warningLines(election.warnings));
+    return lines.join('\n');
+  }
+
+  lines.push('', 'ORE PLANETARIE');
+  lines.push('Ora locale | reggitore | d/n | durata | Ascendente | Luna');
+
+  let day = '';
+  for (const hour of hours) {
+    const current = hour.local.start.slice(0, 10);
+    if (current !== day) {
+      day = current;
+      lines.push(`— ${day}`);
+    }
+
+    lines.push(
+      `${hour.local.start.slice(11, 16)}-${hour.local.end.slice(11, 16)} ` +
+        `${bodyName(hour.ruler).padEnd(10)} ` +
+        `${hour.diurnal ? 'd' : 'n'}${String(hour.index).padStart(2)} ` +
+        `${String(hour.minutes).padStart(3)}m ` +
+        `${formatZodiacal(hour.ascendant.longitude).padEnd(11)} ` +
+        `${hour.moonVoid ? 'vuota' : ''}`.trimEnd(),
+    );
+  }
+
+  lines.push('', 'LUNA VUOTA DI CORSO');
+  if (voids.length === 0) {
+    lines.push('(nessun tratto in questo arco di tempo)');
+  }
+  for (const period of voids) {
+    const last = period.lastAspect
+      ? `dopo ${period.lastAspect.aspect} a ${bodyName(period.lastAspect.body)}`
+      : 'dall\'ingresso, senza aspetti nel segno';
+    lines.push(
+      `${period.local.start.slice(0, 16).replace('T', ' ')} → ` +
+        `${period.local.end.slice(0, 16).replace('T', ' ')} ` +
+        `(${period.minutes} min) in ${period.sign}, ${last}, poi ${period.nextSign}`,
+    );
+  }
+
+  lines.push(...warningLines(election.warnings));
 
   return lines.join('\n');
 }

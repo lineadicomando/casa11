@@ -125,6 +125,41 @@ export const DEFAULT_PASSAGE_BODIES: readonly BodyId[] = DEFAULT_TRANSIT_BODIES.
 );
 
 /**
+ * L'ordine caldeo: i sette pianeti classici per velocità apparente decrescente
+ * vista dalla Terra.
+ *
+ * Regge la successione delle ore planetarie. Ventiquattro ore avanzano di tre
+ * posizioni nella catena, ed è da questo scarto che nasce l'ordine dei giorni
+ * della settimana — che infatti non è quello dei pianeti.
+ */
+export const CHALDEAN_ORDER: readonly BodyId[] = [
+  'saturno',
+  'giove',
+  'marte',
+  'sole',
+  'venere',
+  'mercurio',
+  'luna',
+];
+
+/**
+ * Il pianeta che regge ciascun giorno della settimana, da domenica a sabato.
+ *
+ * L'ordine sopravvive intatto nei nomi italiani dei giorni — lunedì la Luna,
+ * martedì Marte, fino a sabato che è il giorno di Saturno sotto il nome del
+ * sabato ebraico.
+ */
+export const WEEKDAY_RULERS: readonly BodyId[] = [
+  'sole',
+  'luna',
+  'marte',
+  'mercurio',
+  'giove',
+  'venere',
+  'saturno',
+];
+
+/**
  * Moto medio diurno in gradi, per corpo.
  *
  * Non serve al calcolo delle posizioni — quelle vengono dalle effemeridi — ma

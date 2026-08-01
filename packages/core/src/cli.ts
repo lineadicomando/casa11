@@ -4,12 +4,14 @@ import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
 import {
   formatChartCompact,
+  formatElectionCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
   formatSkyPassagesCompact,
   formatTransitsCompact,
 } from './format.js';
+import { findElectionHours } from './election.js';
 import { findTransitPassages } from './passages.js';
 import { findSignIngresses, findStations } from './sky-events.js';
 import { findSkyPassages } from './sky-passages.js';
@@ -20,9 +22,11 @@ import { computeTransits } from './transits.js';
 import type {
   BirthData,
   ChartOptions,
+  ElectionOptions,
   HouseSystem,
   PassageOptions,
   PassageRange,
+  Place,
   SkyMoment,
   SkyEventOptions,
   SkyOptions,
@@ -78,6 +82,13 @@ Cielo
   --sky --passages      Il calendario degli incontri fra i corpi in cielo,
                         con --from, --to e --moon come sopra
   --sky --events        Ingressi nei segni e stazioni, con --from e --to
+
+Elezione
+  --elezione            Ore planetarie, Ascendente e vuoti di corso della Luna
+                        in un luogo. Nessuna nascita, ma --lat e --lon sono
+                        obbligatorie: alba e tramonto dipendono dal luogo
+  --from --to           L'arco, al massimo 31 giorni. Se omessi, oggi
+  --tz <IANA>           Fuso in cui leggere le date e scrivere le ore
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -99,6 +110,7 @@ function main(argv: string[]): number {
       passages: { type: 'boolean', default: false },
       sky: { type: 'boolean', default: false },
       events: { type: 'boolean', default: false },
+      elezione: { type: 'boolean', default: false },
       from: { type: 'string' },
       to: { type: 'string' },
       moon: { type: 'boolean', default: false },
@@ -113,6 +125,10 @@ function main(argv: string[]): number {
     process.stdout.write(USAGE);
     return 0;
   }
+
+  // L'elezione, come il cielo, non riguarda nessuna nascita: si risponde prima
+  // di chiedere una data di nascita che non servirebbe.
+  if (values.elezione) return printElection(values);
 
   // Il cielo si calcola prima di controllare i dati di nascita: è la sola
   // domanda del programma che non ne ha bisogno.
@@ -318,6 +334,48 @@ function printSkyEvents(values: {
     values.json
       ? `${JSON.stringify({ range, ingresses, stations, warnings: tutte }, null, 2)}\n`
       : `${formatSkyEventsCompact(ingresses, stations, range, tutte)}\n`,
+  );
+  return 0;
+}
+
+/**
+ * Stampa il calendario elettivo di un luogo.
+ *
+ * È l'unico comando che pretende le coordinate senza alternative: le ore
+ * planetarie nascono da alba e tramonto, e quelle senza un punto sulla Terra
+ * non esistono. Il fuso serve a leggere le date e a scrivere gli orari, e se
+ * manca è quello della macchina.
+ */
+function printElection(values: {
+  from?: string | undefined;
+  to?: string | undefined;
+  lat?: string | undefined;
+  lon?: string | undefined;
+  tz?: string | undefined;
+  ephe?: string | undefined;
+  json: boolean;
+}): number {
+  if (!values.lat || !values.lon) {
+    process.stderr.write(
+      '--elezione richiede --lat e --lon: le ore planetarie dipendono da alba e tramonto,\n' +
+        'che cambiano con il luogo.\n',
+    );
+    return 2;
+  }
+
+  const timezone = values.tz ?? systemTimezone();
+  const from = values.from ?? currentMoment(timezone).date;
+  const range: PassageRange = { from, to: values.to ?? from, timezone };
+  const place: Place = { latitude: Number(values.lat), longitude: Number(values.lon) };
+
+  const options: ElectionOptions = {};
+  if (values.ephe) options.ephemerisPath = values.ephe;
+
+  const election = findElectionHours(range, place, options);
+  process.stdout.write(
+    values.json
+      ? `${JSON.stringify(election, null, 2)}\n`
+      : `${formatElectionCompact(election)}\n`,
   );
   return 0;
 }

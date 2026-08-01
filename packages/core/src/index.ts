@@ -11,6 +11,8 @@ export { computeTransits, natalTargets } from './transits.js';
 export { findTransitPassages } from './passages.js';
 export { findSkyPassages } from './sky-passages.js';
 export { findSignIngresses, findStations } from './sky-events.js';
+export { findElectionHours, MAX_ELECTION_DAYS } from './election.js';
+export { riseOrSet } from './rise.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
 export {
@@ -31,6 +33,7 @@ export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
 export {
   formatChartCompact,
+  formatElectionCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
@@ -53,6 +56,7 @@ export {
 export {
   ASPECTS,
   BODIES,
+  CHALDEAN_ORDER,
   DEFAULT_BODIES,
   DEFAULT_PASSAGE_BODIES,
   DEFAULT_TRANSIT_BODIES,
@@ -60,6 +64,7 @@ export {
   MEAN_DAILY_MOTION,
   NATAL_POINT_NAMES,
   SIGN_ABBR,
+  WEEKDAY_RULERS,
   TRANSIT_ORB_BONUS,
   TRANSIT_ORBS,
   ZODIAC_SIGNS,
@@ -77,6 +82,8 @@ export type {
   CelestialBody,
   ChartOptions,
   ChartPoint,
+  ElectionOptions,
+  ElectionResult,
   EphemerisMode,
   House,
   HouseSystem,
@@ -86,6 +93,7 @@ export type {
   PassageOptions,
   PassageRange,
   Place,
+  PlanetaryHour,
   PointAspect,
   ResolvedTime,
   Sect,
@@ -103,5 +111,6 @@ export type {
   TransitMoment,
   TransitPassage,
   TransitOptions,
+  VoidOfCourse,
   ZodiacSign,
 } from './types.js';

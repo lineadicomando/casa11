@@ -549,3 +549,99 @@ export interface TransitChart {
    */
   warnings: string[];
 }
+
+export interface ElectionOptions {
+  /**
+   * Corpi il cui incontro basta a togliere la Luna dal vuoto di corso.
+   * Default: i sei classici oltre alla Luna, cioè la regola nella sua forma
+   * tradizionale.
+   */
+  bodies?: BodyId[];
+  /** Percorso della cartella con i file `.se1`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Un'ora planetaria: una delle dodici parti in cui si divide l'arco diurno, o
+ * l'arco notturno, del luogo.
+ *
+ * Dura sessanta minuti soltanto agli equinozi. A giugno, alle nostre
+ * latitudini, un'ora diurna sfiora gli ottanta minuti e una notturna scende
+ * sotto i quaranta: `minutes` dice quale delle due si sta guardando meglio di
+ * qualunque etichetta.
+ */
+export interface PlanetaryHour {
+  /** Il pianeta che la regge, secondo l'ordine caldeo. */
+  ruler: BodyId;
+  /** `true` fra alba e tramonto. */
+  diurnal: boolean;
+  /** Posizione nella dodicina, 1-12. */
+  index: number;
+  /** Inizio in UTC, ISO 8601. */
+  start: string;
+  /** Fine in UTC: coincide con l'inizio dell'ora successiva. */
+  end: string;
+  /** Gli stessi due istanti nel fuso richiesto. */
+  local: { start: string; end: string };
+  /** Durata effettiva in minuti. */
+  minutes: number;
+  /**
+   * L'Ascendente all'inizio dell'ora.
+   *
+   * È il dato che si muove più in fretta di tutti: un grado ogni quattro
+   * minuti, un segno intero nell'arco di due ore scarse. Vale all'istante
+   * `start` e non per l'ora intera.
+   */
+  ascendant: { longitude: number; sign: ZodiacSign; signDegree: number };
+  /** `true` se la Luna è vuota di corso durante tutta l'ora o parte di essa. */
+  moonVoid: boolean;
+}
+
+/**
+ * Il tratto in cui la Luna non perfeziona più alcun aspetto maggiore prima di
+ * lasciare il segno.
+ *
+ * Dura da pochi minuti a un giorno e mezzo. La tradizione sconsiglia di
+ * cominciare qualcosa mentre è in corso — il perché è interpretazione, e sta
+ * a chi legge; qui c'è solo quando comincia e quando finisce.
+ */
+export interface VoidOfCourse {
+  /** Il segno che la Luna sta attraversando mentre è vuota. */
+  sign: ZodiacSign;
+  /** Il segno in cui entra, chiudendo il vuoto. */
+  nextSign: ZodiacSign;
+  /**
+   * L'ultimo aspetto perfezionato prima del vuoto.
+   *
+   * Assente nel caso raro in cui la Luna attraversi un segno intero senza
+   * concludere nulla: allora il vuoto comincia con l'ingresso stesso.
+   */
+  lastAspect?: { body: BodyId; aspect: AspectId };
+  /** Inizio in UTC, ISO 8601. */
+  start: string;
+  /** Fine in UTC: l'istante in cui la Luna cambia segno. */
+  end: string;
+  /** Gli stessi due istanti nel fuso richiesto. */
+  local: { start: string; end: string };
+  /** Durata in minuti. */
+  minutes: number;
+}
+
+/**
+ * Il calendario elettivo di un luogo.
+ *
+ * Non contiene nessuna raccomandazione, ed è deliberato: dice com'è fatto il
+ * tempo — chi regge ogni ora, che grado sorge, quando la Luna è vuota — e
+ * lascia la scelta a chi consuma.
+ */
+export interface ElectionResult {
+  range: PassageRange;
+  place: Place;
+  hours: PlanetaryHour[];
+  voids: VoidOfCourse[];
+  /**
+   * Avvertimenti non bloccanti: alba o tramonto non calcolabili alle latitudini
+   * polari, corpi non disponibili, ripieghi sul sistema di case.
+   */
+  warnings: string[];
+}
