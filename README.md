@@ -395,15 +395,25 @@ settimane, il risultato è vuoto e lo dice: dodici parti di un arco diurno lungo
 un giorno intero sarebbero un numero plausibile e falso.
 
 L'arco ha un tetto di **31 giorni**, che è più stretto di quello dei passaggi:
-qui ogni giorno porta ventiquattro righe.
+qui ogni giorno porta ventiquattro righe. Il tetto però non basta a rendere
+consultabile un mese — sono più di settecento ore — e per questo l'elenco si
+restringe: `rulers` tiene solo le ore rette da certi pianeti, `skipMoonVoid`
+scarta quelle che un vuoto attraversa. Chiedere un reggitore solo su un mese
+intero porta da 745 righe a 72. I filtri **viaggiano col risultato**: un elenco
+ridotto che non dichiari di esserlo si legge come completo. E reggono l'ora
+soltanto i sette dell'ordine caldeo: `rulers=urano` è un errore e non un elenco
+vuoto, perché un elenco vuoto direbbe «non in questo mese» invece di «mai».
 
 ```sh
 casa11 --elezione --lat 38.1166 --lon 13.3636 --tz Europe/Rome \
        --from 2029-08-24 --to 2029-08-26
+casa11 --elezione --lat 44.6983 --lon 10.6312 --tz Europe/Rome \
+       --from 2026-08-01 --to 2026-08-31 --reggitori giove --senza-vuoti
 ```
 
 ```
 GET /api/election?locationId=2523920&from=2029-08-24&to=2029-08-26
+GET /api/election?locationId=3169522&from=2026-08-01&to=2026-08-31&rulers=giove&skipMoonVoid=true
 ```
 
 Il luogo è **obbligatorio e senza alternative**, unico caso fra gli endpoint: le
@@ -739,7 +749,7 @@ Sette tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 | `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
 | `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
 | `find_sky_events` | un arco → incontri, ingressi nei segni e stazioni, sempre senza nascita |
-| `find_election_hours` | un luogo e un arco → ore planetarie, Ascendente, Luna vuota di corso |
+| `find_election_hours` | un luogo e un arco → ore planetarie, Ascendente, Luna vuota di corso; `rulers` per restringere |
 
 **`compute_sky` e `find_sky_events` non hanno nessun parametro obbligatorio**, e
 le loro descrizioni insistono sulla differenza che un modello tenderebbe a

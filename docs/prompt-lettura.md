@@ -255,15 +255,26 @@ qui si sceglie.
 - `bodies` (facoltativo): i corpi il cui incontro toglie la Luna dal vuoto di
   corso. Default: i sei classici. Aggiungere i moderni è una dottrina diversa,
   non un'impostazione più precisa: non farlo di tua iniziativa.
+- `rulers` (facoltativo): restringe alle ore rette da quei pianeti, es.
+  `rulers=giove,venere`. **Usalo appena l'arco supera i due o tre giorni**: un
+  mese intero sono più di settecento ore, che non sono un calendario ma un muro
+  di righe. Reggono l'ora soltanto i sette classici; chiedere Urano o Nettuno è
+  un errore, non un elenco vuoto.
+- `skipMoonVoid=true` (facoltativo): scarta le ore che un vuoto attraversa. I
+  vuoti restano nella risposta, perché sono la ragione per cui quelle ore
+  mancano.
 
 Risposta: `{ "range": …, "place": …, "hours": [ … ], "voids": [ … ],
-"warnings": [ … ] }`.
+"filters": …, "warnings": [ … ] }`.
 
 - `hours[]` — `ruler` (il pianeta che regge l'ora), `diurnal`, `index` (1-12
   dentro la dodicina), `start` e `end` in UTC, `local`, `minutes`, `ascendant`
   e `moonVoid`.
 - `voids[]` — `sign`, `nextSign`, `lastAspect`, `start`, `end`, `local`,
   `minutes`.
+- `filters` — compare solo se hai ristretto la richiesta. Leggilo prima di
+  descrivere l'elenco: un conteggio di settanta ore su un mese non sono le ore
+  di quel mese, sono quelle che hai chiesto.
 
 Quattro cose da non sbagliare nel raccontarlo:
 
@@ -303,6 +314,8 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
 - `LOCALITA_SCONOSCIUTA` — l'id non esiste: rifai la ricerca.
 - `COORDINATE_NON_VALIDE`, `FUSO_ORARIO_NON_VALIDO`, `SISTEMA_CASE_NON_VALIDO`
   — input da correggere.
+- `CORPO_SCONOSCIUTO` — un corpo che non esiste, oppure, nell'elezione, un
+  pianeta che non regge ore: solo i sette classici lo fanno.
 - `DATABASE_ASSENTE` (503) — il dataset delle località non è stato importato
   sul server: la ricerca non è disponibile, ma il calcolo funziona ancora se
   l'utente fornisce coordinate e fuso orario.
@@ -606,7 +619,9 @@ risposta diventano fasce, larghe quanto il transitante è lento.
 
 `find_election_hours` risponde a «quando cominciare qualcosa» e pretende il
 luogo, che è l'unico caso in cui un tool lo esiga senza alternative: alba e
-tramonto vengono da lì. Le sue ore non durano sessanta minuti, il giorno
+tramonto vengono da lì. Su archi più lunghi di due o tre giorni restringi con
+`rulers`, altrimenti ti arrivano settecento righe, e leggi `filters` nella
+risposta prima di dire quante ore ci siano. Le sue ore non durano sessanta minuti, il giorno
 comincia all'alba, e l'Ascendente che riporta vale all'inizio dell'ora e non per
 tutta la sua durata. Non contiene raccomandazioni: sceglierne una è
 interpretazione tua, e da motivare.
