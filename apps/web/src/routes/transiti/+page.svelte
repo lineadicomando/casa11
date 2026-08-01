@@ -42,10 +42,28 @@
 
   const canSubmit = $derived(isComplete(birth) && isCompleteMoment(transit));
 
-  async function submit(event: SubmitEvent): Promise<void> {
+  /**
+   * Il numero dell'ultima richiesta partita.
+   *
+   * Le frecce del passo si premono in fretta, e le risposte non tornano
+   * nell'ordine in cui sono state chieste: senza confrontare il numero, quella
+   * di un istante già superato arriverebbe dopo e si prenderebbe lo schermo.
+   */
+  let ultima = 0;
+
+  function submit(event: SubmitEvent): void {
     event.preventDefault();
+    void calcola();
+  }
+
+  /**
+   * Il passo ricalcola con quello che c'è nel modulo in quel momento, nascita
+   * compresa: una freccia è un invio come un altro, e non congela il modulo.
+   */
+  async function calcola(): Promise<void> {
     if (!canSubmit) return;
 
+    const richiesta = ++ultima;
     loading = true;
     errorMessage = null;
 
@@ -53,6 +71,7 @@
       const body = await fetchTransits(
         transitParameters(birth, { houseSystem, minorAspects }, transit),
       );
+      if (richiesta !== ultima) return;
       chart = body.chart;
       transits = body.transits;
       placeLabel = body.place?.label ?? null;
@@ -60,12 +79,13 @@
       passages = null;
       passagesError = null;
     } catch (cause) {
+      if (richiesta !== ultima) return;
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo dei transiti non riuscito.';
       chart = null;
       transits = null;
     } finally {
-      loading = false;
+      if (richiesta === ultima) loading = false;
     }
   }
 
@@ -99,7 +119,7 @@
 <form onsubmit={submit} class="modulo">
   <BirthForm bind:value={birth}>
     {#snippet options()}
-      <MomentFields bind:value={transit} what="del transito" id="transito" />
+      <MomentFields bind:value={transit} what="del transito" id="transito" onstep={calcola} />
       <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
     {/snippet}
   </BirthForm>
@@ -117,7 +137,9 @@
   <section class="risultato">
     <div class="intestazione">
       <h2>{placeLabel ?? 'Transiti'}</h2>
-      <p class="meta">
+      <!-- Un passo cambia la pagina senza che nessuno l'abbia ricaricata: chi
+           non la vede deve sentirsi dire almeno di che istante si tratta. -->
+      <p class="meta" aria-live="polite">
         Transiti del {transits.input.date}{transits.time.timeKnown
           ? ` alle ${transits.input.time}`
           : ' (mezzogiorno)'} · {transits.input.timezone} · UT

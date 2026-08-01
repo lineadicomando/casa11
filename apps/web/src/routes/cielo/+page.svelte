@@ -49,25 +49,37 @@
     void load();
   });
 
+  /**
+   * Il numero dell'ultima richiesta partita.
+   *
+   * Le frecce del passo si premono in fretta, e le risposte non tornano
+   * nell'ordine in cui sono state chieste: senza confrontare il numero, quella
+   * di un giorno già superato arriverebbe dopo e si prenderebbe lo schermo.
+   */
+  let ultima = 0;
+
   async function load(): Promise<void> {
     if (!canSubmit) return;
 
+    const richiesta = ++ultima;
     loading = true;
     errorMessage = null;
 
     try {
       const body = await fetchSky(skyParameters(moment, { houseSystem, minorAspects }, location));
+      if (richiesta !== ultima) return;
       sky = body.sky;
       placeLabel = body.place?.label ?? null;
       // Il calendario partiva dal giorno precedente: si ricomincia da capo.
       calendar = null;
       calendarError = null;
     } catch (cause) {
+      if (richiesta !== ultima) return;
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo del cielo non riuscito.';
       sky = null;
     } finally {
-      loading = false;
+      if (richiesta === ultima) loading = false;
     }
   }
 
@@ -106,7 +118,7 @@
 
 <form onsubmit={submit} class="modulo">
   <div class="campi">
-    <MomentFields bind:value={moment} id="cielo" />
+    <MomentFields bind:value={moment} id="cielo" onstep={load} />
 
     <LocationSearch selected={location} onselect={selectLocation} label="Luogo (facoltativo)" />
 
@@ -133,7 +145,9 @@
   <section class="risultato">
     <div class="intestazione">
       <h2>{placeLabel ?? 'Cielo del momento'}</h2>
-      <p class="meta">
+      <!-- Un passo cambia la pagina senza che nessuno l'abbia ricaricata: chi
+           non la vede deve sentirsi dire almeno di che istante si tratta. -->
+      <p class="meta" aria-live="polite">
         {sky.input.date}{sky.time.timeKnown ? ` · ${sky.input.time}` : ' · ora non indicata'} ·
         {sky.input.timezone} · UT {sky.time.utc.replace('T', ' ').replace('Z', '')}{sky.siderealTime
           ? ` · TSL ${sky.siderealTime.formatted}`
