@@ -99,7 +99,11 @@ export function findElectionHours(
   }
 
   const periods = findVoidsOfCourse(range, start, end, options, context, warnings);
-  const hours = buildPlanetaryHours(range, place, start, end, periods, context, warnings);
+  const hours = buildPlanetaryHours(range, place, start, end, periods, options, context, warnings);
+
+  const filters: NonNullable<ElectionResult['filters']> = {};
+  if (options.rulers) filters.rulers = [...options.rulers];
+  if (options.skipMoonVoid) filters.skipMoonVoid = true;
 
   return {
     range,
@@ -108,6 +112,10 @@ export function findElectionHours(
     // I giorni giuliani servivano a intersecare i vuoti con le ore: fuori di
     // qui il risultato parla solo in ISO, come il resto del motore.
     voids: periods.map(({ startJulianDay: _start, endJulianDay: _end, ...period }) => period),
+    // Dichiarati insieme al risultato: un elenco filtrato che non dica di
+    // esserlo si legge come un elenco completo, e sessanta ore invece di
+    // settecento sembrerebbero tutte quelle che esistono.
+    ...(Object.keys(filters).length > 0 ? { filters } : {}),
     warnings,
   };
 }
@@ -125,6 +133,7 @@ function buildPlanetaryHours(
   start: number,
   end: number,
   voids: readonly VoidPeriod[],
+  options: ElectionOptions,
   context: EphemerisContext,
   warnings: string[],
 ): PlanetaryHour[] {
@@ -166,16 +175,29 @@ function buildPlanetaryHours(
       const hourEnd = hourStart + (diurnal ? dayLength : nightLength);
       if (hourEnd <= start || hourStart >= end) continue;
 
+      // I due filtri si applicano prima di descrivere l'ora e non dopo, così
+      // le cuspidi si calcolano solo per le ore che resteranno. Il risparmio è
+      // modesto — un mese intero costa comunque meno di due decimi di secondo
+      // — ma scartare a valle costringerebbe a costruire per intero
+      // settecento oggetti destinati a essere buttati.
+      const hourRuler = chaldeanRuler(ruler, i);
+      if (options.rulers && !options.rulers.includes(hourRuler)) continue;
+
+      const moonVoid = voids.some(
+        (period) => period.startJulianDay < hourEnd && period.endJulianDay > hourStart,
+      );
+      if (moonVoid && options.skipMoonVoid) continue;
+
       hours.push(
         describeHour(
           hourStart,
           hourEnd,
-          chaldeanRuler(ruler, i),
+          hourRuler,
           diurnal,
           (i % 12) + 1,
           range.timezone,
           place,
-          voids,
+          moonVoid,
           context,
           warnings,
         ),
@@ -196,7 +218,7 @@ function describeHour(
   index: number,
   timezone: string,
   place: Place,
-  voids: readonly VoidPeriod[],
+  moonVoid: boolean,
   context: EphemerisContext,
   warnings: string[],
 ): PlanetaryHour {
@@ -224,9 +246,7 @@ function describeHour(
       sign: signOf(ascendant),
       signDegree: degreeInSign(ascendant),
     },
-    moonVoid: voids.some(
-      (period) => period.startJulianDay < hourEnd && period.endJulianDay > hourStart,
-    ),
+    moonVoid,
   };
 }
 

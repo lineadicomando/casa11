@@ -89,6 +89,8 @@ Elezione
                         obbligatorie: alba e tramonto dipendono dal luogo
   --from --to           L'arco, al massimo 31 giorni. Se omessi, oggi
   --tz <IANA>           Fuso in cui leggere le date e scrivere le ore
+  --reggitori <lista>   Solo le ore rette da questi, es. giove,venere
+  --senza-vuoti         Scarta le ore che un vuoto di corso attraversa
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -111,6 +113,8 @@ function main(argv: string[]): number {
       sky: { type: 'boolean', default: false },
       events: { type: 'boolean', default: false },
       elezione: { type: 'boolean', default: false },
+      reggitori: { type: 'string' },
+      'senza-vuoti': { type: 'boolean', default: false },
       from: { type: 'string' },
       to: { type: 'string' },
       moon: { type: 'boolean', default: false },
@@ -353,6 +357,8 @@ function printElection(values: {
   lon?: string | undefined;
   tz?: string | undefined;
   ephe?: string | undefined;
+  reggitori?: string | undefined;
+  'senza-vuoti': boolean;
   json: boolean;
 }): number {
   if (!values.lat || !values.lon) {
@@ -370,6 +376,18 @@ function printElection(values: {
 
   const options: ElectionOptions = {};
   if (values.ephe) options.ephemerisPath = values.ephe;
+  if (values['senza-vuoti']) options.skipMoonVoid = true;
+  if (values.reggitori) {
+    const rulers = values.reggitori
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id !== '');
+    if (rulers.length === 0) {
+      process.stderr.write('--reggitori è vuoto: elenca i pianeti separati da virgola.\n');
+      return 2;
+    }
+    options.rulers = rulers as ElectionOptions['rulers'];
+  }
 
   const election = findElectionHours(range, place, options);
   process.stdout.write(

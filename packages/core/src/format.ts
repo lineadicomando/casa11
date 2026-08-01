@@ -290,11 +290,20 @@ export function formatPassagesCompact(
  * che tagliano le ore invece di allinearvisi.
  */
 export function formatElectionCompact(election: ElectionResult): string {
-  const { range, place, hours, voids } = election;
+  const { range, place, hours, voids, filters } = election;
   const lines = [
     `ELEZIONE — dal ${range.from} al ${range.to} (${range.timezone})`,
     `Luogo: ${formatPlace(place)}`,
   ];
+
+  // Il filtro va dichiarato subito: chi legge deve sapere che le ore mancanti
+  // non sono state omesse dal calcolo ma escluse su richiesta.
+  if (filters) {
+    const criteri: string[] = [];
+    if (filters.rulers) criteri.push(`solo le ore di ${filters.rulers.map(bodyName).join(', ')}`);
+    if (filters.skipMoonVoid) criteri.push('escluse quelle con la Luna vuota di corso');
+    lines.push(`Elenco filtrato: ${criteri.join('; ')}`);
+  }
 
   if (hours.length === 0) {
     lines.push('', '(nessuna ora planetaria calcolabile in questo arco)');

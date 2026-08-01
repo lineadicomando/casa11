@@ -557,6 +557,21 @@ export interface ElectionOptions {
    * tradizionale.
    */
   bodies?: BodyId[];
+  /**
+   * Restringe l'elenco alle ore rette da questi pianeti.
+   *
+   * Serve alla leggibilità prima che alla velocità: un mese intero sono
+   * settecentoquaranta ore, che nessuno consulta e che a un agente riempiono
+   * il contesto. Chiedere un reggitore solo ne lascia un settimo.
+   */
+  rulers?: BodyId[];
+  /**
+   * Scarta le ore che un vuoto di corso attraversa, in tutto o in parte.
+   *
+   * È una scelta di chi chiede, non un consiglio del motore: i vuoti restano
+   * nel risultato, perché sono la ragione per cui quelle ore mancano.
+   */
+  skipMoonVoid?: boolean;
   /** Percorso della cartella con i file `.se1`. */
   ephemerisPath?: string;
 }
@@ -639,6 +654,14 @@ export interface ElectionResult {
   place: Place;
   hours: PlanetaryHour[];
   voids: VoidOfCourse[];
+  /**
+   * I filtri applicati alla richiesta, se ce n'erano.
+   *
+   * Viaggia col risultato perché un elenco ridotto che non dichiari di esserlo
+   * si legge come completo: sessanta ore al posto di settecento sembrerebbero
+   * tutte quelle che esistono.
+   */
+  filters?: { rulers?: BodyId[]; skipMoonVoid?: boolean };
   /**
    * Avvertimenti non bloccanti: alba o tramonto non calcolabili alle latitudini
    * polari, corpi non disponibili, ripieghi sul sistema di case.

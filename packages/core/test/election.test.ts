@@ -148,6 +148,41 @@ describe('findElectionHours', () => {
     expect(period.lastAspect).toEqual({ body: 'saturno', aspect: 'quadrato' });
   });
 
+  it('restringe le ore ai reggitori richiesti, dichiarandolo', () => {
+    const { hours, filters } = findElectionHours(DUE_GIORNI, PALERMO, {
+      rulers: ['giove', 'venere'],
+    });
+
+    expect(hours.length).toBeGreaterThan(0);
+    expect(new Set(hours.map((hour) => hour.ruler))).toEqual(new Set(['giove', 'venere']));
+    // Il filtro viaggia col risultato: senza, un elenco ridotto passerebbe
+    // per completo.
+    expect(filters).toEqual({ rulers: ['giove', 'venere'] });
+
+    // Filtrare non sposta le ore rimaste: sono le stesse dell'elenco intero.
+    const tutte = findElectionHours(DUE_GIORNI, PALERMO);
+    const attese = tutte.hours.filter((hour) => hour.ruler === 'giove' || hour.ruler === 'venere');
+    expect(hours.map((hour) => hour.start)).toEqual(attese.map((hour) => hour.start));
+  });
+
+  it('scarta le ore attraversate da un vuoto, ma non i vuoti', () => {
+    const intera = findElectionHours(DUE_GIORNI, PALERMO);
+    const { hours, voids, filters } = findElectionHours(DUE_GIORNI, PALERMO, {
+      skipMoonVoid: true,
+    });
+
+    expect(hours.every((hour) => !hour.moonVoid)).toBe(true);
+    expect(hours.length).toBe(intera.hours.filter((hour) => !hour.moonVoid).length);
+    expect(hours.length).toBeLessThan(intera.hours.length);
+    // I vuoti restano: sono la ragione per cui quelle ore mancano.
+    expect(voids).toEqual(intera.voids);
+    expect(filters).toEqual({ skipMoonVoid: true });
+  });
+
+  it('non dichiara filtri quando non ce ne sono', () => {
+    expect(findElectionHours(DUE_GIORNI, PALERMO).filters).toBeUndefined();
+  });
+
   it('rifiuta un arco più lungo di un mese', () => {
     expect(() =>
       findElectionHours(
@@ -200,5 +235,16 @@ describe('formatElectionCompact', () => {
     expect(testo).toContain('LUNA VUOTA DI CORSO');
     // Una durata in minuti per riga, e nessuna è di sessanta.
     expect(testo).toMatch(/\d{2}:\d{2}-\d{2}:\d{2} \w+\s+[dn]\s?\d+\s+\d{2}m/);
+  });
+
+  it('dichiara in testa che l elenco è filtrato', () => {
+    const testo = formatElectionCompact(
+      findElectionHours(DUE_GIORNI, PALERMO, { rulers: ['giove'], skipMoonVoid: true }),
+    );
+
+    expect(testo).toContain('Elenco filtrato: solo le ore di Giove');
+    expect(testo).toContain('Luna vuota di corso');
+    // I vuoti restano elencati in coda anche quando le loro ore sono sparite.
+    expect(testo).toMatch(/LUNA VUOTA DI CORSO/);
   });
 });
