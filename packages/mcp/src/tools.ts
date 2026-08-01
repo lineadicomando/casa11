@@ -686,7 +686,8 @@ export function registerFindElectionHours(server: McpServer, context: ToolContex
         'Il risultato NON contiene raccomandazioni e non è una classifica: dice quale pianeta ' +
         'regge un\'ora, non se quell\'ora sia buona per qualcosa. Se ti viene chiesto quando ' +
         "giocare, scommettere o comprare un biglietto della lotteria, queste ore non lo " +
-        "dicono: l'esito di un sorteggio non dipende dal momento in cui lo si compra.",
+        "dicono: l'esito di un sorteggio non dipende dal momento in cui lo si compra. " +
+        'Su archi lunghi restringi con rulers: un mese intero sono più di settecento ore.',
       inputSchema: {
         location_id: z
           .number()
@@ -720,6 +721,22 @@ export function registerFindElectionHours(server: McpServer, context: ToolContex
               'classici (Sole, Mercurio, Venere, Marte, Giove, Saturno), che è la regola ' +
               'nella forma in cui è nata. Aggiungere i pianeti moderni è una dottrina diversa.',
           ),
+        rulers: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Restringe l\'elenco alle ore rette da questi pianeti, es. ["giove", "venere"]. ' +
+              'USALO quando l\'arco supera i due o tre giorni: un mese intero sono più di ' +
+              'settecento ore, che non sono un calendario ma un muro di righe.',
+          ),
+        skip_moon_void: z
+          .boolean()
+          .optional()
+          .describe(
+            'Scarta le ore che un vuoto di corso attraversa. I vuoti restano elencati, ' +
+              'perché sono la ragione per cui quelle ore mancano. È una scelta di chi ' +
+              'chiede, non un consiglio del server.',
+          ),
         format: z.enum(['compact', 'json']).optional().describe('compact (default) oppure json.'),
       },
     },
@@ -743,6 +760,8 @@ export function registerFindElectionHours(server: McpServer, context: ToolContex
         const options: ElectionOptions = {};
         if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
         if (args.bodies) options.bodies = args.bodies as ElectionOptions['bodies'];
+        if (args.rulers) options.rulers = args.rulers as ElectionOptions['rulers'];
+        if (args.skip_moon_void) options.skipMoonVoid = true;
 
         const election = findElectionHours(
           range,

@@ -8,6 +8,7 @@
  */
 
 import type {
+  BodyId,
   HouseSystem,
   NatalChart,
   PassageRange,
@@ -153,7 +154,14 @@ export interface ElectionResponse {
   place: { label?: string; refined: boolean };
   hours: PlanetaryHour[];
   voids: VoidOfCourse[];
+  filters?: { rulers?: BodyId[]; skipMoonVoid?: boolean };
   warnings: string[];
+}
+
+export interface ElectionFilters {
+  /** `null` per tutte le ore: è il caso normale su archi brevi. */
+  ruler: BodyId | null;
+  skipMoonVoid: boolean;
 }
 
 /**
@@ -163,12 +171,22 @@ export interface ElectionResponse {
  * L'arco è corto per costruzione — ventiquattro ore planetarie al giorno
  * riempiono in fretta uno schermo — e il fuso lo dà la località.
  */
-export function electionParameters(location: Location, from: string, days: number): URLSearchParams {
-  return new URLSearchParams({
+export function electionParameters(
+  location: Location,
+  from: string,
+  days: number,
+  filters: ElectionFilters,
+): URLSearchParams {
+  const parameters = new URLSearchParams({
     locationId: String(location.id),
     from,
     to: shiftDate(from, 'day', days),
   });
+
+  if (filters.ruler) parameters.set('rulers', filters.ruler);
+  if (filters.skipMoonVoid) parameters.set('skipMoonVoid', 'true');
+
+  return parameters;
 }
 
 export async function fetchElection(parameters: URLSearchParams): Promise<ElectionResponse> {

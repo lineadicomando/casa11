@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { PlanetaryHour, VoidOfCourse } from '@undicesimacasa/core';
+  import type { BodyId, PlanetaryHour, VoidOfCourse } from '@undicesimacasa/core';
   import { formatDegrees } from '$lib/format';
   import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '$lib/glyphs';
 
@@ -17,9 +17,20 @@
   interface Props {
     hours: PlanetaryHour[];
     voids: VoidOfCourse[];
+    /** I filtri applicati, se ce n'erano: un elenco ridotto deve dirlo. */
+    filters?: { rulers?: BodyId[]; skipMoonVoid?: boolean } | undefined;
   }
 
-  let { hours, voids }: Props = $props();
+  let { hours, voids, filters = undefined }: Props = $props();
+
+  /** «solo le ore di Giove, senza quelle con la Luna vuota». */
+  const criterio = $derived.by(() => {
+    if (!filters) return null;
+    const parti: string[] = [];
+    if (filters.rulers) parti.push(`solo le ore di ${filters.rulers.map((id) => BODY_LABEL[id]).join(', ')}`);
+    if (filters.skipMoonVoid) parti.push('senza quelle con la Luna vuota di corso');
+    return parti.length > 0 ? parti.join(', ') : null;
+  });
 
   /** Le ore spezzate per giornata locale, nell'ordine in cui arrivano. */
   const giorni = $derived.by(() => {
@@ -69,6 +80,11 @@
   <h3 class="titolo-sezione">
     Ore planetarie <span class="conteggio">{hours.length}</span>
   </h3>
+  {#if criterio}
+    <!-- Il conteggio sopra è di un elenco ridotto: senza questa riga si
+         leggerebbe come il numero delle ore esistenti. -->
+    <p class="tenue">Elenco filtrato: {criterio}.</p>
+  {/if}
 
   {#if hours.length === 0}
     <p class="tenue">

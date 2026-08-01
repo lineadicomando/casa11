@@ -179,6 +179,17 @@ describe('findElectionHours', () => {
     expect(filters).toEqual({ skipMoonVoid: true });
   });
 
+  it('rifiuta un reggitore che nessuna ora può avere', () => {
+    // Urano non regge ore: chiederlo darebbe un elenco vuoto, che si
+    // leggerebbe come «questo mese non ne ha» invece di «non esistono».
+    expect(() => findElectionHours(DUE_GIORNI, PALERMO, { rulers: ['urano'] })).toThrowError(
+      ChartError,
+    );
+    expect(() => findElectionHours(DUE_GIORNI, PALERMO, { rulers: ['urano'] })).toThrowError(
+      /ordine caldeo/,
+    );
+  });
+
   it('non dichiara filtri quando non ce ne sono', () => {
     expect(findElectionHours(DUE_GIORNI, PALERMO).filters).toBeUndefined();
   });

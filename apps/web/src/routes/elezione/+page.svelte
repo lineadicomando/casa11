@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { BodyId } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
   import { tick } from 'svelte';
   import {
@@ -9,7 +10,19 @@
   } from '$lib/api';
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import { BODY_LABEL } from '$lib/glyphs';
   import { nowMoment, shiftDate } from '$lib/moment';
+
+  /** I sette dell'ordine caldeo: sono gli unici che reggano un'ora. */
+  const REGGITORI: readonly BodyId[] = [
+    'saturno',
+    'giove',
+    'marte',
+    'sole',
+    'venere',
+    'mercurio',
+    'luna',
+  ];
 
   /**
    * Quanti giorni chiedere in una volta.
@@ -22,6 +35,8 @@
 
   let location = $state<Location | null>(null);
   let from = $state(nowMoment().date);
+  let ruler = $state<BodyId | ''>('');
+  let skipMoonVoid = $state(false);
 
   let election = $state<ElectionResponse | null>(null);
   let loading = $state(false);
@@ -53,7 +68,12 @@
     errorMessage = null;
 
     try {
-      election = await fetchElection(electionParameters(location, from, GIORNI - 1));
+      election = await fetchElection(
+        electionParameters(location, from, GIORNI - 1, {
+          ruler: ruler === '' ? null : ruler,
+          skipMoonVoid,
+        }),
+      );
       return true;
     } catch (cause) {
       errorMessage =
@@ -126,6 +146,21 @@
   <div class="dettagli" hidden={!aperto}>
     <div class="campi">
       <LocationSearch selected={location} onselect={selectLocation} label="Luogo" />
+
+      <div class="filtri">
+        <label for="elezione-reggitore">Reggitore</label>
+        <select id="elezione-reggitore" bind:value={ruler}>
+          <option value="">tutte le ore</option>
+          {#each REGGITORI as pianeta (pianeta)}
+            <option value={pianeta}>solo le ore di {BODY_LABEL[pianeta]}</option>
+          {/each}
+        </select>
+
+        <label class="spunta">
+          <input type="checkbox" bind:checked={skipMoonVoid} />
+          Nascondi le ore con la Luna vuota di corso
+        </label>
+      </div>
     </div>
 
     <p class="nota">
@@ -164,7 +199,7 @@
       </div>
     {/if}
 
-    <ElectionTable hours={election.hours} voids={election.voids} />
+    <ElectionTable hours={election.hours} voids={election.voids} filters={election.filters} />
 
     <!-- La pagina calcola e non consiglia, ed è la stessa linea che tiene il
          motore: dire quale ora convenga sarebbe interpretazione, e non è di
@@ -199,5 +234,22 @@
     padding: 0.1rem 0.5rem;
     font-size: 1rem;
     line-height: 1.2;
+  }
+
+  .filtri {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .filtri label {
+    font-size: 0.85rem;
+    color: var(--testo-tenue);
+  }
+
+  .spunta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
 </style>

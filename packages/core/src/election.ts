@@ -98,6 +98,18 @@ export function findElectionHours(
     );
   }
 
+  // Un reggitore sconosciuto non produrrebbe nessun errore, solo un elenco
+  // vuoto: chi ha scritto «urano» crederebbe che quel mese non abbia ore sue,
+  // e non che nessun mese ne abbia mai.
+  const estranei = (options.rulers ?? []).filter((id) => !CHALDEAN_ORDER.includes(id));
+  if (estranei.length > 0) {
+    throw new ChartError(
+      'CORPO_SCONOSCIUTO',
+      `Nessuna ora è retta da ${estranei.join(', ')}: reggono soltanto i sette pianeti ` +
+        `dell'ordine caldeo (${CHALDEAN_ORDER.join(', ')}).`,
+    );
+  }
+
   const periods = findVoidsOfCourse(range, start, end, options, context, warnings);
   const hours = buildPlanetaryHours(range, place, start, end, periods, options, context, warnings);
 

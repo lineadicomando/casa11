@@ -51,8 +51,12 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     }
 
     const options: ElectionOptions = {};
-    const bodies = readBodies(parameters);
+    const bodies = readBodies(parameters, 'bodies');
     if (bodies) options.bodies = bodies;
+
+    const rulers = readBodies(parameters, 'rulers');
+    if (rulers) options.rulers = rulers;
+    if (parameters.get('skipMoonVoid') === 'true') options.skipMoonVoid = true;
 
     const election = findElectionHours(
       range,
@@ -70,6 +74,9 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
       place: { label: place.label, refined: place.refined ?? false },
       hours: election.hours,
       voids: election.voids,
+      // I filtri tornano indietro con il risultato: un elenco ridotto che non
+      // dichiari di esserlo si legge come completo.
+      ...(election.filters ? { filters: election.filters } : {}),
       warnings: election.warnings,
     });
   } catch (cause) {
@@ -79,14 +86,15 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
 };
 
 /**
- * I corpi che tolgono la Luna dal vuoto di corso, separati da virgola.
+ * Una lista di corpi separati da virgola.
  *
- * Senza il parametro valgono i sei classici, che è la regola nella forma in
- * cui è nata. Chi vuole contare anche Urano, Nettuno e Plutone lo chiede, e
- * sta chiedendo una dottrina diversa: non è un dettaglio di comodo.
+ * Serve a due parametri che non vanno confusi: `bodies` sono i corpi che
+ * tolgono la Luna dal vuoto di corso — senza, valgono i sei classici, che è la
+ * regola nella forma in cui è nata — mentre `rulers` restringe l'elenco alle
+ * ore rette da quei pianeti.
  */
-function readBodies(parameters: URLSearchParams): BodyId[] | null {
-  const raw = parameters.get('bodies');
+function readBodies(parameters: URLSearchParams, name: 'bodies' | 'rulers'): BodyId[] | null {
+  const raw = parameters.get(name);
   if (raw === null || raw === '') return null;
 
   const bodies = raw
@@ -97,7 +105,7 @@ function readBodies(parameters: URLSearchParams): BodyId[] | null {
   if (bodies.length === 0) {
     throw error(400, {
       message:
-        'Valore di "bodies" vuoto: elenca i corpi separati da virgola, es. "sole,venere,giove".',
+        `Valore di "${name}" vuoto: elenca i corpi separati da virgola, es. "sole,venere,giove".`,
       code: 'CORPO_SCONOSCIUTO',
     });
   }

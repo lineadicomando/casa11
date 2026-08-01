@@ -595,6 +595,28 @@ describe('find_election_hours', () => {
     expect(textOf(result)).toMatch(/massimo è 31/);
   });
 
+  it('restringe le ore al reggitore chiesto e lo dichiara', async () => {
+    const result = await client.callTool({
+      name: 'find_election_hours',
+      arguments: {
+        latitude: 44.69825,
+        longitude: 10.63125,
+        timezone: 'Europe/Rome',
+        from: '2026-08-01',
+        to: '2026-08-31',
+        rulers: ['giove'],
+        skip_moon_void: true,
+      },
+    });
+
+    const testo = textOf(result);
+    expect(testo).toContain('Elenco filtrato: solo le ore di Giove');
+    expect(testo).toContain('escluse quelle con la Luna vuota di corso');
+    // Un mese intero sarebbe di ottocento righe: è la ragione del filtro.
+    expect(testo.split('\n').length).toBeLessThan(200);
+    expect(testo).not.toMatch(/^\d\d:\d\d-\d\d:\d\d (Sole|Luna|Marte|Mercurio|Venere|Saturno)/m);
+  });
+
   it('non calcola niente senza un luogo', async () => {
     const result = await client.callTool({
       name: 'find_election_hours',
