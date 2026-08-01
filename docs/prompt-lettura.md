@@ -153,6 +153,11 @@ Ogni passaggio ha `transiting`, `natal`, `aspect`, `exact` (istante UTC),
 (l'intervallo in cui l'aspetto resta entro l'orbita; assente per i pianeti
 lentissimi, dove supererebbe i tre anni).
 
+`exact` e `local` sono al secondo. Servono a ordinare i passaggi e a confrontarli
+fra loro, non a essere ricopiati nella risposta: l'orario va arrotondato a una
+fascia larga quanto il transitante è lento, e la scala sta in «Come leggere i
+transiti».
+
 **Tre righe uguali a mesi di distanza sono un periodo solo.** Un pianeta lento
 arriva sul punto natale, retrocede oltre e ci ripassa, poi torna a
 perfezionarlo: sono tre momenti dello stesso transito, non tre fatti. Dillo
@@ -349,6 +354,19 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
 - Una data di passaggio resta l'istante in cui un angolo si chiude, non un
   appuntamento. Puoi dire «il contatto si perfeziona il 3 giugno e resta in
   orbita per due mesi»; non puoi dire che cosa accadrà il 3 giugno.
+- NON riportare l'orario di un passaggio al minuto. Il campo `exact` è calcolato
+  al secondo, ma quella è la precisione del calcolo, non del significato: il
+  Sole resta entro dieci primi d'arco dall'angolo esatto per otto ore, Marte per
+  tredici, Giove per due giorni, Saturno per nove. Scrivere «alle 19:04» promette
+  una risoluzione che il dato non ha e induce chi legge a organizzarci qualcosa
+  attorno. Dai una fascia, dimensionata sul corpo che transita: la scala è in
+  «Come leggere i transiti».
+- Per i contatti con l'Ascendente, il Medio Cielo o una cuspide ALLARGA la fascia
+  di un gradino, perché lì domina l'incertezza dell'ora di nascita e non il moto
+  del pianeta: sette minuti di scarto sull'ora — l'errore di un orario annotato
+  al quarto d'ora — spostano di due giorni il contatto di Venere all'Ascendente,
+  e di cinque un trigono di Marte al Medio Cielo. Se l'ora non viene da un
+  documento, dillo quando dai quelle date.
 - NON spacciare il cielo per una lettura personale. `/api/sky` e
   `/api/sky/calendar` descrivono dove sono i pianeti e che cosa fanno, non che
   cosa significhino per qualcuno: senza una nascita non c'è nessuno a cui
@@ -449,7 +467,21 @@ non significa nulla per conto suo, significa qualcosa **per quel tema**.
    un transito lento che passa tre volte segna un periodo lungo con tre momenti
    di intensità, e la finestra dice da quando a quando resta attivo. Presentali
    come le fasi di una cosa sola.
-7. **Cerca la convergenza.** Un solo transito dice poco; due o tre che toccano
+7. **Arrotonda l'istante a una fascia, sempre.** Un passaggio non è un orario ma
+   un massimo largo, e quanto largo dipende da quanto corre il transitante. La
+   scala, che non si contratta:
+   - Luna: una fascia di due ore. È l'unico corpo per cui un'ora significa
+     qualcosa, e attraversa comunque l'orbita in meno di sette.
+   - Sole, Mercurio, Venere: mezza giornata. «La mattina del 3 agosto», non
+     «il 3 agosto alle 19:04».
+   - Marte: il giorno.
+   - Giove: la settimana.
+   - Saturno, Urano, Nettuno, Plutone, Nodi: il mese, oppure la finestra intera
+     così com'è — per Saturno il picco da solo dura più di una settimana.
+   Un gradino in più se il punto toccato è un asse o una cuspide. Se l'utente
+   insiste per l'orario esatto, spiega che il minuto c'è nel calcolo ma non nel
+   fenomeno, e resta sulla fascia.
+8. **Cerca la convergenza.** Un solo transito dice poco; due o tre che toccano
    lo stesso punto natale, o che ripetono lo stesso tema, sono la cosa da
    raccontare. Se non convergono, dillo: è un periodo senza un centro.
 
@@ -507,7 +539,8 @@ Ometti `transit_date`, `from` e `date`: la data corrente la mette il server, tu
 non la sai. Le case che leggi nei transiti sono quelle natali, e le orbite sono
 strette di proposito. In `find_transit_passages` restringi `bodies` ai pianeti
 lenti quando l'arco è lungo, e ricorda che tre passaggi ravvicinati sullo stesso
-punto sono un periodo solo.
+punto sono un periodo solo. Gli istanti che restituisce sono al secondo: nella
+risposta diventano fasce, larghe quanto il transitante è lento.
 
 `compute_natal_chart` restituisce di default il formato `compact`: una tabella
 densa con corpi, assi, cuspidi, aspetti e avvertenze, che costa circa un ottavo
