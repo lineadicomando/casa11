@@ -22,7 +22,7 @@ undicesimacasa/
 ├── packages/
 │   ├── core/          motore di calcolo (nessuna dipendenza web)
 │   ├── geo/           ricerca località, dataset GeoNames locale
-│   └── mcp/           server MCP: luogo, tema natale, cielo, transiti, passaggi
+│   └── mcp/           server MCP: luogo, tema natale, cielo, transiti, passaggi, elezione
 └── apps/
     └── web/           SvelteKit: interfaccia + API REST
 ```
@@ -342,6 +342,79 @@ dai corpi predefiniti, qui come nel calendario dei passaggi: da sola cambia
 segno ogni due giorni e mezzo. Ma senza di lei non ci sono lunazioni, quindi
 quando servono la si chiede per nome.
 
+## Elezione
+
+Il tema natale riceve un istante e lo legge; l'elezione fa il contrario: cerca
+l'istante. È la tecnica tradizionale per scegliere **quando** cominciare
+qualcosa, e il motore ne calcola il materiale — non la scelta.
+
+```ts
+const { hours, voids } = findElectionHours(
+  { from: '2029-08-24', to: '2029-08-26', timezone: 'Europe/Rome' },
+  { latitude: 38.1166, longitude: 13.3636 },
+);
+```
+
+```
+06:34-07:40 Venere     d 1  66m 1°19' Ver
+07:40-08:46 Mercurio   d 2  66m 14°43' Ver
+...
+2029-08-23 15:47 → 2029-08-24 01:34 (587 min) in acquario, dopo quadrato a Saturno, poi pesci
+```
+
+Tre cose, e nessuna di esse è un giudizio.
+
+Le **ore planetarie** sono le dodici parti in cui si divide l'arco diurno, e le
+altre dodici in cui si divide quello notturno. Durano sessanta minuti soltanto
+agli equinozi: a Palermo, a fine agosto, un'ora diurna sta sui sessantasei
+minuti e una notturna sui cinquantaquattro. Il reggitore segue l'**ordine
+caldeo** — Saturno, Giove, Marte, Sole, Venere, Mercurio, Luna — a partire dal
+pianeta del giorno della settimana, e il giorno planetario comincia **all'alba**
+e non a mezzanotte: fra la mezzanotte e l'alba di lunedì regge ancora la
+domenica. Ventiquattro ore avanzano di tre posizioni nella catena, ed è da quello
+scarto che discende l'ordine dei giorni della settimana.
+
+L'**Ascendente** viene dato all'inizio di ogni ora, ed è il dato che si muove
+più in fretta di tutti: un grado ogni quattro minuti, un segno intero in meno di
+due ore.
+
+La **Luna vuota di corso** è il tratto in cui non perfeziona più alcun aspetto
+maggiore prima di lasciare il segno. Si ricava per intero da due calendari che
+il motore già sa fare — gli ingressi della Luna e i suoi incontri — presi su un
+arco allargato, perché il vuoto in corso il primo giorno è cominciato prima.
+Contano i **sei classici**: allargare la regola a Urano, Nettuno e Plutone
+cambierebbe in silenzio il risultato di una dottrina che ha un'origine precisa,
+quindi chi la vuole moderna passa `bodies` e se ne assume la scelta.
+
+Alba e tramonto sono l'unico calcolo del motore che guardi l'orizzonte, e sono
+presi al **centro del disco senza rifrazione**: non è l'alba dell'almanacco, che
+arriva quasi cinque minuti prima, ma è l'unica per cui il Sole si trovi
+esattamente sull'Ascendente — cioè l'unica coerente con gli assi che la stessa
+tabella riporta accanto. Alle latitudini polari, dove il Sole può non sorgere per
+settimane, il risultato è vuoto e lo dice: dodici parti di un arco diurno lungo
+un giorno intero sarebbero un numero plausibile e falso.
+
+L'arco ha un tetto di **31 giorni**, che è più stretto di quello dei passaggi:
+qui ogni giorno porta ventiquattro righe.
+
+```sh
+casa11 --elezione --lat 38.1166 --lon 13.3636 --tz Europe/Rome \
+       --from 2029-08-24 --to 2029-08-26
+```
+
+```
+GET /api/election?locationId=2523920&from=2029-08-24&to=2029-08-26
+```
+
+Il luogo è **obbligatorio e senza alternative**, unico caso fra gli endpoint: le
+ore planetarie nascono da alba e tramonto, e quelle senza un punto sulla Terra
+non esistono. Omettendo `to` si ha un giorno solo, che è la domanda più comune.
+
+**Il risultato non contiene raccomandazioni**, ed è deliberato quanto il resto:
+dice quale pianeta regge un'ora e se la Luna sia vuota, non se quell'ora sia
+buona per qualcosa. Il significato è di chi consuma, come per ogni altro numero
+che questo motore produce.
+
 ## Le località
 
 Il dataset GeoNames è importato in un database SQLite locale: 235.073 località,
@@ -493,6 +566,7 @@ GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026
 GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome
 GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&timezone=Europe/Rome
+GET /api/election?locationId=2523920&from=2029-08-24&to=2029-08-26
 ```
 
 I transiti accettano **gli stessi parametri di nascita** del tema, più
@@ -511,8 +585,8 @@ dentro il JavaScript scaricato dall'utente.
 
 ### Struttura dell'interfaccia
 
-L'applicazione ospita più sezioni — il tema, i transiti, il cielo — che
-condividono quasi tutto pur partendo da domande diverse. Le parti riusabili
+L'applicazione ospita più sezioni — il tema, i transiti, il cielo, l'elezione —
+che condividono quasi tutto pur partendo da domande diverse. Le parti riusabili
 stanno perciò in `$lib` e non nella pagina:
 
 | | |
@@ -523,7 +597,7 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |
 | `lib/wheel.ts` | la geometria della ruota, senza SVG e quindi verificabile |
 | `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
-| `lib/server/{place,birth,moment}.ts` | lettura dei parametri, condivisa fra gli endpoint |
+| `lib/server/{place,birth,moment,range}.ts` | lettura dei parametri, condivisa fra gli endpoint |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
 | `lib/components/MomentFields.svelte` | giorno, ora, «adesso» e il passo avanti o indietro: l'istante che i transiti e il cielo chiedono allo stesso modo |
 | `lib/components/ChartSettings.svelte` | sistema di case e aspetti minori; nella striscia del modulo chiuso ricalcola da sé |
@@ -538,7 +612,9 @@ richiesto una tabella nuova sola — quella degli aspetti a due lati — e ha
 riusato le altre; e per cui il cielo di un istante non ne ha richiesta nessuna.
 Ne servono due al calendario, ma perché i dati sono diversi davvero: un incontro
 ha due corpi mobili invece di un corpo e un punto fermo, e ingressi e stazioni
-non sono aspetti affatto. Per la stessa ragione la ruota accetta un tipo
+non sono aspetti affatto. L'elezione ne ha richiesta una sua per lo stesso
+motivo — un'ora planetaria non è un aspetto e non ha orbita — e prende le ore e
+i vuoti, non il risultato dell'endpoint. Per la stessa ragione la ruota accetta un tipo
 strutturale e non un `NatalChart`: il cielo non deve fingersi un tema per essere
 disegnato.
 
@@ -653,7 +729,7 @@ Espone il calcolo agli agenti. Trasporto stdio:
 Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
 il percorso assoluto.
 
-Sei tool, con la ricerca del luogo deliberatamente separata dal calcolo:
+Sette tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 
 | Tool | Cosa fa |
 |---|---|
@@ -663,6 +739,7 @@ Sei tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 | `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
 | `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
 | `find_sky_events` | un arco → incontri, ingressi nei segni e stazioni, sempre senza nascita |
+| `find_election_hours` | un luogo e un arco → ore planetarie, Ascendente, Luna vuota di corso |
 
 **`compute_sky` e `find_sky_events` non hanno nessun parametro obbligatorio**, e
 le loro descrizioni insistono sulla differenza che un modello tenderebbe a
@@ -671,7 +748,9 @@ nascita il cielo da solo non basta. Serve a evitare che un agente inventi una
 data di nascita per poter chiamare `compute_transits`, o che chiami questi
 quando la domanda riguarda invece una persona. `find_sky_events` accetta
 `include` per chiedere una sola delle tre cose, che accorcia la risposta quando
-la domanda è precisa.
+la domanda è precisa. `find_election_hours` è l'eccezione che conferma la
+regola del luogo: è l'unico tool a pretenderlo senza alternative, perché senza
+alba e tramonto non ci sono ore planetarie da dividere.
 
 La data di adesso **va sempre omessa** — `transit_date`, `from`, `date` —
 perché la mette il server, che è la sola fonte a saperla. È la stessa ragione
