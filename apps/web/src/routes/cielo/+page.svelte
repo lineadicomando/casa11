@@ -101,8 +101,7 @@
 
 <h1>Cielo</h1>
 <p class="sottotitolo">
-  Dove sono i pianeti in un dato momento e che aspetti formano fra loro. Non è un tema
-  natale e non sono transiti: senza una nascita a cui riferirlo, è il cielo e basta.
+  Dove sono i pianeti in un dato momento e che aspetti formano fra loro.
 </p>
 
 <form onsubmit={submit} class="modulo">

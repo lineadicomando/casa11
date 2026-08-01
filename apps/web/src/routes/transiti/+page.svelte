@@ -94,7 +94,6 @@
 <h1>Transiti</h1>
 <p class="sottotitolo">
   Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita.
-  Le orbite sono strette: un transito è una fase, non una previsione.
 </p>
 
 <form onsubmit={submit} class="modulo">
