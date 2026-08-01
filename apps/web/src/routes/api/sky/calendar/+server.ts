@@ -2,10 +2,11 @@ import {
   findSignIngresses,
   findSkyPassages,
   findStations,
+  type BodyId,
   type SkyEventOptions,
   type SkyPassageOptions,
 } from '@undicesimacasa/core';
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError } from '$lib/server/place';
 import { resolvePassageRange } from '$lib/server/range';
@@ -20,7 +21,8 @@ import type { RequestHandler } from './$types';
  * si guarda, nemmeno le case.
  *
  * Senza `from` si parte da oggi, senza `to` si arriva a un anno dopo. L'arco
- * ha un tetto di tre anni.
+ * ha un tetto di tre anni. Con `bodies` si sceglie chi seguire: senza, tutti
+ * tranne la Luna.
  */
 export const GET: RequestHandler = ({ url, setHeaders }) => {
   try {
@@ -31,6 +33,15 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     const minorAspects = parameters.get('minorAspects') === 'true';
     const passageOptions: SkyPassageOptions = { minorAspects };
     const eventOptions: SkyEventOptions = {};
+
+    // Senza `bodies` la Luna resta fuori, perché in un anno riempirebbe
+    // l'elenco da sola. Ma è anche l'unico modo di avere le lunazioni, e
+    // negarlo qui renderebbe l'endpoint più povero della riga di comando.
+    const bodies = readBodies(parameters);
+    if (bodies) {
+      passageOptions.bodies = bodies;
+      eventOptions.bodies = bodies;
+    }
 
     const incontri = findSkyPassages(range, passageOptions);
     const ingressi = findSignIngresses(range, eventOptions);
@@ -58,3 +69,29 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     toHttpError(cause);
   }
 };
+
+/**
+ * I corpi da seguire, separati da virgola.
+ *
+ * Un identificatore sconosciuto lo rifiuta il motore, con il suo codice: qui
+ * si controlla solo che la lista non sia vuota, perché una lista vuota
+ * scivolerebbe nei predefiniti invece di dire che non si è capito.
+ */
+function readBodies(parameters: URLSearchParams): BodyId[] | null {
+  const raw = parameters.get('bodies');
+  if (raw === null || raw === '') return null;
+
+  const bodies = raw
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id !== '');
+
+  if (bodies.length === 0) {
+    throw error(400, {
+      message: 'Valore di "bodies" vuoto: elenca i corpi separati da virgola, es. "sole,luna".',
+      code: 'CORPO_SCONOSCIUTO',
+    });
+  }
+
+  return bodies as BodyId[];
+}

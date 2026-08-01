@@ -279,6 +279,69 @@ fuso vale UTC via API e l'orologio della macchina da riga di comando. La cache
 di `/api/sky` è **pubblica** e non privata come quella di un tema — il cielo di
 un istante è lo stesso per tutti e non è di nessuno.
 
+### Il calendario del cielo
+
+Le tre cose che succedono in un periodo, e che un quadro istantaneo non può
+mostrare: due corpi che si **incontrano**, un corpo che **entra** in un segno,
+un corpo che si **ferma** e inverte il moto.
+
+```ts
+const { passages } = findSkyPassages(arco, { bodies: ['saturno', 'nettuno'] });
+const { ingresses } = findSignIngresses(arco);
+const { stations } = findStations(arco);
+```
+
+```
+2026-02-20 17:54  Saturno  congiunzione  Nettuno  D/D  [24 gen → 16 mar]
+2026-01-26 18:35  Nettuno  pesci → ariete
+2026-05-06 17:34  Plutone  retrograda  5°31' Acq
+```
+
+Il metodo è quello del calendario dei passaggi, con una differenza che decide
+tutto: là un termine solo si muoveva, contro una posizione di nascita ferma per
+sempre; qui si muovono **entrambi**. Il passo di campionamento segue perciò la
+somma delle due velocità e non la loro differenza — in retrogradazione i due si
+avvicinano più in fretta di quanto dicano i moti medi, e un passo tarato sulla
+differenza salterebbe proprio l'incontro che conta. Il margine con cui si cerca
+la finestra segue invece la differenza, che è il ritmo con cui un'orbita si apre
+e si chiude.
+
+La coppia è ordinata per velocità **media** e non per moto istantaneo: presa sul
+momento si scambierebbe i ruoli a ogni retrogradazione, e lo stesso incontro
+comparirebbe ora in un verso ora nell'altro. Ogni coppia compare una volta sola,
+perché un aspetto fra due corpi è reciproco.
+
+**Le lunazioni non hanno codice proprio**: novilunio e plenilunio sono la
+congiunzione e l'opposizione fra Sole e Luna, e escono da sole se il metodo è
+giusto. Il novilunio del 18 gennaio 2026 cade alle 19:52 UT, come sulle
+effemeridi pubblicate — è la verifica che il resto dell'elenco sia altrettanto
+esatto.
+
+**Un ingresso non è sempre un progresso.** Saturno entra in Ariete il 25 maggio
+2025, retrograda tornando in Pesci il 1° settembre e rientra il 14 febbraio
+2026: contarne uno solo darebbe una data d'inizio sbagliata di nove mesi a un
+passaggio che dura tre anni. Ogni attraversamento è un evento a sé e porta con
+sé il verso. Una stazione, dal canto suo, è una radice della **velocità** e non
+della posizione — il pianeta non arriva da nessuna parte, si ferma — e porta il
+grado su cui indugia per giorni e su cui tornerà due volte.
+
+```sh
+casa11 --sky --passages --from 2026-01-01 --to 2026-12-31
+casa11 --sky --events   --from 2026-01-01 --to 2026-12-31
+```
+
+```
+GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&timezone=Europe/Rome
+GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&bodies=sole,luna
+```
+
+L'endpoint fa le tre ricerche insieme: chi guarda un periodo le vuole tutte e
+tre. Non accetta nessun luogo, nemmeno facoltativo — un incontro fra due
+pianeti avviene alla stessa ora ovunque lo si guardi. La **Luna resta fuori**
+dai corpi predefiniti, qui come nel calendario dei passaggi: da sola cambia
+segno ogni due giorni e mezzo. Ma senza di lei non ci sono lunazioni, quindi
+quando servono la si chiede per nome.
+
 ## Le località
 
 Il dataset GeoNames è importato in un database SQLite locale: 235.073 località,
@@ -429,6 +492,7 @@ GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Ro
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
 GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome
+GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&timezone=Europe/Rome
 ```
 
 I transiti accettano **gli stessi parametri di nascita** del tema, più
@@ -470,9 +534,12 @@ Le tabelle prendono **i dati, non il tema**: un quadro di transiti ha due
 insiemi di posizioni e aspetti fra insiemi diversi, e legarle a `NatalChart`
 costringerebbe a riscriverle. È la ragione per cui la sezione dei transiti ha
 richiesto una tabella nuova sola — quella degli aspetti a due lati — e ha
-riusato le altre; e per cui il cielo, che non ha nessuna nascita, non ne ha
-richiesta nessuna. Per la stessa ragione la ruota accetta un tipo strutturale e
-non un `NatalChart`: il cielo non deve fingersi un tema per essere disegnato.
+riusato le altre; e per cui il cielo di un istante non ne ha richiesta nessuna.
+Ne servono due al calendario, ma perché i dati sono diversi davvero: un incontro
+ha due corpi mobili invece di un corpo e un punto fermo, e ingressi e stazioni
+non sono aspetti affatto. Per la stessa ragione la ruota accetta un tipo
+strutturale e non un `NatalChart`: il cielo non deve fingersi un tema per essere
+disegnato.
 
 ### Privacy
 
@@ -585,7 +652,7 @@ Espone il calcolo agli agenti. Trasporto stdio:
 Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
 il percorso assoluto.
 
-Cinque tool, con la ricerca del luogo deliberatamente separata dal calcolo:
+Sei tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 
 | Tool | Cosa fa |
 |---|---|
@@ -594,13 +661,16 @@ Cinque tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 | `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema |
 | `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
 | `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
+| `find_sky_events` | un arco → incontri, ingressi nei segni e stazioni, sempre senza nascita |
 
-**`compute_sky` non ha nessun parametro obbligatorio**, e la sua descrizione
-insiste sulla differenza che un modello tenderebbe a perdere: senza una nascita
-non esistono transiti, esiste solo il cielo; con una nascita il cielo da solo
-non basta. Serve a evitare che un agente inventi una data di nascita per poter
-chiamare `compute_transits`, o che chiami questo quando la domanda riguarda
-invece una persona.
+**`compute_sky` e `find_sky_events` non hanno nessun parametro obbligatorio**, e
+le loro descrizioni insistono sulla differenza che un modello tenderebbe a
+perdere: senza una nascita non esistono transiti, esiste solo il cielo; con una
+nascita il cielo da solo non basta. Serve a evitare che un agente inventi una
+data di nascita per poter chiamare `compute_transits`, o che chiami questi
+quando la domanda riguarda invece una persona. `find_sky_events` accetta
+`include` per chiedere una sola delle tre cose, che accorcia la risposta quando
+la domanda è precisa.
 
 La data di adesso **va sempre omessa** — `transit_date`, `from`, `date` —
 perché la mette il server, che è la sola fonte a saperla. È la stessa ragione
