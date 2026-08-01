@@ -17,13 +17,13 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
-  import TransitSettings from '$lib/components/TransitSettings.svelte';
-  import { isCompleteTransit, nowTransitInput } from '$lib/transit';
+  import { isCompleteMoment, nowMoment } from '$lib/moment';
 
   let birth = $state(emptyBirthInput());
-  let transit = $state(nowTransitInput());
+  let transit = $state(nowMoment());
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
 
@@ -40,7 +40,7 @@
   let loadingPassages = $state(false);
   let passagesError = $state<string | null>(null);
 
-  const canSubmit = $derived(isComplete(birth) && isCompleteTransit(transit));
+  const canSubmit = $derived(isComplete(birth) && isCompleteMoment(transit));
 
   async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -100,7 +100,7 @@
 <form onsubmit={submit} class="modulo">
   <BirthForm bind:value={birth}>
     {#snippet options()}
-      <TransitSettings bind:value={transit} />
+      <MomentFields bind:value={transit} what="del transito" id="transito" />
       <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
     {/snippet}
   </BirthForm>

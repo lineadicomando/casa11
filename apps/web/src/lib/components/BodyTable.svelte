@@ -30,6 +30,17 @@
     title = 'Corpi',
     houseTitle = 'Casa',
   }: Props = $props();
+
+  /**
+   * La colonna delle case c'è solo se qualcuno la occupa.
+   *
+   * Senza ora di nascita, o senza un luogo da cui guardare il cielo, le case
+   * non esistono affatto: una colonna di trattini le farebbe sembrare un dato
+   * mancante invece che una domanda mal posta.
+   */
+  const withHouses = $derived(
+    bodies.some((body) => body.house !== undefined) || partOfFortune?.house !== undefined,
+  );
 </script>
 
 <section>
@@ -40,7 +51,7 @@
         <th></th>
         <th>Corpo</th>
         <th>Posizione</th>
-        <th class="numerico">{houseTitle}</th>
+        {#if withHouses}<th class="numerico">{houseTitle}</th>{/if}
       </tr>
     </thead>
     <tbody>
@@ -57,7 +68,7 @@
             <span class="glifo-piccolo">{SIGN_GLYPH[body.sign]}</span>
             <span class="tenue">{SIGN_LABEL[body.sign]}</span>
           </td>
-          <td class="numerico">{body.house ?? '—'}</td>
+          {#if withHouses}<td class="numerico">{body.house ?? '—'}</td>{/if}
         </tr>
       {/each}
       {#if partOfFortune}
@@ -69,7 +80,7 @@
             <span class="glifo-piccolo">{SIGN_GLYPH[partOfFortune.sign]}</span>
             <span class="tenue">{SIGN_LABEL[partOfFortune.sign]}</span>
           </td>
-          <td class="numerico">{partOfFortune.house ?? '—'}</td>
+          {#if withHouses}<td class="numerico">{partOfFortune.house ?? '—'}</td>{/if}
         </tr>
       {/if}
     </tbody>

@@ -85,6 +85,44 @@ export function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
 }
 
 /**
+ * Un luogo che può non esserci.
+ *
+ * Il fuso è facoltativo perché senza località non c'è niente che lo fornisca:
+ * due coordinate non dicono che ore siano. Nel cielo di un istante è un dato
+ * a parte — l'orologio di chi guarda — e non una proprietà del posto.
+ */
+export interface OptionalPlace {
+  latitude: number;
+  longitude: number;
+  timezone?: string;
+  label?: string;
+  refined?: boolean;
+}
+
+/**
+ * Il luogo, quando indicarlo è una scelta e non un obbligo.
+ *
+ * È il caso del cielo: le posizioni valgono ovunque, il luogo serve solo a
+ * orientare assi e case. Assente, non è un errore — mezzo assente sì, perché
+ * una coordinata sola metterebbe l'osservatore su un meridiano arbitrario.
+ */
+export function resolveOptionalPlace(parameters: URLSearchParams): OptionalPlace | null {
+  if (parameters.get('locationId')) return resolvePlace(parameters);
+
+  const { latitude, longitude } = readCoordinateOverrides(parameters);
+  if (latitude === undefined && longitude === undefined) return null;
+
+  if (latitude === undefined || longitude === undefined) {
+    throw error(400, {
+      message: 'Luogo incompleto: "latitude" e "longitude" vanno indicate insieme.',
+      code: 'LUOGO_INCOMPLETO',
+    });
+  }
+
+  return { latitude, longitude };
+}
+
+/**
  * Legge le coordinate esplicite, se presenti.
  *
  * Un valore malformato è un errore, non un motivo per ripiegare in silenzio

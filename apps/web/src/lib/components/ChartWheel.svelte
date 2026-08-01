@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NatalChart, TransitChart } from '@undicesimacasa/core';
+  import type { TransitChart } from '@undicesimacasa/core';
   import {
     ASPECT_COLOR,
     ELEMENT_COLOR,
@@ -18,10 +18,11 @@
     radiiFor,
     spread,
     transitWheelPoints,
+    type WheelChart,
   } from '$lib/wheel';
 
   interface Props {
-    chart: NatalChart;
+    chart: WheelChart;
     /**
      * Transiti da disegnare in un anello esterno. Quando ci sono, le linee
      * al centro sono i loro aspetti al tema e non quelli interni al tema:
@@ -30,9 +31,20 @@
     transits?: TransitChart | null;
     /** Corpo evidenziato: gli aspetti che non lo toccano vengono attenuati. */
     highlighted?: string | null;
+    /**
+     * Descrizione per chi non vede il disegno. Ha un valore predefinito
+     * perché la ruota nasce per il tema, ma il cielo di un istante non è un
+     * tema e non va annunciato come tale.
+     */
+    label?: string;
   }
 
-  let { chart, transits = null, highlighted = null }: Props = $props();
+  let {
+    chart,
+    transits = null,
+    highlighted = null,
+    label = 'Ruota del tema natale con posizioni planetarie, case e aspetti',
+  }: Props = $props();
 
   /** Ampiezza minima dell'arco di una congiunzione, in gradi. */
   const CONJUNCTION_MIN_SPAN = 5;
@@ -94,7 +106,7 @@
   role="img"
   aria-label={transits
     ? 'Ruota con il tema natale, i corpi in transito e i loro aspetti'
-    : 'Ruota del tema natale con posizioni planetarie, case e aspetti'}
+    : label}
 >
   <!-- Settori dei segni, colorati per elemento -->
   {#each ZODIAC_ORDER as sign, index (sign)}

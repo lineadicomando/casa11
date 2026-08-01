@@ -80,7 +80,14 @@ export function readChartOptions(parameters: URLSearchParams): ChartOptions {
   return options;
 }
 
-/** L'etichetta del luogo, come la riceve chi chiama. */
-export function placeLabel(place: ResolvedPlace): { label: string; refined: boolean } | undefined {
-  return place.label ? { label: place.label, refined: place.refined ?? false } : undefined;
+/**
+ * L'etichetta del luogo, come la riceve chi chiama.
+ *
+ * Accetta anche un luogo assente: nel cielo di un istante indicarlo è
+ * facoltativo, e la risposta si limita a non intestarsi a nessun posto.
+ */
+export function placeLabel(
+  place: { label?: string; refined?: boolean } | null,
+): { label: string; refined: boolean } | undefined {
+  return place?.label ? { label: place.label, refined: place.refined ?? false } : undefined;
 }

@@ -11,8 +11,31 @@
  * trascinerebbe l'intero grafo nel bundle del browser.
  */
 
-import type { CelestialBody, NatalChart, NatalPointId, TransitChart } from '@undicesimacasa/core';
+import type {
+  Angles,
+  Aspect,
+  CelestialBody,
+  ChartPoint,
+  House,
+  NatalPointId,
+  TransitChart,
+} from '@undicesimacasa/core';
 import { BODY_GLYPH, POINT_GLYPH } from './glyphs';
+
+/**
+ * Quel che alla ruota serve di una carta.
+ *
+ * Un tipo strutturale invece di `NatalChart`, perché la stessa ruota disegna
+ * il cielo di un istante — che non ha nascita, e quindi nemmeno Parte di
+ * Fortuna. Elencare qui i campi usati dice anche quanto poco ne serva.
+ */
+export interface WheelChart {
+  bodies: readonly CelestialBody[];
+  houses: readonly House[];
+  angles?: Angles;
+  partOfFortune?: ChartPoint;
+  aspects: readonly Aspect[];
+}
 
 export const SIZE = 800;
 export const CENTER = SIZE / 2;
@@ -220,8 +243,8 @@ function normalize360(degrees: number): number {
   return ((degrees % 360) + 360) % 360;
 }
 
-/** I corpi del tema natale, con la Parte di Fortuna se è stata calcolata. */
-export function natalWheelPoints(chart: NatalChart): WheelPoint[] {
+/** I corpi della carta, con la Parte di Fortuna se è stata calcolata. */
+export function natalWheelPoints(chart: WheelChart): WheelPoint[] {
   const points: WheelPoint[] = chart.bodies.map((body) => ({
     id: body.id,
     glyph: BODY_GLYPH[body.id],
@@ -261,7 +284,7 @@ export function transitWheelPoints(transits: TransitChart): WheelPoint[] {
  * `undefined` quando il punto non c'è — un asse in un tema senza ora — così
  * che la linea dell'aspetto non venga tracciata verso il centro della ruota.
  */
-export function natalPointLongitude(chart: NatalChart, id: NatalPointId): number | undefined {
+export function natalPointLongitude(chart: WheelChart, id: NatalPointId): number | undefined {
   if (chart.angles) {
     if (id === 'ascendente') return chart.angles.ascendant;
     if (id === 'medio-cielo') return chart.angles.midheaven;

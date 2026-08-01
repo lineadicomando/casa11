@@ -4,9 +4,14 @@
   interface Props {
     selected: Location | null;
     onselect: (location: Location | null) => void;
+    /**
+     * Che luogo si sta cercando. Nel cielo di un istante non è una nascita
+     * ma il punto da cui si guarda, ed è per giunta facoltativo.
+     */
+    label?: string;
   }
 
-  let { selected, onselect }: Props = $props();
+  let { selected, onselect, label = 'Luogo di nascita' }: Props = $props();
 
   let query = $state('');
   let results = $state<Location[]>([]);
@@ -90,7 +95,7 @@
 </script>
 
 <div class="combo">
-  <label for="luogo">Luogo di nascita</label>
+  <label for="luogo">{label}</label>
   <input
     id="luogo"
     type="text"

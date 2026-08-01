@@ -11,12 +11,14 @@ import type {
   HouseSystem,
   NatalChart,
   PassageRange,
+  SkyChart,
   TransitChart,
   TransitPassage,
 } from '@undicesimacasa/core';
+import type { Location } from '@undicesimacasa/geo';
 import type { BirthInput } from './birth';
 import { refinedCoordinates } from './birth';
-import type { TransitInput } from './transit';
+import type { MomentInput } from './moment';
 
 /** Errore con un messaggio già presentabile a schermo. */
 export class RequestError extends Error {
@@ -71,6 +73,43 @@ export async function fetchChart(parameters: URLSearchParams): Promise<ChartResp
   return request<ChartResponse>(`/api/chart?${parameters}`, 'Calcolo non riuscito');
 }
 
+export interface SkyResponse {
+  sky: SkyChart;
+  place?: { label: string; refined: boolean };
+}
+
+/**
+ * Compone i parametri di `/api/sky`.
+ *
+ * Non riusa quelli del tema perché non c'è nessuna nascita: il luogo è
+ * facoltativo e l'istante non è riferito a niente.
+ *
+ * Il fuso resta quello di chi guarda anche quando si sceglie un luogo
+ * lontano: l'ora scritta nel modulo deve corrispondere all'orologio di chi la
+ * scrive. Il luogo serve solo a orientare assi e case.
+ */
+export function skyParameters(
+  moment: MomentInput,
+  options: ChartOptionsInput,
+  location: Location | null,
+): URLSearchParams {
+  const parameters = new URLSearchParams({
+    date: moment.date,
+    timezone: moment.timezone,
+    houseSystem: options.houseSystem,
+    minorAspects: String(options.minorAspects),
+  });
+
+  if (moment.time) parameters.set('time', moment.time);
+  if (location) parameters.set('locationId', String(location.id));
+
+  return parameters;
+}
+
+export async function fetchSky(parameters: URLSearchParams): Promise<SkyResponse> {
+  return request<SkyResponse>(`/api/sky?${parameters}`, 'Calcolo del cielo non riuscito');
+}
+
 export interface TransitsResponse extends ChartResponse {
   transits: TransitChart;
 }
@@ -85,7 +124,7 @@ export interface TransitsResponse extends ChartResponse {
 export function transitParameters(
   birth: BirthInput,
   options: ChartOptionsInput,
-  transit: TransitInput,
+  transit: MomentInput,
 ): URLSearchParams {
   const parameters = chartParameters(birth, options);
 
@@ -117,7 +156,7 @@ export interface PassagesResponse extends ChartResponse {
 export function passageParameters(
   birth: BirthInput,
   options: ChartOptionsInput,
-  transit: TransitInput,
+  transit: MomentInput,
   months: number,
 ): URLSearchParams {
   const parameters = chartParameters(birth, options);

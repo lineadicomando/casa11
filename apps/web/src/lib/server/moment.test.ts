@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveTransitMoment } from './moment';
+import { resolveSkyMoment, resolveTransitMoment } from './moment';
 
 /** Estrae status e corpo da un errore sollevato da `error()`. */
 function capture(run: () => unknown): { status: number; body: { message: string; code?: string } } {
@@ -120,5 +120,43 @@ describe('resolveTransitMoment', () => {
 
     expect(moment.date).toBe('2026-08-01');
     expect(explicit).toBe(false);
+  });
+});
+
+describe('resolveSkyMoment', () => {
+  it('legge la data senza prefisso: qui ce n è una sola', () => {
+    const { moment, explicit } = resolveSkyMoment(
+      params('date=2026-08-15&time=09:00&timezone=Asia/Tokyo'),
+      'UTC',
+      ADESSO,
+    );
+
+    expect(moment).toEqual({ date: '2026-08-15', time: '09:00', timezone: 'Asia/Tokyo' });
+    expect(explicit).toBe(true);
+  });
+
+  it('senza fuso ripiega su UTC e non sull orologio del server', () => {
+    const { moment } = resolveSkyMoment(params(''), undefined, ADESSO);
+
+    expect(moment.timezone).toBe('UTC');
+    expect(moment).toEqual({ date: '2026-07-31', time: '23:30', timezone: 'UTC' });
+  });
+
+  it('eredita il fuso della località quando ce n è una', () => {
+    const { moment } = resolveSkyMoment(params(''), 'Europe/Rome', ADESSO);
+
+    expect(moment).toEqual({ date: '2026-08-01', time: '01:30', timezone: 'Europe/Rome' });
+  });
+
+  it('rifiuta con gli stessi codici che userebbe il motore', () => {
+    // Chi chiama ramifica sul codice senza sapere se la richiesta sia stata
+    // fermata qui o più a valle.
+    expect(capture(() => resolveSkyMoment(params('date=15/08/2026'))).body.code).toBe(
+      'DATA_NON_VALIDA',
+    );
+    expect(capture(() => resolveSkyMoment(params('time=9.00'))).body.code).toBe('ORA_NON_VALIDA');
+    expect(capture(() => resolveSkyMoment(params('timezone=Europa/Roma'))).body.code).toBe(
+      'FUSO_ORARIO_NON_VALIDO',
+    );
   });
 });
