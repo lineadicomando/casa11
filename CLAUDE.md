@@ -22,7 +22,8 @@ npm test                                   # tutti i workspace (vitest)
 npm run test:watch -w @undicesimacasa/core
 npm run typecheck                          # ricompila core e geo, poi controlla il resto
 npm run build
-npm run dev -w @undicesimacasa/web         # http://localhost:3000
+npm run dev -w @undicesimacasa/web         # http://localhost:5173 (Vite)
+npm start -w @undicesimacasa/web           # http://localhost:3000, dopo build
 ```
 
 `npm run geo:import -w @undicesimacasa/geo` scarica **~205 MB**: serve solo se
