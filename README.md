@@ -22,7 +22,7 @@ undicesimacasa/
 ├── packages/
 │   ├── core/          motore di calcolo (nessuna dipendenza web)
 │   ├── geo/           ricerca località, dataset GeoNames locale
-│   └── mcp/           server MCP: luogo, tema natale, transiti, passaggi
+│   └── mcp/           server MCP: luogo, tema natale, cielo, transiti, passaggi
 └── apps/
     └── web/           SvelteKit: interfaccia + API REST
 ```
@@ -226,6 +226,59 @@ arriva a un anno dopo.
 **Resta un elenco di istanti, non di eventi.** Il motore dice quando un angolo
 si chiude; che cosa accada in quel periodo non è un dato astronomico.
 
+## Cielo
+
+Dove sono i pianeti in un dato momento e che aspetti formano **fra loro**.
+
+Non sono transiti. Un transito è un rapporto — un pianeta che passa *su
+qualcosa* — e senza una nascita non c'è niente su cui passare. Non è nemmeno un
+tema natale con la data di oggi: quello pretende un luogo, e qui il luogo è
+facoltativo.
+
+```ts
+import { computeSky, currentMoment, formatSkyCompact } from '@undicesimacasa/core';
+
+const sky = computeSky(currentMoment('Europe/Rome'));
+
+sky.bodies;    // posizioni, segno, moto — le stesse ovunque sulla Terra
+sky.aspects;   // aspetti reciproci, con le orbite di un tema
+sky.houses;    // vuoto: nessun luogo, nessuna casa
+```
+
+Il luogo è facoltativo perché **le longitudini eclittiche sono geocentriche**: a
+Roma e a Tokyo un pianeta è allo stesso grado dello zodiaco. Con un luogo si
+aggiungono tempo siderale, assi e case:
+
+```ts
+const sky = computeSky(momento, { place: { latitude: 41.9028, longitude: 12.4964 } });
+```
+
+Ma le case vogliono **anche l'ora**. Senza, l'Ascendente compie un giro completo
+nell'arco della giornata: calcolarle a mezzogiorno significherebbe inventarle,
+non approssimarle, ed è la sola condizione che il motore segnala fra le
+avvertenze. Che il luogo manchi non è invece un'anomalia ma una scelta, e non
+produce nessun avviso.
+
+Le orbite sono quelle **natali**, non quelle strette dei transiti: è una carta a
+tutti gli effetti, solo senza nascita.
+
+Sulle altre superfici:
+
+```sh
+casa11 --sky                                    # adesso, fuso di sistema
+casa11 --sky --on 2026-08-01 --at 18:30 --tz Europe/Rome --lat 41.90 --lon 12.50
+```
+
+```
+GET /api/sky
+GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome&locationId=3169070
+```
+
+Nessun parametro è obbligatorio da nessuna parte: senza data vale adesso, senza
+fuso vale UTC via API e l'orologio della macchina da riga di comando. La cache
+di `/api/sky` è **pubblica** e non privata come quella di un tema — il cielo di
+un istante è lo stesso per tutti e non è di nessuno.
+
 ## Le località
 
 Il dataset GeoNames è importato in un database SQLite locale: 235.073 località,
@@ -366,8 +419,8 @@ npm start -w @undicesimacasa/web        # http://localhost:3000
 npm run dev -w @undicesimacasa/web      # sviluppo
 ```
 
-Tre endpoint, tutti in GET perché un tema natale è una funzione pura dei suoi
-parametri: l'URL è condivisibile e la risposta memorizzabile.
+Tutti gli endpoint sono in GET perché un tema natale è una funzione pura dei
+suoi parametri: l'URL è condivisibile e la risposta memorizzabile.
 
 ```
 GET /api/locations?q=napoli&limit=8&country=IT
@@ -375,6 +428,7 @@ GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
 GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
 GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
+GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome
 ```
 
 I transiti accettano **gli stessi parametri di nascita** del tema, più
@@ -393,20 +447,21 @@ dentro il JavaScript scaricato dall'utente.
 
 ### Struttura dell'interfaccia
 
-L'applicazione ospita più sezioni — il tema, i transiti — che partono tutte
-dalla stessa nascita. Le parti riusabili stanno perciò in `$lib` e non nella
-pagina:
+L'applicazione ospita più sezioni — il tema, i transiti, il cielo — che
+condividono quasi tutto pur partendo da domande diverse. Le parti riusabili
+stanno perciò in `$lib` e non nella pagina:
 
 | | |
 |---|---|
 | `lib/birth.ts` | lo stato del modulo di nascita, con `isComplete` e le coordinate corrette |
-| `lib/transit.ts` | lo stato del modulo dell'istante, con il fuso di chi guarda |
+| `lib/moment.ts` | lo stato del modulo dell'istante, con il fuso di chi guarda |
 | `lib/clock.ts` | l'ora da parete in un fuso: la stessa risposta al server e al browser |
 | `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |
 | `lib/wheel.ts` | la geometria della ruota, senza SVG e quindi verificabile |
 | `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
-| `lib/server/{place,birth,moment}.ts` | lettura dei parametri, condivisa fra i due endpoint |
+| `lib/server/{place,birth,moment}.ts` | lettura dei parametri, condivisa fra gli endpoint |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
+| `lib/components/MomentFields.svelte` | giorno, ora e «adesso»: l'istante che i transiti e il cielo chiedono allo stesso modo |
 | `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
 | `lib/nodal-axis.ts` | accorpa l'asse dei Nodi, che si presenta sempre in coppia |
 | `lib/components/*Table.svelte` | le tabelle dei risultati |
@@ -415,7 +470,9 @@ Le tabelle prendono **i dati, non il tema**: un quadro di transiti ha due
 insiemi di posizioni e aspetti fra insiemi diversi, e legarle a `NatalChart`
 costringerebbe a riscriverle. È la ragione per cui la sezione dei transiti ha
 richiesto una tabella nuova sola — quella degli aspetti a due lati — e ha
-riusato le altre.
+riusato le altre; e per cui il cielo, che non ha nessuna nascita, non ne ha
+richiesta nessuna. Per la stessa ragione la ruota accetta un tipo strutturale e
+non un `NatalChart`: il cielo non deve fingersi un tema per essere disegnato.
 
 ### Privacy
 
@@ -528,7 +585,7 @@ Espone il calcolo agli agenti. Trasporto stdio:
 Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
 il percorso assoluto.
 
-Tre tool, con la ricerca del luogo deliberatamente separata dal calcolo:
+Cinque tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 
 | Tool | Cosa fa |
 |---|---|
@@ -536,10 +593,18 @@ Tre tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 | `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
 | `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema |
 | `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
+| `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
 
-In `compute_transits` **`transit_date` va omessa** per il cielo di adesso: la
-data corrente la mette il server, che è la sola fonte a saperla. È la stessa
-ragione per cui il tool non converte l'ora e non inventa le coordinate — le
+**`compute_sky` non ha nessun parametro obbligatorio**, e la sua descrizione
+insiste sulla differenza che un modello tenderebbe a perdere: senza una nascita
+non esistono transiti, esiste solo il cielo; con una nascita il cielo da solo
+non basta. Serve a evitare che un agente inventi una data di nascita per poter
+chiamare `compute_transits`, o che chiami questo quando la domanda riguarda
+invece una persona.
+
+La data di adesso **va sempre omessa** — `transit_date`, `from`, `date` —
+perché la mette il server, che è la sola fonte a saperla. È la stessa ragione
+per cui i tool non convertono l'ora e non inventano le coordinate: le
 descrizioni dicono all'agente che cosa non deve fare da sé, perché è lì che un
 modello produce un risultato plausibile e sbagliato.
 

@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@undicesimacasa/core';
 import {
   registerComputeNatalChart,
+  registerComputeSky,
   registerComputeTransits,
   registerFindTransitPassages,
   registerSearchLocation,
@@ -23,17 +24,20 @@ export function createServer(context: ToolContext = {}): McpServer {
     { name: SERVER_NAME, version: SERVER_VERSION },
     {
       instructions:
-        'Espone il calcolo del tema natale e dei transiti. Flusso tipico: search_location per ' +
-        'ottenere un location_id, poi compute_natal_chart oppure compute_transits. Data e ora ' +
-        'vanno passate in ora locale, come segnate sul documento di nascita. Per il cielo di ' +
-        'adesso ometti transit_date: la data corrente la mette il server. Per sapere quando un ' +
-        'transito diventa esatto, e quante volte, c\'è find_transit_passages. Il server ' +
-        "restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
+        'Espone il calcolo del tema natale, dei transiti e del cielo. Flusso tipico: ' +
+        'search_location per ottenere un location_id, poi compute_natal_chart oppure ' +
+        'compute_transits. Data e ora vanno passate in ora locale, come segnate sul documento ' +
+        'di nascita. Per sapere quando un transito diventa esatto, e quante volte, c\'è ' +
+        'find_transit_passages. Senza una nascita non esistono transiti ma solo il cielo: ' +
+        'per quello c\'è compute_sky, che non chiede né data di nascita né luogo. ' +
+        'Per il presente ometti sempre la data: la data corrente la mette il server. ' +
+        "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
     },
   );
 
   registerSearchLocation(server, context);
   registerComputeNatalChart(server, context);
+  registerComputeSky(server, context);
   registerComputeTransits(server, context);
   registerFindTransitPassages(server, context);
   registerReferenceResources(server);

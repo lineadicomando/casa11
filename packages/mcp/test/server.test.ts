@@ -64,14 +64,23 @@ function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
 }
 
 describe('superficie MCP', () => {
-  it('espone i quattro tool con descrizione e schema', async () => {
+  it('espone i cinque tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
     expect(names).toContain('search_location');
     expect(names).toContain('compute_natal_chart');
+    expect(names).toContain('compute_sky');
     expect(names).toContain('compute_transits');
     expect(names).toContain('find_transit_passages');
+
+    const skyTool = tools.find((tool) => tool.name === 'compute_sky');
+    // La descrizione deve tenere separate le due domande: senza una nascita
+    // non esistono transiti, e con una nascita il cielo da solo non basta.
+    expect(skyTool?.description).toMatch(/compute_transits/);
+    expect(skyTool?.description).toMatch(/facoltativo/i);
+    // Nessun parametro obbligatorio: è la differenza che rende utile il tool.
+    expect(skyTool?.inputSchema.required).toBeUndefined();
 
     const transitTool = tools.find((tool) => tool.name === 'compute_transits');
     // La descrizione deve dissuadere l'agente dall'inventare la data di oggi
@@ -328,6 +337,81 @@ describe('compute_transits', () => {
 
     expect(result.isError).toBe(true);
     expect(textOf(result)).toMatch(/search_location/);
+  });
+});
+
+describe('compute_sky', () => {
+  it('risponde senza nessun parametro: è il motivo per cui esiste', async () => {
+    const result = await client.callTool({ name: 'compute_sky', arguments: {} });
+
+    const testo = textOf(result);
+    expect(result.isError).toBeFalsy();
+    expect(testo).toMatch(/^CIELO — /);
+    // Senza luogo il cielo è completo lo stesso, e lo dichiara invece di
+    // lasciar credere a un calcolo mancato.
+    expect(testo).toMatch(/Senza luogo/);
+    expect(testo).not.toMatch(/\nASSI\n/);
+  });
+
+  it('aggiunge assi e case quando il luogo c è', async () => {
+    const result = await client.callTool({
+      name: 'compute_sky',
+      arguments: { date: '2026-08-01', time: '18:30', location_id: ROMA_ID },
+    });
+
+    const testo = textOf(result);
+    expect(testo).toMatch(/Luogo: Roma, Lazio, Italia/);
+    // Il fuso viene dalla località: l'istante è scritto in ora di Roma.
+    expect(testo).toMatch(/2026-08-01 18:30 \(Europe\/Rome/);
+    expect(testo).toMatch(/\nASSI\n/);
+    expect(testo).toMatch(/\nCUSPIDI\n/);
+  });
+
+  it('dà le stesse posizioni con e senza luogo', async () => {
+    // È la ragione per cui il luogo è facoltativo, e va verificata dal lato
+    // che un agente vede davvero.
+    const [senza, con] = await Promise.all([
+      client.callTool({
+        name: 'compute_sky',
+        arguments: { date: '2026-08-01', time: '18:30', timezone: 'Europe/Rome', format: 'json' },
+      }),
+      client.callTool({
+        name: 'compute_sky',
+        arguments: { date: '2026-08-01', time: '18:30', location_id: ROMA_ID, format: 'json' },
+      }),
+    ]);
+
+    const posizioni = (result: typeof senza): Record<string, number> =>
+      Object.fromEntries(
+        (JSON.parse(textOf(result)).bodies as { id: string; longitude: number }[]).map((body) => [
+          body.id,
+          body.longitude,
+        ]),
+      );
+
+    expect(posizioni(con)).toEqual(posizioni(senza));
+    expect(JSON.parse(textOf(senza)).angles).toBeUndefined();
+    expect(JSON.parse(textOf(con)).angles).toBeDefined();
+  });
+
+  it('spiega che mezzo luogo non è un luogo, e che se ne può fare a meno', async () => {
+    const result = await client.callTool({
+      name: 'compute_sky',
+      arguments: { date: '2026-08-01', latitude: 41.9 },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/omettile entrambe/);
+  });
+
+  it('parte da adesso quando la data non è indicata', async () => {
+    const result = await client.callTool({
+      name: 'compute_sky',
+      arguments: { timezone: 'Europe/Rome', format: 'json' },
+    });
+
+    const oggi = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' });
+    expect(JSON.parse(textOf(result)).input.date).toBe(oggi);
   });
 });
 

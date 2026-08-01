@@ -1,17 +1,22 @@
 import {
   ChartError,
   computeNatalChart,
+  computeSky,
   computeTransits,
   currentMoment,
   findTransitPassages,
   formatChartCompact,
   formatPassagesCompact,
+  formatSkyCompact,
   formatTransitsCompact,
   type BirthData,
   type ChartOptions,
   type HouseSystem,
   type PassageOptions,
   type PassageRange,
+  type Place,
+  type SkyMoment,
+  type SkyOptions,
   type TransitMoment,
   type TransitOptions,
 } from '@undicesimacasa/core';
@@ -355,6 +360,154 @@ function transitMoment(
   const moment: TransitMoment = { date: args.transit_date, timezone };
   if (args.transit_time !== undefined) moment.time = args.transit_time;
   return moment;
+}
+
+export function registerComputeSky(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'compute_sky',
+    {
+      title: 'Calcola il cielo di un istante',
+      description:
+        'Calcola dove sono i pianeti in un dato momento e che aspetti formano fra loro, ' +
+        'senza riferirli a nessuna nascita. USA QUESTO TOOL quando non c\'è un tema natale: ' +
+        '"dov\'è la Luna adesso", "in che segno è Marte", "quando è il prossimo plenilunio". ' +
+        'Se invece una data di nascita c\'è, e la domanda è che cosa il cielo tocchi di quella ' +
+        'persona, il tool giusto è compute_transits: senza un tema non esistono transiti, ' +
+        'esiste solo il cielo. Non chiamare questo tool inventando una nascita. ' +
+        'OMETTI date per adesso: la data corrente la mette il server, tu non la sai. ' +
+        'Il luogo è FACOLTATIVO perché le posizioni nello zodiaco sono le stesse ovunque ' +
+        'sulla Terra: indicalo solo se ti servono Ascendente e case, e non inventarlo mai. ' +
+        "Restano dati astronomici: l'interpretazione, se richiesta, spetta a te.",
+      inputSchema: {
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('Giorno, formato YYYY-MM-DD. OMETTILO per adesso, invece di scrivere una data che credi corrente.'),
+        time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe(
+            "Ora, formato HH:mm. Se la ometti vale mezzogiorno: nell'arco della giornata " +
+              'solo la Luna si sposta sensibilmente, ma assi e case non verranno calcolati.',
+          ),
+        timezone: z
+          .string()
+          .optional()
+          .describe(
+            'Fuso IANA in cui leggere e scrivere l\'istante. Default: quello della località ' +
+              'se ne indichi una, altrimenti UTC. Non cambia il cielo, solo come lo si data.',
+          ),
+        location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe('Luogo da cui si guarda, da search_location. Facoltativo: serve solo ad assi e case.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord. Va insieme a longitude.'),
+        longitude: z.number().min(-180).max(180).optional().describe('Longitudine, positiva a Est. Va insieme a latitude.'),
+        house_system: z
+          .enum(HOUSE_SYSTEMS)
+          .optional()
+          .describe('Sistema di domificazione. Default: placidus. Ha effetto solo con un luogo.'),
+        minor_aspects: z
+          .boolean()
+          .optional()
+          .describe('Includi semisestile, quinconce, semiquadrato, sesquiquadrato. Default: false.'),
+        format: z
+          .enum(['compact', 'json'])
+          .optional()
+          .describe('compact (default): tabella densa. json: oggetto completo.'),
+      },
+    },
+    async (args) => {
+      try {
+        const observation = resolveObservation(args, context);
+        if ('error' in observation) return fail(observation.error);
+
+        const timezone = args.timezone ?? observation.timezone ?? 'UTC';
+        const moment = skyMoment(args, timezone);
+
+        const options: SkyOptions = { minorAspects: args.minor_aspects ?? false };
+        if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
+        if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+        if (observation.place) options.place = observation.place;
+
+        const sky = computeSky(moment, options);
+
+        if (args.format === 'json') {
+          return ok(JSON.stringify(sky, null, 2));
+        }
+
+        const header = observation.label ? `Luogo: ${observation.label}\n` : '';
+        return ok(header + formatSkyCompact(sky));
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
+
+/**
+ * L'istante del cielo.
+ *
+ * Senza `date` vale adesso, e la data la mette il server: è la sola fonte che
+ * la sappia davvero.
+ */
+function skyMoment(
+  args: { date?: string | undefined; time?: string | undefined },
+  timezone: string,
+): SkyMoment {
+  if (args.date === undefined) {
+    const now = currentMoment(timezone);
+    return args.time ? { ...now, time: args.time } : now;
+  }
+
+  const moment: SkyMoment = { date: args.date, timezone };
+  if (args.time !== undefined) moment.time = args.time;
+  return moment;
+}
+
+/**
+ * Il punto di osservazione, che può non esserci.
+ *
+ * A differenza della nascita, qui il luogo non è un requisito ma un'aggiunta:
+ * senza, il cielo è comunque completo. Mezzo luogo invece è un errore, perché
+ * una coordinata sola metterebbe l'osservatore su un meridiano arbitrario.
+ */
+function resolveObservation(
+  args: {
+    location_id?: number | undefined;
+    latitude?: number | undefined;
+    longitude?: number | undefined;
+  },
+  context: ToolContext,
+): { place?: Place; timezone?: string; label?: string } | { error: string } {
+  if (args.location_id !== undefined) {
+    const place = resolvePlace({ location_id: args.location_id }, context);
+    if ('error' in place) return place;
+
+    const resolved: { place: Place; timezone: string; label?: string } = {
+      place: { latitude: place.latitude, longitude: place.longitude },
+      timezone: place.timezone,
+    };
+    if (place.label) resolved.label = place.label;
+    return resolved;
+  }
+
+  const { latitude, longitude } = args;
+  if (latitude === undefined && longitude === undefined) return {};
+
+  if (latitude === undefined || longitude === undefined) {
+    return {
+      error:
+        'Luogo incompleto: latitude e longitude vanno indicate insieme. ' +
+        'Se il luogo non ti serve, omettile entrambe: il cielo si calcola lo stesso, ' +
+        'senza Ascendente e senza case.',
+    };
+  }
+
+  return { place: { latitude, longitude } };
 }
 
 /** Tre anni: oltre, la ricerca costa più di quanto valga il risultato. */
