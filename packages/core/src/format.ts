@@ -1,8 +1,9 @@
-import { NATAL_POINT_NAMES } from './constants.js';
+import { BODIES, NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
 import type {
   Angles,
   Aspect,
+  BodyId,
   CelestialBody,
   House,
   NatalChart,
@@ -10,6 +11,7 @@ import type {
   PassageRange,
   Place,
   SkyChart,
+  SkyPassage,
   TransitChart,
   TransitPassage,
 } from './types.js';
@@ -144,6 +146,44 @@ export function formatTransitsCompact(natal: NatalChart, transits: TransitChart)
 }
 
 /**
+ * Rende in forma tabellare il calendario degli incontri in cielo.
+ *
+ * Una riga per aspetto esatto, in ordine di tempo, con il moto di **entrambi**
+ * i corpi: è quello a spiegare perché uno stesso incontro possa comparire tre
+ * volte a poche settimane di distanza.
+ */
+export function formatSkyPassagesCompact(
+  passages: readonly SkyPassage[],
+  range: PassageRange,
+  warnings: readonly string[] = [],
+): string {
+  const lines = [`INCONTRI IN CIELO — dal ${range.from} al ${range.to} (${range.timezone})`, ''];
+
+  if (passages.length === 0) {
+    lines.push('(nessun aspetto si perfeziona in questo arco di tempo)');
+    return lines.join('\n');
+  }
+
+  lines.push('Data e ora locali | più veloce | aspetto | più lento | moto | finestra');
+  for (const passage of passages) {
+    const window = passage.window
+      ? `${passage.window.start.slice(0, 10)} → ${passage.window.end.slice(0, 10)}`
+      : 'oltre i tre anni';
+    const motion = `${passage.retrograde.faster ? 'R' : 'D'}/${passage.retrograde.slower ? 'R' : 'D'}`;
+
+    lines.push(
+      `${passage.local.slice(0, 16).replace('T', ' ')} ` +
+        `${bodyName(passage.faster).padEnd(11)} ${passage.aspect.padEnd(15)} ` +
+        `${bodyName(passage.slower).padEnd(11)} ${motion}  ${window}`,
+    );
+  }
+
+  lines.push(...warningLines(warnings));
+
+  return lines.join('\n');
+}
+
+/**
  * Rende in forma tabellare il calendario dei passaggi.
  *
  * Una riga per aspetto esatto, in ordine di tempo. La colonna del moto è
@@ -241,6 +281,11 @@ function warningLines(warnings: readonly string[]): string[] {
 
 function nameOf(chart: { bodies: readonly CelestialBody[] }, id: string): string {
   return chart.bodies.find((body) => body.id === id)?.name ?? id;
+}
+
+/** Il nome di un corpo quando non c'è nessuna carta da cui ricavarlo. */
+function bodyName(id: BodyId): string {
+  return BODIES.find((body) => body.id === id)?.name ?? id;
 }
 
 /** Gli stessi nomi visti come mappa parziale su tutti i bersagli possibili. */

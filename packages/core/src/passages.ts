@@ -1,10 +1,16 @@
-import { DateTime } from 'luxon';
 import { ASPECTS, DEFAULT_PASSAGE_BODIES, MEAN_DAILY_MOTION, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from './constants.js';
 import { computeBodies, initEphemeris, type EphemerisContext } from './ephemeris.js';
-import { ChartError } from './errors.js';
-import { normalize360 } from './math.js';
+import { signedDifference } from './math.js';
+import {
+  MAX_WINDOW_DAYS,
+  WIDEST_ORB,
+  bisect,
+  julianDayToISO,
+  resolveRange,
+  signedAngles,
+  stepFor,
+} from './roots.js';
 import { natalTargets } from './transits.js';
-import { resolveTime } from './time.js';
 import type { AspectDefinition } from './constants.js';
 import type {
   BodyId,
@@ -14,18 +20,6 @@ import type {
   PassageRange,
   TransitPassage,
 } from './types.js';
-
-/** Gradi di moto per passo di campionamento: più fitto di così è sprecato. */
-const STEP_DEGREES = 2;
-/** Estremi del passo, in giorni: sotto non serve, sopra si rischia di saltare. */
-const MIN_STEP_DAYS = 0.2;
-const MAX_STEP_DAYS = 10;
-/** Un minuto: sotto questa soglia l'istante esatto non si affina oltre. */
-const PRECISION_DAYS = 1 / 1440;
-/** Oltre questo arco la finestra non è più una finestra. */
-const MAX_WINDOW_DAYS = 1095;
-/** L'orbita più larga concessa a un transito: congiunzione più i due luminari. */
-const WIDEST_ORB = 4;
 
 interface Sample {
   julianDay: number;
@@ -40,12 +34,8 @@ interface Sample {
  * stesso punto natale tre volte nel giro di un anno, e quel ritmo — avanti,
  * indietro, avanti — è ciò che rende leggibile un periodo lungo.
  *
- * Il metodo è quello classico per le radici di una funzione continua:
- * si campiona lo scarto dall'angolo esatto a passo commisurato alla velocità
- * del corpo, si cerca dove cambia segno, e lì si dimezza l'intervallo fino al
- * minuto. Un aspetto sfiorato e non raggiunto — il corpo inverte il moto
- * appena prima — non produce cambi di segno e non viene elencato, che è il
- * risultato corretto.
+ * Il metodo è in `roots.ts`. Qui a muoversi è un corpo solo: il punto natale è
+ * fermo per sempre, e lo scarto dipende dalla sola longitudine del transitante.
  */
 export function findTransitPassages(
   natal: NatalChart,
@@ -55,14 +45,7 @@ export function findTransitPassages(
   const context = initEphemeris(options.ephemerisPath);
   const warnings: string[] = [...context.warnings];
 
-  const start = resolveTime({ date: range.from, time: '00:00', timezone: range.timezone });
-  const end = resolveTime({ date: range.to, time: '23:59', timezone: range.timezone });
-  if (end.time.julianDayUT <= start.time.julianDayUT) {
-    throw new ChartError(
-      'INTERVALLO_NON_VALIDO',
-      `Intervallo vuoto: "${range.to}" non è successivo a "${range.from}".`,
-    );
-  }
+  const { start, end } = resolveRange(range);
 
   const definitions = options.minorAspects ? ASPECTS : ASPECTS.filter((a) => a.major);
   const targets = natalTargets(natal, options.targets, warnings);
@@ -75,13 +58,7 @@ export function findTransitPassages(
     // orbita già prima, e senza quel margine la sua finestra risulterebbe
     // aperta soltanto perché non è stata guardata.
     const margin = Math.min(MAX_WINDOW_DAYS, WIDEST_ORB / (MEAN_DAILY_MOTION[bodyId] ?? 1));
-    const samples = sampleLongitudes(
-      bodyId,
-      start.time.julianDayUT - margin,
-      end.time.julianDayUT + margin,
-      context,
-      warnings,
-    );
+    const samples = sampleLongitudes(bodyId, start - margin, end + margin, context, warnings);
     if (samples.length < 2) continue;
 
     for (const target of targets) {
@@ -94,9 +71,7 @@ export function findTransitPassages(
           // sono fuori dall'arco richiesto e non vanno elencati.
           passages.push(
             ...found.filter(
-              (passage) =>
-                passage.julianDay >= start.time.julianDayUT &&
-                passage.julianDay <= end.time.julianDayUT,
+              (passage) => passage.julianDay >= start && passage.julianDay <= end,
             ),
           );
         }
@@ -112,18 +87,6 @@ export function findTransitPassages(
   };
 }
 
-/**
- * Gli angoli firmati di un aspetto.
- *
- * Un trigono si perfeziona due volte per giro: quando il transitante è 120°
- * avanti al punto natale e quando gli è 120° indietro. Trattarli come due
- * bersagli distinti evita di ragionare su una separazione ripiegata in
- * [0, 180], che nei punti di ripiegamento non è derivabile.
- */
-function signedAngles(angle: number): number[] {
-  return angle === 0 || angle === 180 ? [angle] : [angle, -angle];
-}
-
 function sampleLongitudes(
   bodyId: BodyId,
   from: number,
@@ -131,8 +94,7 @@ function sampleLongitudes(
   context: EphemerisContext,
   warnings: string[],
 ): Sample[] {
-  const motion = MEAN_DAILY_MOTION[bodyId] ?? 1;
-  const step = Math.min(MAX_STEP_DAYS, Math.max(MIN_STEP_DAYS, STEP_DEGREES / motion));
+  const step = stepFor(MEAN_DAILY_MOTION[bodyId] ?? 1);
 
   const samples: Sample[] = [];
   for (let jd = from; jd < to + step; jd += step) {
@@ -176,7 +138,7 @@ function passagesOf(
     if (Math.abs(g1 - g0) > 90) continue;
     if (g0 === 0 || g0 * g1 > 0) continue;
 
-    const exact = bisect(bodyId, before.julianDay, after.julianDay, gap, context);
+    const exact = bisect(before.julianDay, after.julianDay, atTime(bodyId, gap, context));
     if (exact === null) continue;
 
     const body = bodyAt(bodyId, exact, context);
@@ -229,7 +191,7 @@ function windowAround(
       if (outside(sample)) {
         const [lo, hi] =
           direction === -1 ? [sample.julianDay, from] : [from, sample.julianDay];
-        return bisect(bodyId, lo, hi, (longitude) => Math.abs(gap(longitude)) - orbLimit, context);
+        return bisect(lo, hi, atTime(bodyId, (l) => Math.abs(gap(l)) - orbLimit, context));
       }
       i += direction;
     }
@@ -243,40 +205,16 @@ function windowAround(
   return { start: julianDayToISO(start, timezone), end: julianDayToISO(end, timezone) };
 }
 
-/**
- * Dimezza l'intervallo finché l'istante non è determinato al minuto.
- *
- * Più in là non ha senso spingersi: le effemeridi sono esatte al secondo
- * d'arco, ma un aspetto «esatto» al secondo di tempo è una precisione che
- * nessuna lettura astrologica usa.
- */
-function bisect(
+/** Trasporta nel tempo una funzione della longitudine di un corpo. */
+function atTime(
   bodyId: BodyId,
-  from: number,
-  to: number,
   f: (longitude: number) => number,
   context: EphemerisContext,
-): number | null {
-  let lo = from;
-  let hi = to;
-  const at = (jd: number): number | null => {
-    const longitude = longitudeAt(bodyId, jd, context);
+): (julianDay: number) => number | null {
+  return (julianDay) => {
+    const longitude = longitudeAt(bodyId, julianDay, context);
     return longitude === null ? null : f(longitude);
   };
-
-  const fLo = at(lo);
-  if (fLo === null) return null;
-
-  while (hi - lo > PRECISION_DAYS) {
-    const mid = (lo + hi) / 2;
-    const fMid = at(mid);
-    if (fMid === null) return null;
-    if (fMid === 0) return mid;
-    if (Math.sign(fMid) === Math.sign(fLo)) lo = mid;
-    else hi = mid;
-  }
-
-  return (lo + hi) / 2;
 }
 
 function longitudeAt(bodyId: BodyId, julianDay: number, context: EphemerisContext): number | null {
@@ -290,21 +228,4 @@ function bodyAt(
 ): { longitude: number; speed: number } | undefined {
   const { bodies } = computeBodies(julianDay, [bodyId], context);
   return bodies[0];
-}
-
-/** Differenza fra due longitudini in (-180, 180]. */
-function signedDifference(a: number, b: number): number {
-  const difference = normalize360(a - b);
-  return difference > 180 ? difference - 360 : difference;
-}
-
-/** Da giorno giuliano a ISO 8601, in UTC o nel fuso richiesto. */
-function julianDayToISO(julianDay: number, timezone = 'utc'): string {
-  const millis = (julianDay - 2440587.5) * 86_400_000;
-  return (
-    DateTime.fromMillis(Math.round(millis / 60_000) * 60_000, { zone: timezone }).toISO({
-      suppressMilliseconds: true,
-      suppressSeconds: true,
-    }) ?? ''
-  );
 }

@@ -6,9 +6,11 @@ import {
   formatChartCompact,
   formatPassagesCompact,
   formatSkyCompact,
+  formatSkyPassagesCompact,
   formatTransitsCompact,
 } from './format.js';
 import { findTransitPassages } from './passages.js';
+import { findSkyPassages } from './sky-passages.js';
 import { DEFAULT_PASSAGE_BODIES } from './constants.js';
 import { computeSky } from './sky.js';
 import { currentMoment, systemTimezone } from './time.js';
@@ -21,6 +23,7 @@ import type {
   PassageRange,
   SkyMoment,
   SkyOptions,
+  SkyPassageOptions,
   TransitMoment,
   TransitOptions,
 } from './types.js';
@@ -69,6 +72,8 @@ Cielo
                         Se omesso, quello di sistema
   --lat --lon           Luogo da cui si guarda: facoltativo, serve solo ad
                         assi e case, che vogliono anche l'ora
+  --sky --passages      Il calendario degli incontri fra i corpi in cielo,
+                        con --from, --to e --moon come sopra
 `.trimStart();
 
 function main(argv: string[]): number {
@@ -107,11 +112,11 @@ function main(argv: string[]): number {
   // Il cielo si calcola prima di controllare i dati di nascita: è la sola
   // domanda del programma che non ne ha bisogno.
   if (values.sky) {
-    if (values.transits || values.passages) {
-      process.stderr.write('--sky non si combina con --transits né con --passages.\n');
+    if (values.transits) {
+      process.stderr.write('--sky non si combina con --transits: un transito vuole un tema.\n');
       return 2;
     }
-    return printSky(values);
+    return values.passages ? printSkyPassages(values) : printSky(values);
   }
 
   const missing = (['date', 'lat', 'lon', 'tz'] as const).filter((key) => !values[key]);
@@ -232,6 +237,37 @@ function printSky(values: {
   const sky = computeSky(moment, options);
   process.stdout.write(
     values.json ? `${JSON.stringify(sky, null, 2)}\n` : `${formatSkyCompact(sky)}\n`,
+  );
+  return 0;
+}
+
+/**
+ * Stampa il calendario degli incontri in cielo.
+ *
+ * Le stesse opzioni d'arco dei passaggi natali, senza nessuna nascita: qui i
+ * corpi si incontrano fra loro.
+ */
+function printSkyPassages(values: {
+  from?: string | undefined;
+  to?: string | undefined;
+  tz?: string | undefined;
+  ephe?: string | undefined;
+  minor: boolean;
+  moon: boolean;
+  json: boolean;
+}): number {
+  const timezone = values.tz ?? systemTimezone();
+  const range = passageRange({ from: values.from, to: values.to }, timezone);
+
+  const options: SkyPassageOptions = { minorAspects: values.minor };
+  if (values.ephe) options.ephemerisPath = values.ephe;
+  if (values.moon) options.bodies = [...DEFAULT_PASSAGE_BODIES, 'luna'];
+
+  const { passages, warnings } = findSkyPassages(range, options);
+  process.stdout.write(
+    values.json
+      ? `${JSON.stringify({ range, passages, warnings }, null, 2)}\n`
+      : `${formatSkyPassagesCompact(passages, range, warnings)}\n`,
   );
   return 0;
 }

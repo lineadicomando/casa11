@@ -436,6 +436,53 @@ export interface TransitPassage {
   window?: { start: string; end: string };
 }
 
+export interface SkyPassageOptions {
+  /** Corpi da seguire. Default: `DEFAULT_PASSAGE_BODIES`, cioè senza la Luna. */
+  bodies?: BodyId[];
+  /** Includi gli aspetti minori. */
+  minorAspects?: boolean;
+  /** Orbite per aspetto: valgono per la finestra, non per l'istante esatto. */
+  orbs?: Partial<Record<AspectId, number>>;
+  /** Percorso della cartella con i file `.se1`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Un aspetto fra due corpi in cielo che si perfeziona.
+ *
+ * I due lati si distinguono per **velocità media** e non per moto istantaneo:
+ * è il più veloce a raggiungere il più lento, ed è la convenzione con cui si
+ * nomina un incontro. Presa sul moto del momento, la coppia si scambierebbe i
+ * ruoli a ogni retrogradazione, e lo stesso aspetto comparirebbe ora in un
+ * verso ora nell'altro.
+ */
+export interface SkyPassage {
+  faster: BodyId;
+  slower: BodyId;
+  aspect: AspectId;
+  /** Angolo esatto dell'aspetto in gradi. */
+  angle: number;
+  /** Istante UTC in cui l'aspetto è esatto, ISO 8601. */
+  exact: string;
+  /** Lo stesso istante nel fuso richiesto. */
+  local: string;
+  /**
+   * Quale dei due è retrogrado in quell'istante.
+   *
+   * È la ragione per cui uno stesso aspetto può perfezionarsi più volte: due
+   * corpi che si inseguono si incontrano una volta sola, ma se uno dei due
+   * torna indietro si incontrano tre.
+   */
+  retrograde: { faster: boolean; slower: boolean };
+  /**
+   * Intervallo in cui l'aspetto resta entro l'orbita.
+   *
+   * Assente quando non si chiude entro tre anni: fra due pianeti lenti un
+   * contatto dura più di quanto abbia senso chiamare finestra.
+   */
+  window?: { start: string; end: string };
+}
+
 export interface TransitChart {
   input: TransitMoment;
   time: ResolvedTime;

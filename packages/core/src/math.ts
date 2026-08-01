@@ -17,6 +17,19 @@ export function angularSeparation(a: number, b: number): number {
 }
 
 /**
+ * Differenza fra due longitudini, **con il segno**, in (-180, 180].
+ *
+ * Non è `angularSeparation`: quella ripiega il risultato in [0, 180] e nei due
+ * punti di ripiegamento non è derivabile, il che la rende inservibile a chi
+ * cerca l'istante in cui un aspetto si perfeziona — proprio lì cadono
+ * congiunzione e opposizione.
+ */
+export function signedDifference(a: number, b: number): number {
+  const difference = normalize360(a - b);
+  return difference > 180 ? difference - 360 : difference;
+}
+
+/**
  * Arco percorso in senso zodiacale (antiorario) da `from` a `to`, in [0, 360).
  * Serve per stabilire in quale casa cade un pianeta.
  */
