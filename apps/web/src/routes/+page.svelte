@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { chartParameters, fetchChart, fetchLocation, RequestError } from '$lib/api';
-  import { birthFromParameters, isComplete } from '$lib/birth';
+  import { birthFromParameters, isComplete, missingBirthFields } from '$lib/birth';
   import { Evidenza } from '$lib/evidenza.svelte';
   import { houseSystemOrDefault } from '$lib/house-systems';
   import { birthStore } from '$lib/birth-store.svelte';
@@ -13,6 +13,7 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
@@ -41,6 +42,7 @@
   let aperto = $state(true);
 
   const canSubmit = $derived(isComplete(birth));
+  const mancanti = $derived(missingBirthFields(birth));
 
   /**
    * Il numero dell'ultima richiesta partita.
@@ -175,9 +177,15 @@
       {/snippet}
     </BirthForm>
 
-    <button type="submit" class="invia" disabled={!canSubmit || loading}>
+    <button
+      type="submit"
+      class="invia"
+      disabled={!canSubmit || loading}
+      aria-describedby={mancanti.length > 0 ? 'mancanti-tema' : undefined}
+    >
       {loading ? 'Calcolo…' : 'Calcola il tema'}
     </button>
+    <CampiMancanti campi={mancanti} id="mancanti-tema" />
   {/snippet}
 </ModuloPieghevole>
 

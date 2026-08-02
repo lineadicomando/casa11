@@ -18,6 +18,7 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
@@ -59,6 +60,9 @@
   let calendarError = $state<string | null>(null);
 
   const canSubmit = $derived(isCompleteMoment(moment));
+  /* Qui obbligatorio è il solo giorno: il luogo è facoltativo per
+     costruzione, e senza ora vale mezzogiorno. */
+  const mancanti = $derived(canSubmit ? [] : ['il giorno']);
 
   /** Senza luogo non ci sono case da domificare, e senza ora nemmeno. */
   const housesDisabled = $derived(location === null || moment.time === '');
@@ -240,9 +244,15 @@
       </p>
     {/if}
 
-    <button type="submit" class="invia" disabled={!canSubmit || loading}>
+    <button
+      type="submit"
+      class="invia"
+      disabled={!canSubmit || loading}
+      aria-describedby={mancanti.length > 0 ? 'mancanti-cielo' : undefined}
+    >
       {loading ? 'Calcolo…' : 'Calcola il cielo'}
     </button>
+    <CampiMancanti campi={mancanti} id="mancanti-cielo" />
   {/snippet}
 </ModuloPieghevole>
 

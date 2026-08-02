@@ -16,7 +16,7 @@
     RequestError,
     transitParameters,
   } from '$lib/api';
-  import { birthFromParameters, isComplete } from '$lib/birth';
+  import { birthFromParameters, isComplete, missingBirthFields } from '$lib/birth';
   import { houseSystemOrDefault } from '$lib/house-systems';
   import { Evidenza } from '$lib/evidenza.svelte';
   import { birthStore } from '$lib/birth-store.svelte';
@@ -25,6 +25,7 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
@@ -74,6 +75,11 @@
   let passagesError = $state<string | null>(null);
 
   const canSubmit = $derived(isComplete(birth) && isCompleteMoment(transit));
+  /* Due moduli in uno: la nascita e l'istante da confrontarle. */
+  const mancanti = $derived([
+    ...missingBirthFields(birth),
+    ...(isCompleteMoment(transit) ? [] : ['il giorno del transito']),
+  ]);
 
   /**
    * Il numero dell'ultima richiesta partita.
@@ -282,9 +288,15 @@
       </p>
     </div>
 
-    <button type="submit" class="invia" disabled={!canSubmit || loading}>
+    <button
+      type="submit"
+      class="invia"
+      disabled={!canSubmit || loading}
+      aria-describedby={mancanti.length > 0 ? 'mancanti-transiti' : undefined}
+    >
       {loading ? 'Calcolo…' : 'Calcola i transiti'}
     </button>
+    <CampiMancanti campi={mancanti} id="mancanti-transiti" />
   {/snippet}
 </ModuloPieghevole>
 

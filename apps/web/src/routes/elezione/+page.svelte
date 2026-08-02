@@ -26,6 +26,7 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import Meta from '$lib/components/Meta.svelte';
@@ -113,6 +114,12 @@
   let aperto = $state(true);
 
   const canSubmit = $derived(location !== null && from !== '');
+  /* La nascita è facoltativa e non entra nell'elenco: qui l'unica cosa
+     che manchi davvero è il luogo, da cui vengono alba e tramonto. */
+  const mancanti = $derived([
+    ...(from === '' ? ['il giorno da cui partire'] : []),
+    ...(location === null ? ['il luogo'] : []),
+  ]);
 
   /**
    * Il luogo e i filtri possono arrivare già scritti nell'indirizzo.
@@ -395,9 +402,15 @@
       </BirthForm>
     </section>
 
-    <button type="submit" class="invia" disabled={!canSubmit || loading}>
+    <button
+      type="submit"
+      class="invia"
+      disabled={!canSubmit || loading}
+      aria-describedby={mancanti.length > 0 ? 'mancanti-elezione' : undefined}
+    >
       {loading ? 'Calcolo…' : 'Calcola le ore'}
     </button>
+    <CampiMancanti campi={mancanti} id="mancanti-elezione" />
   {/snippet}
 </ModuloPieghevole>
 

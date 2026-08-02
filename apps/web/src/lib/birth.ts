@@ -102,15 +102,36 @@ export function birthFromParameters(
 }
 
 /**
- * `true` quando il modulo basta a calcolare.
+ * Che cosa manca perché il modulo basti a calcolare, nominato per esteso.
+ *
+ * Il pulsante di invio si spegneva senza dire perché, e con il modulo chiuso i
+ * campi vuoti non erano nemmeno in vista: restava un pulsante grigio e nessuna
+ * strada per capire quale delle tre cose mancasse.
  *
  * Le coordinate corrette a mano devono essere interpretabili **o** disattivate:
  * un campo lasciato a metà non deve produrre una richiesta che ripiega in
  * silenzio sul centroide, perché chi le corregge lo fa proprio per non usarlo.
  */
+export function missingBirthFields(input: BirthInput): string[] {
+  const mancano: string[] = [];
+
+  if (input.date === '') mancano.push('la data di nascita');
+  if (!input.timeUnknown && input.time === '') mancano.push("l'ora di nascita");
+  if (input.location === null) mancano.push('il luogo di nascita');
+  if (input.refineCoordinates && refinedCoordinates(input) === null) {
+    mancano.push('delle coordinate interpretabili');
+  }
+
+  return mancano;
+}
+
+/**
+ * `true` quando il modulo basta a calcolare.
+ *
+ * Definita sull'elenco di ciò che manca invece di ripeterne le condizioni: due
+ * risposte alla stessa domanda finiscono per non essere più la stessa, e
+ * sarebbe il pulsante acceso sopra la riga che dice che manca qualcosa.
+ */
 export function isComplete(input: BirthInput): boolean {
-  if (input.date === '' || input.location === null) return false;
-  if (!input.timeUnknown && input.time === '') return false;
-  if (input.refineCoordinates && refinedCoordinates(input) === null) return false;
-  return true;
+  return missingBirthFields(input).length === 0;
 }
