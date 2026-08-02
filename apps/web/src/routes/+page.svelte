@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { HouseSystem, NatalChart } from '@undicesimacasa/core';
   import { chartParameters, fetchChart, RequestError } from '$lib/api';
-  import { emptyBirthInput, isComplete } from '$lib/birth';
+  import { isComplete } from '$lib/birth';
+  import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import AspectTable from '$lib/components/AspectTable.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
@@ -10,7 +11,9 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import { tick } from 'svelte';
 
-  let birth = $state(emptyBirthInput());
+  // La nascita non è di questa pagina: chi la scrive qui la ritrova nei
+  // transiti e nell'elezione, e viceversa.
+  const birth = $derived(birthStore.value);
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
 
@@ -140,7 +143,7 @@
   </div>
 
   <div class="dettagli" hidden={!aperto}>
-    <BirthForm bind:value={birth}>
+    <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
         <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
       {/snippet}

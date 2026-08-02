@@ -12,7 +12,8 @@
     RequestError,
     transitParameters,
   } from '$lib/api';
-  import { emptyBirthInput, isComplete } from '$lib/birth';
+  import { isComplete } from '$lib/birth';
+  import { birthStore } from '$lib/birth-store.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
@@ -23,7 +24,8 @@
   import { isCompleteMoment, nowMoment } from '$lib/moment';
   import { tick } from 'svelte';
 
-  let birth = $state(emptyBirthInput());
+  // La stessa nascita del tema e dell'elezione: si scrive una volta sola.
+  const birth = $derived(birthStore.value);
   let transit = $state(nowMoment());
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
@@ -186,7 +188,7 @@
   </div>
 
   <div class="dettagli" hidden={!aperto}>
-    <BirthForm bind:value={birth}>
+    <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
         <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
       {/snippet}
