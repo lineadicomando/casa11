@@ -24,6 +24,7 @@
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
+  import Risultato from '$lib/components/Risultato.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
 
@@ -73,6 +74,25 @@
    * di un istante già superato arriverebbe dopo e si prenderebbe lo schermo.
    */
   let ultima = 0;
+
+  /**
+   * A quali condizioni è stato calcolato il quadro che si sta guardando.
+   *
+   * Sono due istanti e non uno — quello dei transiti e quello della nascita —
+   * ed è la sola riga che li tenga insieme: chi sfoglia con le frecce vede
+   * cambiare il primo e restare fermo il secondo.
+   */
+  function condizioni(natale: NatalChart, quadro: TransitChart): string {
+    const ora = quadro.time.timeKnown ? ` alle ${quadro.input.time}` : ' (mezzogiorno)';
+    const ut = quadro.time.utc.replace('T', ' ').replace('Z', '');
+    const nascita = natale.time.timeKnown ? ` alle ${natale.input.time}` : ' (ora ignota)';
+    const da = transitPlaceLabel ? ` · guardato da ${transitPlaceLabel}` : '';
+    return (
+      `Transiti del ${quadro.input.date}${ora} · ${quadro.input.timezone} · UT ${ut}` +
+      ` · su nascita del ${natale.input.date}${nascita} · case ${natale.houseSystem}` +
+      ` · effemeridi ${quadro.ephemerisMode}${da}`
+    );
+  }
 
   async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -227,34 +247,11 @@
 {/if}
 
 {#if chart && transits}
-  <section class="risultato">
-    <div class="intestazione">
-      <h2>{placeLabel ?? 'Transiti'}</h2>
-      <!-- Un passo cambia la pagina senza che nessuno l'abbia ricaricata: chi
-           non la vede deve sentirsi dire almeno di che istante si tratta. -->
-      <p class="meta" aria-live="polite">
-        Transiti del {transits.input.date}{transits.time.timeKnown
-          ? ` alle ${transits.input.time}`
-          : ' (mezzogiorno)'} · {transits.input.timezone} · UT
-        {transits.time.utc.replace('T', ' ').replace('Z', '')} · su nascita del
-        {chart.input.date}{chart.time.timeKnown ? ` alle ${chart.input.time}` : ' (ora ignota)'} ·
-        case {chart.houseSystem} · effemeridi {transits.ephemerisMode}{transitPlaceLabel
-          ? ` · guardato da ${transitPlaceLabel}`
-          : ''}
-      </p>
-    </div>
-
-    {#if transits.warnings.length > 0}
-      <div class="avvertenze">
-        <h3>Avvertenze</h3>
-        <ul>
-          {#each transits.warnings as warning (warning)}
-            <li>{warning}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
+  <Risultato
+    titolo={placeLabel ?? 'Transiti'}
+    meta={condizioni(chart, transits)}
+    avvertenze={transits.warnings}
+  >
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {transits} {highlighted} />
@@ -316,7 +313,7 @@
         <p class="errore" role="alert">{passagesError}</p>
       {/if}
     </section>
-  </section>
+  </Risultato>
 {/if}
 
 <style>
@@ -352,43 +349,6 @@
     background: var(--linea);
     color: var(--testo-tenue);
     cursor: not-allowed;
-  }
-
-  .risultato {
-    margin-top: 2.5rem;
-  }
-
-  .intestazione h2 {
-    font-family: Georgia, serif;
-    font-weight: 400;
-    font-size: 1.5rem;
-    margin: 0 0 0.2rem;
-  }
-
-  .meta {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--testo-tenue);
-  }
-
-  .avvertenze {
-    margin-top: 1.25rem;
-    padding: 0.9rem 1.1rem;
-    background: var(--accento-tenue);
-    border-radius: var(--raggio);
-    font-size: 0.85rem;
-  }
-
-  .avvertenze h3 {
-    margin: 0 0 0.4rem;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .avvertenze ul {
-    margin: 0;
-    padding-left: 1.1rem;
   }
 
   .griglia {

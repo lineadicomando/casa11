@@ -18,6 +18,7 @@
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
+  import Risultato from '$lib/components/Risultato.svelte';
   import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
   import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
@@ -94,6 +95,26 @@
     } finally {
       if (richiesta === ultima) loading = false;
     }
+  }
+
+  /**
+   * A quali condizioni è stato calcolato il cielo che si sta guardando.
+   *
+   * Tempo siderale e settore ci sono solo con un luogo: senza orizzonte non
+   * esiste un «sopra» in cui mettere il Sole, e non si scrivono affatto invece
+   * di scriversi vuoti.
+   */
+  function condizioni(cielo: SkyChart): string {
+    const ora = cielo.time.timeKnown ? ` · ${cielo.input.time}` : ' · ora non indicata';
+    const ut = cielo.time.utc.replace('T', ' ').replace('Z', '');
+    const tsl = cielo.siderealTime ? ` · TSL ${cielo.siderealTime.formatted}` : '';
+    const orizzonte = cielo.sect
+      ? ` · Sole ${cielo.sect === 'diurna' ? 'sopra' : 'sotto'} l'orizzonte`
+      : '';
+    return (
+      `${cielo.input.date}${ora} · ${cielo.input.timezone} · UT ${ut}` +
+      `${tsl}${orizzonte} · effemeridi ${cielo.ephemerisMode}`
+    );
   }
 
   async function submit(event: SubmitEvent): Promise<void> {
@@ -176,32 +197,11 @@
 {/if}
 
 {#if sky}
-  <section class="risultato">
-    <div class="intestazione">
-      <h2>{placeLabel ?? 'Cielo del momento'}</h2>
-      <!-- Un passo cambia la pagina senza che nessuno l'abbia ricaricata: chi
-           non la vede deve sentirsi dire almeno di che istante si tratta. -->
-      <p class="meta" aria-live="polite">
-        {sky.input.date}{sky.time.timeKnown ? ` · ${sky.input.time}` : ' · ora non indicata'} ·
-        {sky.input.timezone} · UT {sky.time.utc.replace('T', ' ').replace('Z', '')}{sky.siderealTime
-          ? ` · TSL ${sky.siderealTime.formatted}`
-          : ''}{sky.sect
-          ? ` · Sole ${sky.sect === 'diurna' ? 'sopra' : 'sotto'} l'orizzonte`
-          : ''} · effemeridi {sky.ephemerisMode}
-      </p>
-    </div>
-
-    {#if sky.warnings.length > 0}
-      <div class="avvertenze">
-        <h3>Avvertenze</h3>
-        <ul>
-          {#each sky.warnings as warning (warning)}
-            <li>{warning}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
+  <Risultato
+    titolo={placeLabel ?? 'Cielo del momento'}
+    meta={condizioni(sky)}
+    avvertenze={sky.warnings}
+  >
     <div class="griglia">
       <div class="ruota">
         <ChartWheel
@@ -261,7 +261,7 @@
         <p class="errore" role="alert">{calendarError}</p>
       {/if}
     </section>
-  </section>
+  </Risultato>
 {/if}
 
 <style>
@@ -296,43 +296,6 @@
     background: var(--linea);
     color: var(--testo-tenue);
     cursor: not-allowed;
-  }
-
-  .risultato {
-    margin-top: 2.5rem;
-  }
-
-  .intestazione h2 {
-    font-family: Georgia, serif;
-    font-weight: 400;
-    font-size: 1.5rem;
-    margin: 0 0 0.2rem;
-  }
-
-  .meta {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--testo-tenue);
-  }
-
-  .avvertenze {
-    margin-top: 1.25rem;
-    padding: 0.9rem 1.1rem;
-    background: var(--accento-tenue);
-    border-radius: var(--raggio);
-    font-size: 0.85rem;
-  }
-
-  .avvertenze h3 {
-    margin: 0 0 0.4rem;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .avvertenze ul {
-    margin: 0;
-    padding-left: 1.1rem;
   }
 
   .griglia {

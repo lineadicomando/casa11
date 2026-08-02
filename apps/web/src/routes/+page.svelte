@@ -10,6 +10,7 @@
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
+  import Risultato from '$lib/components/Risultato.svelte';
 
   // La nascita non è di questa pagina: chi la scrive qui la ritrova nei
   // transiti e nell'elezione, e viceversa.
@@ -65,6 +66,24 @@
     } finally {
       if (richiesta === ultima) loading = false;
     }
+  }
+
+  /**
+   * A quali condizioni è stato calcolato quello che si sta guardando.
+   *
+   * Sta qui e non nel markup perché è una riga sola composta di sette pezzi,
+   * metà dei quali condizionati: nel template diventava un intreccio di
+   * interpolazioni in cui non si vedeva più dove finiva un dato e cominciava
+   * la punteggiatura.
+   */
+  function condizioni(carta: NatalChart): string {
+    const ora = carta.time.timeKnown ? ` · ${carta.input.time}` : ' · ora ignota';
+    const ut = carta.time.utc.replace('T', ' ').replace('Z', '');
+    const settore = carta.sect ? ` · carta ${carta.sect}` : '';
+    return (
+      `${carta.input.date}${ora} · ${carta.input.timezone} · UT ${ut}` +
+      ` · TSL ${carta.siderealTime.formatted}${settore} · effemeridi ${carta.ephemerisMode}`
+    );
   }
 
   async function submit(event: SubmitEvent): Promise<void> {
@@ -135,28 +154,11 @@
 {/if}
 
 {#if chart}
-  <section class="risultato">
-    <div class="intestazione">
-      <h2>{placeLabel ?? 'Tema natale'}</h2>
-      <p class="meta">
-        {chart.input.date}{chart.time.timeKnown ? ` · ${chart.input.time}` : ' · ora ignota'} ·
-        {chart.input.timezone} · UT {chart.time.utc.replace('T', ' ').replace('Z', '')} ·
-        TSL {chart.siderealTime.formatted}{chart.sect ? ` · carta ${chart.sect}` : ''} ·
-        effemeridi {chart.ephemerisMode}
-      </p>
-    </div>
-
-    {#if chart.warnings.length > 0}
-      <div class="avvertenze">
-        <h3>Avvertenze</h3>
-        <ul>
-          {#each chart.warnings as warning (warning)}
-            <li>{warning}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
+  <Risultato
+    titolo={placeLabel ?? 'Tema natale'}
+    meta={condizioni(chart)}
+    avvertenze={chart.warnings}
+  >
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {highlighted} />
@@ -177,7 +179,7 @@
         <AspectTable aspects={chart.aspects} bind:highlighted />
       </div>
     </div>
-  </section>
+  </Risultato>
 {/if}
 
 <style>
@@ -206,43 +208,6 @@
     background: var(--linea);
     color: var(--testo-tenue);
     cursor: not-allowed;
-  }
-
-  .risultato {
-    margin-top: 2.5rem;
-  }
-
-  .intestazione h2 {
-    font-family: Georgia, serif;
-    font-weight: 400;
-    font-size: 1.5rem;
-    margin: 0 0 0.2rem;
-  }
-
-  .meta {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--testo-tenue);
-  }
-
-  .avvertenze {
-    margin-top: 1.25rem;
-    padding: 0.9rem 1.1rem;
-    background: var(--accento-tenue);
-    border-radius: var(--raggio);
-    font-size: 0.85rem;
-  }
-
-  .avvertenze h3 {
-    margin: 0 0 0.4rem;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .avvertenze ul {
-    margin: 0;
-    padding-left: 1.1rem;
   }
 
   .griglia {

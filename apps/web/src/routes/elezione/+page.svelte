@@ -25,6 +25,7 @@
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
+  import Risultato from '$lib/components/Risultato.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { formatDegrees } from '$lib/format';
   import { BODY_LABEL, SIGN_LABEL } from '$lib/glyphs';
@@ -197,6 +198,26 @@
     };
   }
 
+  /**
+   * Che ora si sta guardando, e su quale nascita.
+   *
+   * L'ora planetaria è un intervallo e non un istante: si scrivono i due capi,
+   * perché è la durata a dire di che ora si tratta — sessanta minuti li fa
+   * soltanto agli equinozi.
+   */
+  function condizioni(ora: PlanetaryHour, natale: NatalChart): string {
+    const inizio = ora.local.start.slice(11, 16);
+    const fine = ora.local.end.slice(11, 16);
+    const nascita = natale.time.timeKnown ? ` alle ${natale.input.time}` : ' (ora ignota)';
+    const vuota = ora.moonVoid ? ' · Luna vuota di corso' : '';
+    return (
+      `${ora.local.start.slice(0, 10)} · ${inizio}–${fine} · ${election?.range.timezone}` +
+      ` · ${ora.minutes} min · Ascendente ${formatDegrees(ora.ascendant.signDegree)}` +
+      ` ${SIGN_LABEL[ora.ascendant.sign]} · sulla nascita del ${natale.input.date}${nascita}` +
+      ` · case ${natale.houseSystem}${vuota}`
+    );
+  }
+
   async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     if (await load()) aperto = false;
@@ -330,25 +351,11 @@
 {/if}
 
 {#if election}
-  <section class="risultato">
-    <div class="intestazione">
-      <h2>{election.place.label ?? 'Ore planetarie'}</h2>
-      <p class="meta" aria-live="polite">
-        dal {election.range.from} al {election.range.to} · {election.range.timezone}
-      </p>
-    </div>
-
-    {#if election.warnings.length > 0}
-      <div class="avvertenze">
-        <h3>Avvertenze</h3>
-        <ul>
-          {#each election.warnings as warning (warning)}
-            <li>{warning}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
+  <Risultato
+    titolo={election.place.label ?? 'Ore planetarie'}
+    meta="dal {election.range.from} al {election.range.to} · {election.range.timezone}"
+    avvertenze={election.warnings}
+  >
     <ElectionTable
       hours={election.hours}
       voids={election.voids}
@@ -372,7 +379,7 @@
         Con una nascita nel modulo, ogni ora si può aprire sul tema di nascita.
       {/if}
     </p>
-  </section>
+  </Risultato>
 {/if}
 
 {#if confrontoError}
@@ -384,32 +391,14 @@
 {/if}
 
 {#if scelta && chart && transits}
-  <section class="risultato" bind:this={confronto}>
-    <div class="intestazione">
-      <h2>Ora di {BODY_LABEL[scelta.ruler]}, {scelta.diurnal ? 'diurna' : 'notturna'} {scelta.index}</h2>
-      <p class="meta" aria-live="polite">
-        {scelta.local.start.slice(0, 10)} · {scelta.local.start.slice(11, 16)}–{scelta.local.end.slice(
-          11,
-          16,
-        )} · {election?.range.timezone} · {scelta.minutes} min · Ascendente
-        {formatDegrees(scelta.ascendant.signDegree)}
-        {SIGN_LABEL[scelta.ascendant.sign]} · sulla nascita del
-        {chart.input.date}{chart.time.timeKnown ? ` alle ${chart.input.time}` : ' (ora ignota)'} ·
-        case {chart.houseSystem}{scelta.moonVoid ? ' · Luna vuota di corso' : ''}
-      </p>
-    </div>
-
-    {#if transits.warnings.length > 0}
-      <div class="avvertenze">
-        <h3>Avvertenze</h3>
-        <ul>
-          {#each transits.warnings as warning (warning)}
-            <li>{warning}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
+  <Risultato
+    titolo="Ora di {BODY_LABEL[scelta.ruler]}, {scelta.diurnal
+      ? 'diurna'
+      : 'notturna'} {scelta.index}"
+    avvertenze={transits.warnings}
+    meta={condizioni(scelta, chart)}
+    bind:elemento={confronto}
+  >
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {transits} {highlighted} />
@@ -437,7 +426,7 @@
         />
       </div>
     </div>
-  </section>
+  </Risultato>
 {/if}
 
 <style>
@@ -472,43 +461,6 @@
     background: var(--linea);
     color: var(--testo-tenue);
     cursor: not-allowed;
-  }
-
-  .risultato {
-    margin-top: 2.5rem;
-  }
-
-  .intestazione h2 {
-    font-family: Georgia, serif;
-    font-weight: 400;
-    font-size: 1.5rem;
-    margin: 0 0 0.2rem;
-  }
-
-  .meta {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--testo-tenue);
-  }
-
-  .avvertenze {
-    margin-top: 1.25rem;
-    padding: 0.9rem 1.1rem;
-    background: var(--accento-tenue);
-    border-radius: var(--raggio);
-    font-size: 0.85rem;
-  }
-
-  .avvertenze h3 {
-    margin: 0 0 0.4rem;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .avvertenze ul {
-    margin: 0;
-    padding-left: 1.1rem;
   }
 
   .griglia {
