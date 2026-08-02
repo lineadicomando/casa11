@@ -21,11 +21,11 @@
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
-  import { tick } from 'svelte';
 
   // La stessa nascita del tema e dell'elezione: si scrive una volta sola.
   const birth = $derived(birthStore.value);
@@ -56,20 +56,6 @@
    * nascita sta fra i dettagli.
    */
   let aperto = $state(true);
-  let modulo = $state<HTMLFormElement | null>(null);
-
-  async function commuta(): Promise<void> {
-    aperto = !aperto;
-    if (!aperto) return;
-
-    // Aprendosi il modulo smette di stare appeso in cima e torna al suo posto
-    // nella pagina: chi era sceso a leggere il risultato se lo vedrebbe
-    // sparire verso l'alto proprio mentre chiede di modificarlo. Va aspettato
-    // l'aggiornamento, però: finché è ancora appeso, portarlo in vista è
-    // un'operazione che non sposta niente.
-    await tick();
-    modulo?.scrollIntoView({ block: 'start' });
-  }
 
   /** Il calendario è una seconda richiesta: costa, e non tutti lo vogliono. */
   const MESI = 12;
@@ -187,11 +173,13 @@
   </p>
 {/if}
 
-<!-- `novalidate` perché un modulo che si chiude porta con sé campi obbligatori
-     che il browser non può né mostrare né mettere a fuoco: la completezza la
-     sa già `canSubmit`, che tiene spento il pulsante. -->
-<form onsubmit={submit} class="modulo" class:chiuso={!aperto} bind:this={modulo} novalidate>
-  <div class="testa">
+<ModuloPieghevole
+  bind:aperto
+  etichetta="Nascita e opzioni"
+  chiudibile={chart !== null && transits !== null}
+  onsubmit={submit}
+>
+  {#snippet striscia()}
     <MomentFields
       bind:value={transit}
       what="del transito"
@@ -199,31 +187,9 @@
       onstep={calcola}
       compact={!aperto}
     />
+  {/snippet}
 
-    <!-- La forma segue il mestiere. Aperto, il pulsante chiude, e una X lo dice
-         da sé stando nell'angolo come in una finestra. Chiuso, il mestiere è
-         l'opposto e nessun simbolo lo esprime: solo il testo dice che cosa c'è
-         dietro. L'angolo però è lo stesso, perché la striscia è alta una riga.
-
-         Aperto senza un quadro calcolato non c'è però niente da chiudere: la X
-         lascerebbe una striscia appesa sopra una pagina vuota, con le frecce
-         del passo pronte a sfogliare il nulla. Chiuso il pulsante c'è sempre,
-         perché è la via per tornare ai campi. -->
-    {#if !aperto || (chart && transits)}
-      <button
-        type="button"
-        class="commuta"
-        class:chiusura={aperto}
-        aria-expanded={aperto}
-        aria-label={aperto ? 'Chiudi i dettagli' : undefined}
-        onclick={commuta}
-      >
-        {aperto ? '×' : 'Nascita e opzioni'}
-      </button>
-    {/if}
-  </div>
-
-  <div class="dettagli" hidden={!aperto}>
+  {#snippet dettagli()}
     <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
         <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
@@ -253,8 +219,8 @@
     <button type="submit" class="invia" disabled={!canSubmit || loading}>
       {loading ? 'Calcolo…' : 'Calcola i transiti'}
     </button>
-  </div>
-</form>
+  {/snippet}
+</ModuloPieghevole>
 
 {#if errorMessage}
   <p class="errore" role="alert">{errorMessage}</p>
@@ -358,88 +324,6 @@
     margin: 0 0 1.1rem;
     color: var(--testo-tenue);
     font-size: 0.9rem;
-  }
-
-  .modulo {
-    background: var(--superficie);
-    border: 1px solid var(--linea);
-    border-radius: var(--raggio);
-    padding: 1.5rem;
-    /* Riferimento per la X, che sta nell'angolo del riquadro e non nella riga. */
-    position: relative;
-  }
-
-  /* Chiuso, il modulo resta appeso in cima alla pagina: le frecce servono
-     mentre si guarda il risultato, che comincia sotto la piega. Chiuderlo e
-     basta avvicinerebbe il risultato senza togliere lo scorrimento. */
-  .modulo.chiuso {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding: 0.7rem 1rem;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 0.09);
-  }
-
-  .testa {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-
-  .modulo.chiuso .testa {
-    align-items: center;
-  }
-
-  .commuta {
-    flex: none;
-    padding: 0.35rem 0.8rem;
-    background: none;
-    color: var(--accento);
-    border: 1px solid var(--linea-forte);
-    border-radius: var(--raggio);
-    cursor: pointer;
-    font-size: 0.85rem;
-  }
-
-  .commuta:hover {
-    border-color: var(--accento);
-  }
-
-  /* Fuori dal flusso: è arredo del riquadro, non una terza colonna nella riga
-     dei campi, che è il modo in cui si faceva notare prima. */
-  .commuta.chiusura {
-    position: absolute;
-    top: 0.7rem;
-    /* Lo stesso scostamento del padding della striscia: così il pulsante non
-       si sposta di lato passando da una forma all'altra. */
-    right: 1rem;
-    display: grid;
-    place-items: center;
-    width: 1.8rem;
-    height: 1.8rem;
-    padding: 0;
-    font-size: 1.2rem;
-    line-height: 1;
-    color: var(--testo-tenue);
-    border-color: transparent;
-  }
-
-  .commuta.chiusura:hover {
-    color: var(--accento);
-    border-color: var(--linea-forte);
-  }
-
-  /* Aperto, la X occupa l'angolo senza stare nella riga: i campi devono
-     lasciarle il posto, o il campo dell'ora le finirebbe sotto. Solo quando
-     c'è, però: prima del primo calcolo la X non viene disegnata affatto, e
-     l'angolo tenuto libero per lei sarebbe spazio tolto ai campi. */
-  .modulo:not(.chiuso) .testa:has(.chiusura) {
-    padding-right: 2.5rem;
-  }
-
-  .dettagli {
-    margin-top: 1.5rem;
   }
 
   /* Il luogo del transito non appartiene alla nascita: una riga lo separa dal

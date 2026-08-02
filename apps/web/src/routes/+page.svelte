@@ -9,7 +9,7 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
-  import { tick } from 'svelte';
+  import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
 
   // La nascita non è di questa pagina: chi la scrive qui la ritrova nei
   // transiti e nell'elezione, e viceversa.
@@ -30,20 +30,6 @@
    * nascita sta fra i dettagli.
    */
   let aperto = $state(true);
-  let modulo = $state<HTMLFormElement | null>(null);
-
-  async function commuta(): Promise<void> {
-    aperto = !aperto;
-    if (!aperto) return;
-
-    // Aprendosi il modulo smette di stare appeso in cima e torna al suo posto
-    // nella pagina: chi era sceso a leggere il tema se lo vedrebbe sparire
-    // verso l'alto proprio mentre chiede di modificarlo. Va aspettato
-    // l'aggiornamento, però: finché è ancora appeso, portarlo in vista è
-    // un'operazione che non sposta niente.
-    await tick();
-    modulo?.scrollIntoView({ block: 'start' });
-  }
 
   const canSubmit = $derived(isComplete(birth));
 
@@ -106,50 +92,32 @@
   <p class="sottotitolo">Posizioni planetarie, case e aspetti.</p>
 {/if}
 
-<!-- `novalidate` perché un modulo che si chiude porta con sé campi obbligatori
-     che il browser non può né mostrare né mettere a fuoco: la completezza la
-     sa già `canSubmit`, che tiene spento il pulsante. -->
-<form onsubmit={submit} class="modulo" class:chiuso={!aperto} bind:this={modulo} novalidate>
-  <div class="testa">
-    <!-- Un tema di nascita non si sfoglia nel tempo: la data è quella, e la
-         striscia non ha nessun istante da offrire. Ha però l'asse lungo cui
-         questa pagina si rilegge davvero — la domificazione — e quello sì che
-         si cambia guardando le cuspidi, non prima di averle viste. -->
-    {#if !aperto}
-      <ChartSettings
-        id="case-striscia"
-        bind:houseSystem
-        bind:minorAspects
-        housesDisabled={birth.timeUnknown}
-        onchange={calcola}
-        compact
-      />
-    {/if}
+<!-- Un tema di nascita non si sfoglia nel tempo: la data è quella, e la striscia
+     non ha nessun istante da offrire. Ha però l'asse lungo cui questa pagina si
+     rilegge davvero — la domificazione — e quello sì che si cambia guardando le
+     cuspidi, non prima di averle viste. Aperto invece non serve a niente, ed è
+     per questo che la striscia arriva al modulo solo quando è chiuso: le stesse
+     opzioni stanno già fra i campi, e mostrarle due volte sarebbe chiedere due
+     volte la stessa cosa. -->
+{#snippet opzioni()}
+  <ChartSettings
+    id="case-striscia"
+    bind:houseSystem
+    bind:minorAspects
+    housesDisabled={birth.timeUnknown}
+    onchange={calcola}
+    compact
+  />
+{/snippet}
 
-    <!-- La forma segue il mestiere. Aperto, il pulsante chiude, e una X lo dice
-         da sé stando nell'angolo come in una finestra. Chiuso, il mestiere è
-         l'opposto e nessun simbolo lo esprime: solo il testo dice che cosa c'è
-         dietro.
-
-         Aperto senza un tema calcolato non c'è però niente da chiudere: la X
-         lascerebbe una striscia appesa sopra una pagina vuota, con un sistema
-         di case da scegliere per una carta che non esiste. Chiuso il pulsante
-         c'è sempre, perché è la via per tornare ai campi. -->
-    {#if !aperto || chart}
-      <button
-        type="button"
-        class="commuta"
-        class:chiusura={aperto}
-        aria-expanded={aperto}
-        aria-label={aperto ? 'Chiudi i dettagli' : undefined}
-        onclick={commuta}
-      >
-        {aperto ? '×' : 'Nascita'}
-      </button>
-    {/if}
-  </div>
-
-  <div class="dettagli" hidden={!aperto}>
+<ModuloPieghevole
+  bind:aperto
+  etichetta="Nascita"
+  chiudibile={chart !== null}
+  onsubmit={submit}
+  striscia={aperto ? undefined : opzioni}
+>
+  {#snippet dettagli()}
     <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
         <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
@@ -159,8 +127,8 @@
     <button type="submit" class="invia" disabled={!canSubmit || loading}>
       {loading ? 'Calcolo…' : 'Calcola il tema'}
     </button>
-  </div>
-</form>
+  {/snippet}
+</ModuloPieghevole>
 
 {#if errorMessage}
   <p class="errore" role="alert">{errorMessage}</p>
@@ -218,73 +186,6 @@
     margin: 0 0 1.1rem;
     color: var(--testo-tenue);
     font-size: 0.9rem;
-  }
-
-  .modulo {
-    background: var(--superficie);
-    border: 1px solid var(--linea);
-    border-radius: var(--raggio);
-    padding: 1.5rem;
-  }
-
-  /* Chiuso, il modulo resta appeso in cima alla pagina: il sistema di case si
-     cambia mentre si guardano le cuspidi, che stanno sotto la piega.
-     Chiuderlo e basta avvicinerebbe il tema senza togliere lo scorrimento. */
-  .modulo.chiuso {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding: 0.7rem 1rem;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 0.09);
-  }
-
-  .testa {
-    display: flex;
-    gap: 1.25rem;
-    align-items: center;
-    /* Aperto, nella riga c'è solo la X: qui la manda nel suo angolo. */
-    justify-content: flex-end;
-  }
-
-  .commuta {
-    flex: none;
-    padding: 0.35rem 0.8rem;
-    background: none;
-    color: var(--accento);
-    border: 1px solid var(--linea-forte);
-    border-radius: var(--raggio);
-    cursor: pointer;
-    font-size: 0.85rem;
-  }
-
-  .commuta:hover {
-    border-color: var(--accento);
-  }
-
-  /* A differenza delle altre sezioni la X non ha nessuna riga da sovrapporre —
-     aperto, il modulo comincia direttamente dai campi della nascita. Sta nel
-     flusso, quindi, e sono i margini negativi a portarla nell'angolo del
-     riquadro invece che a un rigo di distanza. */
-  .commuta.chiusura {
-    display: grid;
-    place-items: center;
-    width: 1.8rem;
-    height: 1.8rem;
-    margin: -0.8rem -0.5rem 0 0;
-    padding: 0;
-    font-size: 1.2rem;
-    line-height: 1;
-    color: var(--testo-tenue);
-    border-color: transparent;
-  }
-
-  .commuta.chiusura:hover {
-    color: var(--accento);
-    border-color: var(--linea-forte);
-  }
-
-  .dettagli {
-    margin-top: 0.25rem;
   }
 
   .invia {

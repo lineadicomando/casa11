@@ -24,6 +24,7 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { formatDegrees } from '$lib/format';
   import { BODY_LABEL, SIGN_LABEL } from '$lib/glyphs';
@@ -101,16 +102,8 @@
    * luogo scelto da noi sarebbe un'ora planetaria sbagliata di venti minuti.
    */
   let aperto = $state(true);
-  let modulo = $state<HTMLFormElement | null>(null);
 
   const canSubmit = $derived(location !== null && from !== '');
-
-  async function commuta(): Promise<void> {
-    aperto = !aperto;
-    if (!aperto) return;
-    await tick();
-    modulo?.scrollIntoView({ block: 'start' });
-  }
 
   async function load(): Promise<boolean> {
     if (!location) return false;
@@ -233,8 +226,13 @@
   </p>
 {/if}
 
-<form onsubmit={submit} class="modulo" class:chiuso={!aperto} bind:this={modulo} novalidate>
-  <div class="testa">
+<ModuloPieghevole
+  bind:aperto
+  etichetta="Luogo"
+  chiudibile={election !== null}
+  onsubmit={submit}
+>
+  {#snippet striscia()}
     <div class="giorno">
       <!-- L'etichetta si nasconde alla vista, non alla lettura: nella striscia
            l'altezza è spazio tolto alle ore che si stanno guardando, e il
@@ -255,26 +253,9 @@
         {/if}
       </div>
     </div>
+  {/snippet}
 
-    <!-- Aperto senza un elenco calcolato non c'è niente da chiudere: la X
-         lascerebbe una striscia appesa sopra una pagina vuota, con le frecce
-         dei giorni pronte a sfogliare il nulla. Chiuso il pulsante c'è sempre,
-         perché è la via per tornare ai campi. -->
-    {#if !aperto || election}
-      <button
-        type="button"
-        class="commuta"
-        class:chiusura={aperto}
-        aria-expanded={aperto}
-        aria-label={aperto ? 'Chiudi i dettagli' : undefined}
-        onclick={commuta}
-      >
-        {aperto ? '×' : 'Luogo'}
-      </button>
-    {/if}
-  </div>
-
-  <div class="dettagli" hidden={!aperto}>
+  {#snippet dettagli()}
     <div class="campi">
       <!-- Due ricerche di località convivono in questa pagina, e questa non è
            una nascita: il luogo in cui si comincia qualcosa. -->
@@ -341,8 +322,8 @@
     <button type="submit" class="invia" disabled={!canSubmit || loading}>
       {loading ? 'Calcolo…' : 'Calcola le ore'}
     </button>
-  </div>
-</form>
+  {/snippet}
+</ModuloPieghevole>
 
 {#if errorMessage}
   <p class="errore" role="alert">{errorMessage}</p>
@@ -460,88 +441,10 @@
 {/if}
 
 <style>
-  /* Il guscio della sezione — riquadro, striscia appesa, risultato — è quello
-     delle altre pagine: le stesse regole, perché una sezione che si presenta
-     in modo diverso sembra un'altra applicazione. */
   .sottotitolo {
     margin: 0 0 1.1rem;
     color: var(--testo-tenue);
     font-size: 0.9rem;
-  }
-
-  .modulo {
-    background: var(--superficie);
-    border: 1px solid var(--linea);
-    border-radius: var(--raggio);
-    padding: 1.5rem;
-    /* Riferimento per la X, che sta nell'angolo del riquadro e non nella riga. */
-    position: relative;
-  }
-
-  /* Chiuso, il modulo resta appeso in cima: le frecce dei giorni servono
-     mentre si guardano le ore, che cominciano sotto la piega. */
-  .modulo.chiuso {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding: 0.7rem 1rem;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 0.09);
-  }
-
-  .testa {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-
-  .modulo.chiuso .testa {
-    align-items: center;
-  }
-
-  .commuta {
-    flex: none;
-    padding: 0.35rem 0.8rem;
-    background: none;
-    color: var(--accento);
-    border: 1px solid var(--linea-forte);
-    border-radius: var(--raggio);
-    cursor: pointer;
-    font-size: 0.85rem;
-  }
-
-  .commuta:hover {
-    border-color: var(--accento);
-  }
-
-  .commuta.chiusura {
-    position: absolute;
-    top: 0.7rem;
-    right: 1rem;
-    display: grid;
-    place-items: center;
-    width: 1.8rem;
-    height: 1.8rem;
-    padding: 0;
-    font-size: 1.2rem;
-    line-height: 1;
-    color: var(--testo-tenue);
-    border-color: transparent;
-  }
-
-  .commuta.chiusura:hover {
-    color: var(--accento);
-    border-color: var(--linea-forte);
-  }
-
-  /* L'angolo si tiene libero solo quando la X c'è: prima del primo calcolo non
-     viene disegnata affatto, e lo spazio riservato a lei sarebbe tolto ai campi. */
-  .modulo:not(.chiuso) .testa:has(.chiusura) {
-    padding-right: 2.5rem;
-  }
-
-  .dettagli {
-    margin-top: 1.5rem;
   }
 
   .campi {
