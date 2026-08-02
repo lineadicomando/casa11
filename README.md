@@ -676,10 +676,15 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
 | `lib/color-scheme.ts` | l'aspetto chiaro o scuro scelto dal pulsante, con la chiave dichiarata nell'informativa |
 | `lib/server/{place,birth,moment,range}.ts` | lettura dei parametri, condivisa fra gli endpoint |
+| `lib/evidenza.svelte.ts` | il corpo isolato nella ruota e nelle tabelle: sorvolato col mouse o scelto con un clic, e il secondo vince sul primo |
+| `lib/esporta.ts` | la ruota portata via: fissa i valori calcolati dell'SVG, che altrimenti fuori dalla pagina non risolve né le `var()` né le classi |
+| `lib/components/ModuloPieghevole.svelte` | il riquadro dei campi che si ritira in una striscia appesa: lo stesso in tutte e quattro le sezioni |
+| `lib/components/Risultato.svelte` | titolo, riga delle condizioni, avvertenze: l'intestazione di ciò che è stato calcolato |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
 | `lib/components/MomentFields.svelte` | giorno, ora, «adesso» e il passo avanti o indietro: l'istante che i transiti e il cielo chiedono allo stesso modo |
 | `lib/components/ChartSettings.svelte` | sistema di case e aspetti minori; nella striscia del modulo chiuso ricalcola da sé |
 | `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
+| `lib/components/StrumentiRuota.svelte` | scarica il disegno come SVG o PNG, e manda in stampa |
 | `lib/components/Wordmark.svelte` | il marchio, disegnato inline perché le lettere seguano il colore del testo |
 | `lib/components/ColorSchemeToggle.svelte` | il pulsante che scorre fra aspetto automatico, chiaro e scuro |
 | `lib/nodal-axis.ts` | accorpa l'asse dei Nodi, che si presenta sempre in coppia |
@@ -697,6 +702,35 @@ motivo — un'ora planetaria non è un aspetto e non ha orbita — e prende le o
 i vuoti, non il risultato dell'endpoint. Per la stessa ragione la ruota accetta un tipo
 strutturale e non un `NatalChart`: il cielo non deve fingersi un tema per essere
 disegnato.
+
+### Portare via la carta
+
+Sotto ogni ruota ci sono tre comandi: **SVG**, **PNG** e **stampa**. Il primo dà
+un disegno vettoriale che si apre in qualunque programma; il secondo
+un'immagine al doppio del riquadro di vista, che regge lo zoom e la carta.
+
+Entrambi passano da `lib/esporta.ts`, che prima **fissa** il disegno: i colori
+della ruota sono `var(--elemento-fuoco)` e simili, e i corpi dei glifi stanno in
+classi che vivono nel componente — fuori dal documento non esiste né l'una cosa
+né l'altra, e un SVG serializzato così com'è uscirebbe nero. Si legge quindi il
+valore calcolato di ogni proprietà che conti, nodo per nodo, e lo si scrive come
+attributo; lo stile in riga va tolto, o vincerebbe sull'attributo appena
+scritto. Sotto tutto viene dipinto un rettangolo del colore di sfondo, perché un
+file trasparente perde i glifi scuri su qualunque fondo scuro.
+
+Salvare e stampare **tolgono la selezione in corso**. Con un corpo scelto la
+ruota attenua gli altri glifi e le linee escluse non sono attenuate ma assenti:
+nel file mancherebbero senza che nulla lo dica. Un documento non è la fotografia
+di come lo si stava leggendo. Vale anche per chi stampa con la scorciatoia della
+tastiera, che non passa dal pulsante.
+
+La stampa è governata da un `@media print` in `app.css`: via testata, menù,
+modulo e piè di pagina; `color-scheme` torna a `light` anche per chi lavora in
+scuro, o ne uscirebbero fogli neri; la griglia passa a una colonna, con la ruota
+in cima. Le spiegazioni del dominio restano — su carta servono quanto a schermo
+— mentre le istruzioni d'uso, marcate `.istruzione`, spariscono: «scegli un
+corpo per isolarne gli aspetti» su un foglio è una promessa che nessuno può
+mantenere.
 
 ### Privacy
 
