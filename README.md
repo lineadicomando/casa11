@@ -677,6 +677,8 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/color-scheme.ts` | l'aspetto chiaro o scuro scelto dal pulsante, con la chiave dichiarata nell'informativa |
 | `lib/server/{place,birth,moment,range}.ts` | lettura dei parametri, condivisa fra gli endpoint |
 | `lib/evidenza.svelte.ts` | il corpo isolato nella ruota e nelle tabelle: sorvolato col mouse o scelto con un clic, e il secondo vince sul primo |
+| `lib/house-systems.ts` | l'elenco dei sistemi di case e la domanda «è uno di questi?», che serve a chi legge un indirizzo |
+| `lib/components/Meta.svelte` | titolo, descrizione, canonico e Open Graph di ogni pagina |
 | `lib/esporta.ts` | la ruota portata via: fissa i valori calcolati dell'SVG, che altrimenti fuori dalla pagina non risolve né le `var()` né le classi |
 | `lib/components/ModuloPieghevole.svelte` | il riquadro dei campi che si ritira in una striscia appesa: lo stesso in tutte e quattro le sezioni |
 | `lib/components/Risultato.svelte` | titolo, riga delle condizioni, avvertenze: l'intestazione di ciò che è stato calcolato |
@@ -702,6 +704,27 @@ motivo — un'ora planetaria non è un aspetto e non ha orbita — e prende le o
 i vuoti, non il risultato dell'endpoint. Per la stessa ragione la ruota accetta un tipo
 strutturale e non un `NatalChart`: il cielo non deve fingersi un tema per essere
 disegnato.
+
+### Che cosa finisce nell'indirizzo
+
+Le quattro sezioni **leggono** tutte il proprio indirizzo, e chi lo trova
+scritto ci ritrova il suo calcolo. A scriverlo però sono solo due:
+
+| | |
+|---|---|
+| **Cielo**, **Elezione** | l'indirizzo si aggiorna a ogni calcolo. Sono un istante e una città: non dicono niente di chi guarda, e la pagina si può ricaricare, mettere fra i segnalibri e mandare a qualcuno. Sull'elezione la nascita facoltativa resta fuori |
+| **Tema natale**, **Transiti** | l'indirizzo resta pulito. Dentro ci sarebbe una data di nascita, che finirebbe nella cronologia di chi apre il collegamento e nei registri dei server che attraversa: lo compone il pulsante **Copia link**, sotto la ruota, e sotto il pulsante sta scritto che cosa porta con sé |
+
+I nomi dei parametri sono quelli dell'API — `date`, `time`, `locationId`,
+`houseSystem`, `transitDate` — perché il collegamento è fatto con gli stessi:
+un elenco solo invece di due da tenere allineati. Il luogo viaggia come
+identificativo, e `GET /api/locations?id=…` lo ritrasforma in un nome quando la
+pagina si rimette in piedi.
+
+Si scrive con `replaceState` e non con `pushState`: le frecce del passo si
+premono in fretta, e un giorno per volta riempirebbero la cronologia di voci da
+risalire una a una. Quello che si guadagna è la ricarica e la condivisione, non
+il tasto Indietro.
 
 ### Portare via la carta
 
