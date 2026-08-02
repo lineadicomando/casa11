@@ -19,9 +19,19 @@
     voids: VoidOfCourse[];
     /** I filtri applicati, se ce n'erano: un elenco ridotto deve dirlo. */
     filters?: { rulers?: BodyId[]; skipMoonVoid?: boolean } | undefined;
+    /**
+     * Che cosa fare quando si sceglie un'ora.
+     *
+     * Assente — ed è il caso normale — la tabella è un calendario da leggere e
+     * la colonna del confronto non compare affatto: senza una nascita non c'è
+     * niente con cui confrontare quell'istante.
+     */
+    onselect?: (hour: PlanetaryHour) => void;
+    /** L'inizio dell'ora scelta, in UTC: `hours[].start` la identifica. */
+    selected?: string | null;
   }
 
-  let { hours, voids, filters = undefined }: Props = $props();
+  let { hours, voids, filters = undefined, onselect, selected = null }: Props = $props();
 
   /** «solo le ore di Giove, senza quelle con la Luna vuota». */
   const criterio = $derived.by(() => {
@@ -103,11 +113,14 @@
             <th>Durata</th>
             <th>Ascendente</th>
             <th>Luna</th>
+            {#if onselect}
+              <th><span class="nascosto">Confronto con il tema</span></th>
+            {/if}
           </tr>
         </thead>
         <tbody>
           {#each giorno.ore as ora (ora.start)}
-            <tr class:vuota={ora.moonVoid}>
+            <tr class:vuota={ora.moonVoid} class:scelta={selected === ora.start}>
               <td class="quando">{orario(ora.local.start)}–{orario(ora.local.end)}</td>
               <td>
                 <span class="glifo-piccolo">{BODY_GLYPH[ora.ruler]}</span>
@@ -123,6 +136,23 @@
                    che la Luna non conclude più nulla in quel segno, e che cosa
                    farne lo decide chi legge. -->
               <td class="tenue">{ora.moonVoid ? 'vuota di corso' : ''}</td>
+
+              <!-- Un pulsante vero, e non una riga che reagisce al clic: la
+                   scelta si fa anche da tastiera, e settantadue righe che
+                   rispondono ovunque le si tocchi si scelgono per sbaglio
+                   mentre si legge. -->
+              {#if onselect}
+                <td>
+                  <button
+                    type="button"
+                    class="confronta"
+                    aria-pressed={selected === ora.start}
+                    onclick={() => onselect(ora)}
+                  >
+                    {selected === ora.start ? 'nel tema' : 'confronta'}
+                  </button>
+                </td>
+              {/if}
             </tr>
           {/each}
         </tbody>
@@ -197,5 +227,31 @@
 
   tr.vuota td {
     color: var(--testo-tenue);
+  }
+
+  /* La riga scelta resta riconoscibile mentre si guarda la ruota più in basso:
+     è l'unica cosa che dice a quale delle settantadue ore appartenga. */
+  tr.scelta td {
+    background: var(--accento-tenue);
+  }
+
+  .confronta {
+    padding: 0.1rem 0.5rem;
+    background: none;
+    color: var(--accento);
+    border: 1px solid transparent;
+    border-radius: var(--raggio);
+    cursor: pointer;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .confronta:hover {
+    border-color: var(--linea-forte);
+  }
+
+  .confronta[aria-pressed='true'] {
+    color: var(--testo-tenue);
+    cursor: default;
   }
 </style>

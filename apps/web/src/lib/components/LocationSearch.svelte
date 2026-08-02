@@ -9,9 +9,17 @@
      * ma il punto da cui si guarda, ed è per giunta facoltativo.
      */
     label?: string;
+    /**
+     * L'identificatore del campo.
+     *
+     * L'elezione mostra due ricerche nella stessa pagina — il luogo in cui si
+     * comincia qualcosa e quello di nascita — e con un identificatore solo
+     * entrambe le etichette nominerebbero il primo campo.
+     */
+    id?: string;
   }
 
-  let { selected, onselect, label = 'Luogo di nascita' }: Props = $props();
+  let { selected, onselect, label = 'Luogo di nascita', id = 'luogo' }: Props = $props();
 
   let query = $state('');
   let results = $state<Location[]>([]);
@@ -95,9 +103,9 @@
 </script>
 
 <div class="combo">
-  <label for="luogo">{label}</label>
+  <label for={id}>{label}</label>
   <input
-    id="luogo"
+    {id}
     type="text"
     value={query}
     oninput={onInput}
@@ -108,7 +116,7 @@
     autocomplete="off"
     role="combobox"
     aria-expanded={open}
-    aria-controls="risultati-luogo"
+    aria-controls="risultati-{id}"
     aria-autocomplete="list"
   />
 
@@ -121,7 +129,7 @@
   {/if}
 
   {#if open && results.length > 0}
-    <ul id="risultati-luogo" class="risultati" role="listbox">
+    <ul id="risultati-{id}" class="risultati" role="listbox">
       {#each results as location, index (location.id)}
         <li role="option" aria-selected={index === activeIndex}>
           <button

@@ -1,17 +1,33 @@
 <script lang="ts">
-  import type { BodyId } from '@undicesimacasa/core';
+  import type {
+    BodyId,
+    HouseSystem,
+    NatalChart,
+    PlanetaryHour,
+    TransitChart,
+  } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
   import { tick } from 'svelte';
   import {
     electionParameters,
     fetchElection,
+    fetchTransits,
     RequestError,
+    transitParameters,
     type ElectionResponse,
   } from '$lib/api';
+  import { isComplete } from '$lib/birth';
+  import { birthStore } from '$lib/birth-store.svelte';
+  import BirthForm from '$lib/components/BirthForm.svelte';
+  import BodyTable from '$lib/components/BodyTable.svelte';
+  import ChartSettings from '$lib/components/ChartSettings.svelte';
+  import ChartWheel from '$lib/components/ChartWheel.svelte';
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
-  import { BODY_LABEL } from '$lib/glyphs';
-  import { nowMoment, shiftDate } from '$lib/moment';
+  import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
+  import { formatDegrees } from '$lib/format';
+  import { BODY_LABEL, SIGN_LABEL } from '$lib/glyphs';
+  import { nowMoment, shiftDate, type MomentInput } from '$lib/moment';
 
   /** I sette dell'ordine caldeo: sono gli unici che reggano un'ora. */
   const REGGITORI: readonly BodyId[] = [
@@ -41,6 +57,41 @@
   let election = $state<ElectionResponse | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
+
+  /**
+   * La nascita, se c'è: qui è **facoltativa**, e non lo è per modo di dire.
+   *
+   * Le ore planetarie sono del luogo e non della persona — l'elenco si calcola
+   * e si legge senza che nessuno dica di essere nato da qualche parte. Con una
+   * nascita, però, ogni ora diventa un istante confrontabile con il tema, ed è
+   * il confronto che l'astrologo farebbe comunque aprendo due schede.
+   *
+   * Il tema resta un dato accanto a un altro dato: nessuna ora viene
+   * consigliata, ordinata o segnalata. Il contesto per giudicare sta nella
+   * conversazione con chi chiede, non in questa pagina.
+   */
+  const birth = $derived(birthStore.value);
+  const conNascita = $derived(isComplete(birth));
+  let houseSystem = $state<HouseSystem>('placidus');
+  let minorAspects = $state(false);
+
+  /** L'ora scelta per il confronto, e il suo esito. */
+  let scelta = $state<PlanetaryHour | null>(null);
+  let chart = $state<NatalChart | null>(null);
+  let transits = $state<TransitChart | null>(null);
+  let loadingConfronto = $state(false);
+  let confrontoError = $state<string | null>(null);
+  let highlighted = $state<string | null>(null);
+  let confronto = $state<HTMLElement | null>(null);
+
+  /**
+   * Il numero dell'ultima richiesta di confronto partita.
+   *
+   * Le righe sono settantadue e si scorrono col dito: due scelte ravvicinate
+   * non tornano nell'ordine in cui sono state chieste, e senza confrontare il
+   * numero la ruota a schermo finirebbe per essere di un'altra ora.
+   */
+  let ultima = 0;
 
   /**
    * Il modulo resta aperto finché non c'è un risultato.
@@ -74,15 +125,83 @@
           skipMoonVoid,
         }),
       );
+      // L'ora scelta apparteneva all'elenco precedente: un giorno diverso, o
+      // un filtro diverso, non la contiene più. Tenerne a schermo la ruota
+      // significherebbe mostrare un confronto che nessuna riga rivendica.
+      dimentica();
       return true;
     } catch (cause) {
       errorMessage =
         cause instanceof RequestError ? cause.message : 'Calcolo dell\'elezione non riuscito.';
       election = null;
+      dimentica();
       return false;
     } finally {
       loading = false;
     }
+  }
+
+  function dimentica(): void {
+    ultima += 1;
+    scelta = null;
+    chart = null;
+    transits = null;
+    confrontoError = null;
+    loadingConfronto = false;
+  }
+
+  /**
+   * Il tema di nascita e il cielo dell'ora scelta, uno sull'altro.
+   *
+   * Non serve nessun calcolo nuovo: un'ora planetaria è un istante, e i
+   * transiti sono già il confronto fra una nascita e un istante qualsiasi.
+   */
+  async function scegli(ora: PlanetaryHour): Promise<void> {
+    if (!election || !conNascita) return;
+
+    scelta = ora;
+    const richiesta = ++ultima;
+    loadingConfronto = true;
+    confrontoError = null;
+
+    try {
+      const body = await fetchTransits(
+        transitParameters(
+          birth,
+          { houseSystem, minorAspects },
+          istante(ora, election.range.timezone),
+        ),
+      );
+      if (richiesta !== ultima) return;
+      chart = body.chart;
+      transits = body.transits;
+      await tick();
+      confronto?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    } catch (cause) {
+      if (richiesta !== ultima) return;
+      confrontoError =
+        cause instanceof RequestError ? cause.message : 'Confronto con il tema non riuscito.';
+      chart = null;
+      transits = null;
+    } finally {
+      if (richiesta === ultima) loadingConfronto = false;
+    }
+  }
+
+  /**
+   * L'istante in cui l'ora comincia, nella forma che vuole il modulo.
+   *
+   * Il fuso è quello del luogo eletto e non quello di nascita: `local` è già
+   * scritto lì dentro, e leggerlo altrove sposterebbe l'ora di partenza.
+   * L'inizio è quello pubblicato dal motore, arrotondato al minuto come ogni
+   * altro istante che esca di lì.
+   */
+  function istante(ora: PlanetaryHour, timezone: string): MomentInput {
+    return {
+      date: ora.local.start.slice(0, 10),
+      time: ora.local.start.slice(11, 16),
+      timezone,
+    };
   }
 
   async function submit(event: SubmitEvent): Promise<void> {
@@ -145,7 +264,14 @@
 
   <div class="dettagli" hidden={!aperto}>
     <div class="campi">
-      <LocationSearch selected={location} onselect={selectLocation} label="Luogo" />
+      <!-- Due ricerche di località convivono in questa pagina, e questa non è
+           una nascita: il luogo in cui si comincia qualcosa. -->
+      <LocationSearch
+        id="luogo-elezione"
+        selected={location}
+        onselect={selectLocation}
+        label="Luogo"
+      />
 
       <div class="filtri">
         <label for="elezione-reggitore">Reggitore</label>
@@ -156,7 +282,10 @@
           {/each}
         </select>
 
-        <label class="spunta">
+        <!-- `interruttore` e non una classe di questa pagina: il testo è
+             l'opzione stessa, e senza quella regola prende il trattamento da
+             intestazione di campo — maiuscolo, grassetto, su due righe. -->
+        <label class="interruttore">
           <input type="checkbox" bind:checked={skipMoonVoid} />
           Nascondi le ore con la Luna vuota di corso
         </label>
@@ -168,6 +297,34 @@
       alba e tramonto, che cambiano con la latitudine e con il giorno dell'anno.
       Si vedono {GIORNI} giorni per volta.
     </p>
+
+    <!-- Sotto una riga di separazione perché è un secondo argomento, non altri
+         campi dello stesso: sopra si dice dove e quando, qui per chi. -->
+    <section class="nascita">
+      <h2>Tema di nascita <span class="facoltativo">facoltativo</span></h2>
+
+      <p class="nota">
+        Senza, l'elenco delle ore è completo lo stesso: sono del luogo, non di
+        una persona. Con, ogni ora si apre come istante sul tema di nascita, e
+        i due cieli si guardano insieme invece che in due schede. La nascita è
+        la stessa delle altre sezioni, resta finché la pagina non viene
+        ricaricata e non va da nessuna parte.
+      </p>
+
+      <BirthForm bind:value={birthStore.value}>
+        {#snippet options()}
+          <ChartSettings
+            id="case-elezione"
+            bind:houseSystem
+            bind:minorAspects
+            housesDisabled={birth.timeUnknown}
+            onchange={() => {
+              if (scelta) void scegli(scelta);
+            }}
+          />
+        {/snippet}
+      </BirthForm>
+    </section>
 
     <button type="submit" class="invia" disabled={!canSubmit || loading}>
       {loading ? 'Calcolo…' : 'Calcola le ore'}
@@ -199,21 +356,304 @@
       </div>
     {/if}
 
-    <ElectionTable hours={election.hours} voids={election.voids} filters={election.filters} />
+    <ElectionTable
+      hours={election.hours}
+      voids={election.voids}
+      filters={election.filters}
+      onselect={conNascita ? scegli : undefined}
+      selected={scelta?.start ?? null}
+    />
 
     <!-- La pagina calcola e non consiglia, ed è la stessa linea che tiene il
          motore: dire quale ora convenga sarebbe interpretazione, e non è di
-         chi fa i conti. -->
+         chi fa i conti. Vale anche per il confronto qui sotto — mettere il
+         tema accanto a un'ora non è sceglierla. -->
     <p class="suggerimento">
       Un'ora planetaria è una delle dodici parti in cui si divide l'arco del giorno, o
       quello della notte: dura sessanta minuti soltanto agli equinozi. Il giorno comincia
       all'alba, non a mezzanotte. Che cosa farne di queste ore — se sceglierne una per
       cominciare qualcosa, e quale — non lo dice il calcolo.
+      {#if conNascita}
+        Da «confronta» l'ora si apre come istante sul tema di nascita.
+      {:else}
+        Con una nascita nel modulo, ogni ora si può aprire sul tema di nascita.
+      {/if}
     </p>
   </section>
 {/if}
 
+{#if confrontoError}
+  <p class="errore" role="alert">{confrontoError}</p>
+{/if}
+
+{#if loadingConfronto && !chart}
+  <p class="attesa" aria-live="polite">Calcolo del confronto…</p>
+{/if}
+
+{#if scelta && chart && transits}
+  <section class="risultato" bind:this={confronto}>
+    <div class="intestazione">
+      <h2>Ora di {BODY_LABEL[scelta.ruler]}, {scelta.diurnal ? 'diurna' : 'notturna'} {scelta.index}</h2>
+      <p class="meta" aria-live="polite">
+        {scelta.local.start.slice(0, 10)} · {scelta.local.start.slice(11, 16)}–{scelta.local.end.slice(
+          11,
+          16,
+        )} · {election?.range.timezone} · {scelta.minutes} min · Ascendente
+        {formatDegrees(scelta.ascendant.signDegree)}
+        {SIGN_LABEL[scelta.ascendant.sign]} · sulla nascita del
+        {chart.input.date}{chart.time.timeKnown ? ` alle ${chart.input.time}` : ' (ora ignota)'} ·
+        case {chart.houseSystem}{scelta.moonVoid ? ' · Luna vuota di corso' : ''}
+      </p>
+    </div>
+
+    {#if transits.warnings.length > 0}
+      <div class="avvertenze">
+        <h3>Avvertenze</h3>
+        <ul>
+          {#each transits.warnings as warning (warning)}
+            <li>{warning}</li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
+    <div class="griglia">
+      <div class="ruota">
+        <ChartWheel {chart} {transits} {highlighted} />
+        <p class="suggerimento">
+          Anello esterno: il cielo dell'ora scelta. Anello interno: il tema di nascita.
+          Le linee al centro sono gli aspetti fra i due.
+        </p>
+      </div>
+
+      <div class="tabelle">
+        <TransitAspectTable aspects={transits.aspects} bind:highlighted />
+
+        <BodyTable
+          bodies={transits.transiting}
+          title="Nell'ora scelta"
+          houseTitle="Casa natale"
+          bind:highlighted
+        />
+
+        <BodyTable
+          bodies={chart.bodies}
+          partOfFortune={chart.partOfFortune}
+          title="Tema di nascita"
+          bind:highlighted
+        />
+      </div>
+    </div>
+  </section>
+{/if}
+
 <style>
+  /* Il guscio della sezione — riquadro, striscia appesa, risultato — è quello
+     delle altre pagine: le stesse regole, perché una sezione che si presenta
+     in modo diverso sembra un'altra applicazione. */
+  .sottotitolo {
+    margin: 0 0 1.1rem;
+    color: var(--testo-tenue);
+    font-size: 0.9rem;
+  }
+
+  .modulo {
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    border-radius: var(--raggio);
+    padding: 1.5rem;
+    /* Riferimento per la X, che sta nell'angolo del riquadro e non nella riga. */
+    position: relative;
+  }
+
+  /* Chiuso, il modulo resta appeso in cima: le frecce dei giorni servono
+     mentre si guardano le ore, che cominciano sotto la piega. */
+  .modulo.chiuso {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 0.7rem 1rem;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.09);
+  }
+
+  .testa {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .modulo.chiuso .testa {
+    align-items: center;
+  }
+
+  .commuta {
+    flex: none;
+    padding: 0.35rem 0.8rem;
+    background: none;
+    color: var(--accento);
+    border: 1px solid var(--linea-forte);
+    border-radius: var(--raggio);
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .commuta:hover {
+    border-color: var(--accento);
+  }
+
+  .commuta.chiusura {
+    position: absolute;
+    top: 0.7rem;
+    right: 1rem;
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--testo-tenue);
+    border-color: transparent;
+  }
+
+  .commuta.chiusura:hover {
+    color: var(--accento);
+    border-color: var(--linea-forte);
+  }
+
+  .modulo:not(.chiuso) .testa {
+    padding-right: 2.5rem;
+  }
+
+  .dettagli {
+    margin-top: 1.5rem;
+  }
+
+  .campi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .invia {
+    margin-top: 1.5rem;
+    padding: 0.6rem 1.4rem;
+    background: var(--accento);
+    color: #fff;
+    border: none;
+    border-radius: var(--raggio);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .invia:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .risultato {
+    margin-top: 2.5rem;
+  }
+
+  .intestazione h2 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin: 0 0 0.2rem;
+  }
+
+  .meta {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--testo-tenue);
+  }
+
+  .avvertenze {
+    margin-top: 1.25rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--accento-tenue);
+    border-radius: var(--raggio);
+    font-size: 0.85rem;
+  }
+
+  .avvertenze h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .avvertenze ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  .griglia {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    margin-top: 1.75rem;
+    align-items: start;
+  }
+
+  @media (max-width: 60rem) {
+    .griglia {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tabelle {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .suggerimento {
+    font-size: 0.78rem;
+    color: var(--testo-tenue);
+    margin-top: 0.5rem;
+  }
+
+  /* La nascita è un secondo argomento dentro lo stesso modulo, non altri campi
+     del primo: la riga la separa da dove e quando, che stanno sopra. */
+  .nascita {
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--linea);
+  }
+
+  .nascita h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 0 0 0.2rem;
+    font-family: Georgia, serif;
+    font-weight: 400;
+    font-size: 1.1rem;
+  }
+
+  /* Scritto accanto al titolo e non solo nella nota: chi salta le note deve
+     poter capire in un'occhiata che questo blocco si può lasciare vuoto. */
+  .facoltativo {
+    font-family: inherit;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--testo-tenue);
+  }
+
+  .nascita .nota {
+    margin-bottom: 1.25rem;
+  }
+
+  .attesa {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--testo-tenue);
+  }
+
   .giorno {
     display: flex;
     align-items: center;
@@ -245,11 +685,5 @@
   .filtri label {
     font-size: 0.85rem;
     color: var(--testo-tenue);
-  }
-
-  .spunta {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
   }
 </style>
