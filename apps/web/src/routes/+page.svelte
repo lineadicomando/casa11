@@ -129,17 +129,24 @@
     <!-- La forma segue il mestiere. Aperto, il pulsante chiude, e una X lo dice
          da sé stando nell'angolo come in una finestra. Chiuso, il mestiere è
          l'opposto e nessun simbolo lo esprime: solo il testo dice che cosa c'è
-         dietro. -->
-    <button
-      type="button"
-      class="commuta"
-      class:chiusura={aperto}
-      aria-expanded={aperto}
-      aria-label={aperto ? 'Chiudi i dettagli' : undefined}
-      onclick={commuta}
-    >
-      {aperto ? '×' : 'Nascita'}
-    </button>
+         dietro.
+
+         Aperto senza un tema calcolato non c'è però niente da chiudere: la X
+         lascerebbe una striscia appesa sopra una pagina vuota, con un sistema
+         di case da scegliere per una carta che non esiste. Chiuso il pulsante
+         c'è sempre, perché è la via per tornare ai campi. -->
+    {#if !aperto || chart}
+      <button
+        type="button"
+        class="commuta"
+        class:chiusura={aperto}
+        aria-expanded={aperto}
+        aria-label={aperto ? 'Chiudi i dettagli' : undefined}
+        onclick={commuta}
+      >
+        {aperto ? '×' : 'Nascita'}
+      </button>
+    {/if}
   </div>
 
   <div class="dettagli" hidden={!aperto}>

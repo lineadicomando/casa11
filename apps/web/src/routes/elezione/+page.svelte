@@ -250,16 +250,22 @@
       {/if}
     </div>
 
-    <button
-      type="button"
-      class="commuta"
-      class:chiusura={aperto}
-      aria-expanded={aperto}
-      aria-label={aperto ? 'Chiudi i dettagli' : undefined}
-      onclick={commuta}
-    >
-      {aperto ? '×' : 'Luogo'}
-    </button>
+    <!-- Aperto senza un elenco calcolato non c'è niente da chiudere: la X
+         lascerebbe una striscia appesa sopra una pagina vuota, con le frecce
+         dei giorni pronte a sfogliare il nulla. Chiuso il pulsante c'è sempre,
+         perché è la via per tornare ai campi. -->
+    {#if !aperto || election}
+      <button
+        type="button"
+        class="commuta"
+        class:chiusura={aperto}
+        aria-expanded={aperto}
+        aria-label={aperto ? 'Chiudi i dettagli' : undefined}
+        onclick={commuta}
+      >
+        {aperto ? '×' : 'Luogo'}
+      </button>
+    {/if}
   </div>
 
   <div class="dettagli" hidden={!aperto}>
@@ -522,7 +528,9 @@
     border-color: var(--linea-forte);
   }
 
-  .modulo:not(.chiuso) .testa {
+  /* L'angolo si tiene libero solo quando la X c'è: prima del primo calcolo non
+     viene disegnata affatto, e lo spazio riservato a lei sarebbe tolto ai campi. */
+  .modulo:not(.chiuso) .testa:has(.chiusura) {
     padding-right: 2.5rem;
   }
 

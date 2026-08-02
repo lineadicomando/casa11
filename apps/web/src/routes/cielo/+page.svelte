@@ -164,17 +164,23 @@
     <!-- La forma segue il mestiere. Aperto, il pulsante chiude, e una X lo dice
          da sé stando nell'angolo come in una finestra. Chiuso, il mestiere è
          l'opposto e nessun simbolo lo esprime: solo il testo dice che cosa c'è
-         dietro. L'angolo però è lo stesso, perché la striscia è alta una riga. -->
-    <button
-      type="button"
-      class="commuta"
-      class:chiusura={aperto}
-      aria-expanded={aperto}
-      aria-label={aperto ? 'Chiudi i dettagli' : undefined}
-      onclick={commuta}
-    >
-      {aperto ? '×' : 'Luogo e opzioni'}
-    </button>
+         dietro. L'angolo però è lo stesso, perché la striscia è alta una riga.
+
+         Aperto senza un cielo calcolato non c'è però niente da chiudere: la X
+         lascerebbe una striscia appesa sopra una pagina vuota. Chiuso il
+         pulsante c'è sempre, perché è la via per tornare ai campi. -->
+    {#if !aperto || sky}
+      <button
+        type="button"
+        class="commuta"
+        class:chiusura={aperto}
+        aria-expanded={aperto}
+        aria-label={aperto ? 'Chiudi i dettagli' : undefined}
+        onclick={commuta}
+      >
+        {aperto ? '×' : 'Luogo e opzioni'}
+      </button>
+    {/if}
   </div>
 
   <div class="dettagli" hidden={!aperto}>
@@ -368,8 +374,10 @@
   }
 
   /* Aperto, la X occupa l'angolo senza stare nella riga: i campi devono
-     lasciarle il posto, o il campo dell'ora le finirebbe sotto. */
-  .modulo:not(.chiuso) .testa {
+     lasciarle il posto, o il campo dell'ora le finirebbe sotto. Solo quando
+     c'è, però: prima del primo calcolo la X non viene disegnata affatto, e
+     l'angolo tenuto libero per lei sarebbe spazio tolto ai campi. */
+  .modulo:not(.chiuso) .testa:has(.chiusura) {
     padding-right: 2.5rem;
   }
 
