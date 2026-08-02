@@ -82,12 +82,35 @@
   Va detta però una cosa che si vede a occhio nudo:
   <strong>i valori inseriti compaiono nell'indirizzo</strong> della richiesta
   (<code>/api/chart?date=…&amp;time=…</code>). È una scelta voluta — rende un
-  tema condivisibile con un collegamento e riproducibile — ma ha due
-  conseguenze: quell'indirizzo resta nella cronologia del tuo browser, e
-  transita per i log del server descritti qui sotto. Il server è configurato
-  per registrare il percorso <em>senza</em> i parametri, proprio per non
-  conservarli.
+  tema riproducibile — ma ha due conseguenze: quell'indirizzo resta nella
+  cronologia del tuo browser, e transita per i log del server descritti qui
+  sotto. Il server è configurato per registrare il percorso <em>senza</em> i
+  parametri, proprio per non conservarli.
 </p>
+
+<p>
+  Diverso è l'indirizzo <strong>della pagina</strong>, quello che leggi nella
+  barra del browser, e qui il sito distingue:
+</p>
+
+<ul>
+  <li>
+    Su <strong>Cielo</strong> ed <strong>Elezione</strong> l'indirizzo si
+    aggiorna da sé con quello che stai guardando — giorno, ora, fuso, luogo,
+    opzioni — così che la pagina si possa ricaricare, mettere fra i segnalibri
+    e mandare a qualcuno. Sono un istante e una città: non dicono niente di te.
+    Sull'Elezione il tema di nascita facoltativo <em>non</em> ci finisce.
+  </li>
+  <li>
+    Su <strong>Tema natale</strong> e <strong>Transiti</strong> l'indirizzo
+    resta pulito, perché lì i dati sono una data e un luogo di nascita. Se vuoi
+    condividere un tema c'è il pulsante <em>Copia link</em>, che compone
+    l'indirizzo solo in quel momento: da lì in poi quel collegamento porta con
+    sé la nascita, e finirà nella cronologia di chi lo apre e nei registri dei
+    server che attraversa. È una decisione tua, non un comportamento
+    predefinito.
+  </li>
+</ul>
 
 <h2>I log tecnici del server</h2>
 

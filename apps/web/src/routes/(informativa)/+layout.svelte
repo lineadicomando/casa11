@@ -17,7 +17,7 @@
   }
 
   .prosa :global(h1) {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: var(--serif);
     font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 400;
     letter-spacing: -0.01em;
@@ -25,7 +25,7 @@
   }
 
   .prosa :global(h2) {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: var(--serif);
     font-size: 1.2rem;
     font-weight: 400;
     margin: 2.25rem 0 0.5rem;

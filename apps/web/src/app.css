@@ -51,6 +51,23 @@
   --aspetto-fluidita: light-dark(#39658a, #7aa8cc);
   --aspetto-neutro: light-dark(#7d7260, #a49a88);
   --aspetto-minore: light-dark(#8c8069, #9b917e);
+
+  /* La doratura del monogramma nel marchio.
+
+     Era scritta solo dentro il disegno del marchio, dove nessun altro poteva
+     vederla: dichiararla qui la rende un colore del progetto invece di un
+     dettaglio di un file. Non cambia con l'aspetto — sta sopra il riquadro
+     scuro del monogramma in entrambi. */
+  --oro: #fab219;
+
+  /* La voce delle intestazioni.
+
+     Georgia compariva in due punti soli e per il resto tutto era `system-ui`:
+     due voci senza rapporto fra loro, e una terza nel marchio. Qui il serif
+     diventa una scelta dichiarata e vale per tutti i titoli — il tono dei testi
+     di questo sito è già quello di un libro, e le intestazioni ora lo dicono.
+     Restano di sistema i dati: tabelle, campi, controlli. */
+  --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
 }
 
 /* Senza attributo comanda il sistema: l'aspetto `auto` non ha una regola sua
@@ -310,10 +327,15 @@ tbody tr.evidenziato {
   background: var(--accento-tenue);
 }
 
+/* Il nome di una tabella — CORPI, ASPETTI, ASSI E CUSPIDI. In maiuscoletto
+   spaziato come prima, ma nel serif: è la scala più piccola a cui la voce delle
+   intestazioni arriva, e su un maiuscoletto largo il serif si legge come una
+   testatina da libro invece che come un'etichetta di modulo. */
 .titolo-sezione {
-  font-size: 0.78rem;
+  font-family: var(--serif);
+  font-size: 0.82rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--testo-tenue);
   font-weight: 600;
   margin: 0 0 0.6rem;

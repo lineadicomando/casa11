@@ -78,7 +78,7 @@
   }
 
   .intestazione h2 {
-    font-family: Georgia, serif;
+    font-family: var(--serif);
     font-weight: 400;
     font-size: 1.5rem;
     margin: 0 0 0.2rem;
@@ -100,9 +100,10 @@
 
   .avvertenze h3 {
     margin: 0 0 0.4rem;
-    font-size: 0.78rem;
+    font-family: var(--serif);
+    font-size: 0.82rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
   }
 
   .avvertenze ul {

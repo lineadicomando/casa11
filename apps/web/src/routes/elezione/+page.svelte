@@ -499,7 +499,7 @@
     align-items: baseline;
     gap: 0.6rem;
     margin: 0 0 0.2rem;
-    font-family: Georgia, serif;
+    font-family: var(--serif);
     font-weight: 400;
     font-size: 1.1rem;
   }
