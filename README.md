@@ -124,8 +124,42 @@ transits.warnings;    // ora del transito non fornita, tema senza case, bersagli
 
 `computeTransits` prende il **tema già calcolato**, non i dati di nascita: non
 lo ricalcola, e le case in cui i transiti cadono sono quelle che la persona ha
-davanti, nello stesso sistema di domificazione. I transiti non hanno una
-domificazione propria.
+davanti, nello stesso sistema di domificazione.
+
+### Il luogo da cui si guarda
+
+Facoltativo, e senza non manca niente: le longitudini eclittiche sono
+geocentriche, quindi a Roma e a Tokyo un pianeta è allo stesso grado dello
+zodiaco e forma gli stessi aspetti al tema. Serve alle sole cose che un
+orizzonte definisce.
+
+```ts
+const transits = computeTransits(natal, { date: '2026-08-15', time: '09:00', timezone: 'Asia/Tokyo' }, {
+  place: { latitude: 35.6895, longitude: 139.6917 },
+});
+
+transits.angles;       // Ascendente e Medio Cielo **dell'istante**, da lì
+transits.houses;       // le dodici cuspidi dell'istante. Vuote senza luogo o senza ora
+transits.siderealTime; // locale: dipende dalla longitudine
+```
+
+Da qui un corpo in transito si trova in **due** case, e non è una
+contraddizione ma la differenza fra due domande. `house` risponde a «in quale
+settore della vita di questa persona sta passando», e vale ovunque la persona
+si trovi: è quella che si legge di solito. `transitHouse` risponde a «dove sta
+in cielo, adesso, per chi è in quel posto» — sopra o sotto l'orizzonte, a
+oriente o a occidente.
+
+Con il luogo, **Ascendente e Medio Cielo dell'istante entrano fra i
+transitanti** e aspettano i punti natali. Vanno letti sapendo che si muovono di
+un grado ogni quattro minuti: un loro contatto dura minuti, non i giorni o i
+mesi di un pianeta. La loro velocità non è supposta costante ma misurata sul
+posto — l'Ascendente accelera e rallenta secondo il segno che sorge, tanto più
+quanto più alta è la latitudine.
+
+Il luogo del transito **non riloca il tema**: le case natali restano quelle di
+nascita. Un luogo senza ora produce il solo tempo siderale e un avviso — a
+mezzogiorno l'Ascendente sarebbe inventato, non approssimato.
 
 ### Le orbite sono un'altra tabella
 
@@ -161,14 +195,23 @@ transito che si avvicina, non l'incontro.
 ```sh
 casa11 --date 1968-03-12 --time 14:30 --lat 40.85 --lon 14.27 --tz Europe/Rome \
        --transits --on 2026-08-15
+casa11 … --transits --on 2026-08-15 --at 09:00 \
+       --transit-lat 35.6895 --transit-lon 139.6917
 ```
 
 Senza `--on` vale adesso, ora compresa. Via API e via MCP:
 
 ```
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
+GET /api/transits?…&transitDate=2026-08-15&transitTime=09:00&transitLocationId=1850147
 GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 ```
+
+Il luogo del transito ha parametri suoi — `transitLocationId`, oppure
+`transitLatitude` e `transitLongitude` insieme — perché una richiesta di
+transiti porta **due** luoghi, e negli stessi nomi uno dei due andrebbe perso.
+Sceglierne uno fornisce anche il fuso in cui leggere `transitTime`: chi nomina
+una città intende l'ora di lì.
 
 La risposta porta il tema **e** i transiti, perché le posizioni natali servono
 comunque a leggere il quadro. Quando l'istante è indicato vale un giorno di
@@ -592,6 +635,7 @@ GET /api/locations?q=napoli&limit=8&country=IT
 GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
 GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
+GET /api/transits?…&transitDate=2026-08-15&transitTime=09:00&transitLocationId=1850147
 GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome
 GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&timezone=Europe/Rome
@@ -601,7 +645,10 @@ GET /api/election?locationId=2523920&from=2029-08-24&to=2029-08-26
 I transiti accettano **gli stessi parametri di nascita** del tema, più
 `transitDate`, `transitTime` e `transitTimezone`: un indirizzo che calcola un
 tema ne calcola i transiti cambiando solo il percorso. Senza `transitDate`
-valgono l'istante e il giorno correnti.
+valgono l'istante e il giorno correnti. Il luogo da cui si guarda è facoltativo
+e ha nomi propri — `transitLocationId`, oppure `transitLatitude` e
+`transitLongitude` — perché quelli senza prefisso sono già del luogo di
+nascita; indicandolo, il fuso predefinito dell'istante diventa il suo.
 
 Gli errori riportano il `code` del dominio (`FUSO_ORARIO_NON_VALIDO`,
 `LUOGO_MANCANTE`, …) con lo status appropriato: 400 per l'input, 404 per una
@@ -765,7 +812,7 @@ Sette tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 |---|---|
 | `search_location` | nome → candidati con `location_id`, coordinate, fuso IANA |
 | `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
-| `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema |
+| `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema; `transit_location_id` aggiunge assi e case dell'istante |
 | `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
 | `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
 | `find_sky_events` | un arco → incontri, ingressi nei segni e stazioni, sempre senza nascita |

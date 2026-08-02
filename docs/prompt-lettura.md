@@ -113,21 +113,42 @@ Accetta tutti i parametri di `/api/chart`, più:
 - `transitTime` (facoltativo): ora del transito. Se manca vale mezzogiorno, e
   nell'arco di una giornata solo la Luna si sposta sensibilmente.
 - `transitTimezone` (facoltativo): fuso in cui leggere i due valori qui sopra.
-  Default: quello di nascita.
+  Default: quello del luogo del transito se ne indichi uno, altrimenti quello
+  di nascita.
+- `transitLocationId` (facoltativo): il luogo **da cui si guarda** il transito,
+  da `/api/locations`. Non è il luogo di nascita e non va riempito con quello.
+  Indicalo solo se l'utente dice da dove sta guardando. In alternativa
+  `transitLatitude` e `transitLongitude`, che vanno insieme.
 
-Risposta: `{ "chart": { … }, "transits": { … }, "place": { … } }`. Il tema
-arriva insieme ai transiti: le posizioni natali servono comunque a leggerli.
+Risposta: `{ "chart": { … }, "transits": { … }, "place": { … }, "transitPlace": { … } }`.
+Il tema arriva insieme ai transiti: le posizioni natali servono comunque a
+leggerli.
 
 I campi di `transits`:
 
 - `input`, `time` — istante richiesto e conversione a Tempo Universale.
 - `transiting[]` — un elemento per corpo in transito, con gli stessi campi di
-  `bodies`. **`house` è la casa natale** in cui il transito cade: i transiti non
-  hanno una domificazione propria.
+  `bodies`. **`house` è la casa natale** in cui il transito cade, ed è quella
+  che si legge: dice in quale settore della vita della persona il transito sta
+  passando.
 - `aspects[]` — `transiting` (id del corpo che passa), `natal` (id del punto di
   nascita toccato: un corpo, oppure `ascendente` o `medio-cielo`), `aspect`,
   `angle`, `orb`, `applying`, `retrograde`.
 - `warnings[]` — leggile sempre.
+
+Solo con un luogo del transito compaiono anche:
+
+- `transiting[].transitHouse` — la casa **dell'istante**, che è un'altra cosa:
+  dice dove il corpo sta rispetto all'orizzonte di quel posto in quel momento,
+  non in quale settore della vita passa. Non scambiarla con `house` e non
+  usarla al posto suo.
+- `angles`, `houses`, `houseSystem`, `siderealTime` — assi e cuspidi
+  dell'istante, visti da lì. **Non sono il tema rilocato**: il tema di nascita
+  resta quello che è.
+- `aspects[]` in cui `transiting` vale `ascendente` o `medio-cielo`. Sono gli
+  assi dell'istante, che si spostano di un grado ogni quattro minuti: un loro
+  contatto dura **minuti**, non i giorni o i mesi di un pianeta. Non dargli il
+  peso di un transito planetario e non nominarlo se l'ora non è certa.
 
 Le orbite dei transiti sono **molto più strette** di quelle natali: 2° per
 congiunzione, opposizione, quadrato e trigono, 1,5° per il sestile. Non
@@ -309,8 +330,11 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
   rovesciato o supera i tre anni: chiedine uno più breve.
 - `LUOGO_MANCANTE` — mancano sia `locationId` sia la terna completa. Nell'elezione
   non è un ripiego possibile: senza luogo non c'è niente da calcolare.
-- `LUOGO_INCOMPLETO` — nel cielo hai indicato una sola delle due coordinate.
-  Indicale entrambe, oppure omettile: senza luogo il cielo si calcola lo stesso.
+- `LUOGO_INCOMPLETO` — hai indicato una sola delle due coordinate, nel cielo o
+  nel luogo del transito. Indicale entrambe, oppure omettile: senza luogo il
+  cielo si calcola lo stesso, e i transiti restano completi tranne gli assi e
+  le case dell'istante. Il messaggio nomina i parametri da correggere, che nei
+  transiti sono `transitLatitude` e `transitLongitude`.
 - `LOCALITA_SCONOSCIUTA` — l'id non esiste: rifai la ricerca.
 - `COORDINATE_NON_VALIDE`, `FUSO_ORARIO_NON_VALIDO`, `SISTEMA_CASE_NON_VALIDO`
   — input da correggere.
@@ -419,6 +443,17 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
   hai chiamato solo `/api/transits`: quella è la fotografia di un istante, e
   l'orbita che leggi vale solo per quell'istante. Le date vengono da
   `/api/transits/passages` o da nessuna parte.
+- NON leggere `transitHouse` al posto di `house`. La prima dice dove un corpo
+  sta nel cielo di un certo posto in quel momento; la seconda, in quale settore
+  della vita della persona sta passando — ed è quella che regge la lettura. Se
+  le nomini entrambe, dì quale delle due stai usando.
+- NON trattare un aspetto che parte da `ascendente` o `medio-cielo` in transito
+  come un transito planetario. Quegli assi fanno un giro completo in un giorno:
+  il contatto dura minuti ed è già finito mentre lo si legge. Serve a datare un
+  istante preciso, non a descrivere un periodo, e con un'ora incerta non serve
+  a niente.
+- NON dire che il luogo del transito «riloca» il tema, e non ricalcolare le case
+  di nascita su di esso. Il tema resta dov'è nato.
 - Una data di passaggio resta l'istante in cui un angolo si chiude, non un
   appuntamento. Puoi dire «il contatto si perfeziona il 3 giugno e resta in
   orbita per due mesi»; non puoi dire che cosa accadrà il 3 giugno.
@@ -612,7 +647,19 @@ poterli calcolare.
 
 Ometti `transit_date`, `from` e `date`: la data corrente la mette il server, tu
 non la sai. Le case che leggi nei transiti sono quelle natali, e le orbite sono
-strette di proposito. In `find_transit_passages` restringi `bodies` ai pianeti
+strette di proposito.
+
+`compute_transits` accetta anche `transit_location_id`, cioè il luogo **da cui
+si guarda**. È facoltativo, non è il luogo di nascita, e va indicato solo se
+l'utente dice da dove sta guardando: senza, i transiti sono completi lo stesso.
+Con esso arrivano assi e case dell'istante, che sono un'altra cosa dalle case
+natali — dicono dove un corpo sta rispetto all'orizzonte di quel posto, non in
+quale settore della vita passa — e fra i transitanti compaiono l'Ascendente e
+il Medio Cielo di quel momento, che si spostano di un grado ogni quattro minuti
+e il cui contatto dura minuti, non mesi. Non scambiare le due specie di case e
+non dire che il luogo del transito riloca il tema: il tema resta dov'è nato.
+
+In `find_transit_passages` restringi `bodies` ai pianeti
 lenti quando l'arco è lungo, e ricorda che tre passaggi ravvicinati sullo stesso
 punto sono un periodo solo. Gli istanti che restituisce sono al secondo: nella
 risposta diventano fasce, larghe quanto il transitante è lento.
