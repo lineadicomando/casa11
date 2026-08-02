@@ -1,17 +1,6 @@
 <script lang="ts">
   import type { HouseSystem } from '@undicesimacasa/core';
-
-  const HOUSE_SYSTEMS: { value: HouseSystem; label: string }[] = [
-    { value: 'placidus', label: 'Placidus' },
-    { value: 'koch', label: 'Koch' },
-    { value: 'segni-interi', label: 'Segni interi' },
-    { value: 'equale', label: 'Equale' },
-    { value: 'regiomontano', label: 'Regiomontano' },
-    { value: 'campano', label: 'Campano' },
-    { value: 'porfirio', label: 'Porfirio' },
-    { value: 'topocentrico', label: 'Topocentrico' },
-    { value: 'alcabizio', label: 'Alcabizio' },
-  ];
+  import { HOUSE_SYSTEMS } from '$lib/house-systems';
 
   interface Props {
     houseSystem: HouseSystem;

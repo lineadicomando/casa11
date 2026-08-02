@@ -7,10 +7,13 @@
     TransitChart,
   } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
-  import { tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
+  import { replaceState } from '$app/navigation';
+  import { page } from '$app/state';
   import {
     electionParameters,
     fetchElection,
+    fetchLocation,
     fetchTransits,
     RequestError,
     transitParameters,
@@ -110,6 +113,51 @@
 
   const canSubmit = $derived(location !== null && from !== '');
 
+  /**
+   * Il luogo e i filtri possono arrivare già scritti nell'indirizzo.
+   *
+   * Le ore planetarie sono del luogo e non di una persona: un giorno, una città
+   * e un reggitore non dicono niente di chi guarda, e possono quindi stare in
+   * una query string. **La nascita no**, e infatti non ci finisce: qui è
+   * facoltativa, e chi la scrive lo fa per confrontarla con un'ora, non per
+   * mandarla in giro.
+   */
+  async function dallIndirizzo(parametri: URLSearchParams): Promise<void> {
+    const id = Number(parametri.get('locationId'));
+    if (!Number.isInteger(id) || id <= 0) return;
+
+    location = await fetchLocation(id);
+    if (!location) return;
+
+    from = parametri.get('from') ?? from;
+    const reggitore = parametri.get('rulers');
+    if (reggitore && REGGITORI.includes(reggitore as BodyId)) ruler = reggitore as BodyId;
+    skipMoonVoid = parametri.get('skipMoonVoid') === 'true';
+  }
+
+  /**
+   * Rimette nell'indirizzo quello che si sta guardando.
+   *
+   * Senza `to`, che è `from` più i giorni della finestra: un valore che si
+   * ricava non va scritto due volte, o prima o poi i due si contraddicono.
+   * `replaceState` e non `pushState`, perché le frecce dei giorni riempirebbero
+   * la cronologia di voci da risalire una a una.
+   */
+  function nellIndirizzo(): void {
+    if (!location) return;
+    const parametri = new URLSearchParams({ locationId: String(location.id), from });
+    if (ruler) parametri.set('rulers', ruler);
+    if (skipMoonVoid) parametri.set('skipMoonVoid', 'true');
+    replaceState(`?${parametri}`, {});
+  }
+
+  onMount(() => {
+    void (async () => {
+      await dallIndirizzo(page.url.searchParams);
+      if (location) await load();
+    })();
+  });
+
   async function load(): Promise<boolean> {
     if (!location) return false;
 
@@ -123,6 +171,7 @@
           skipMoonVoid,
         }),
       );
+      nellIndirizzo();
       // L'ora scelta apparteneva all'elenco precedente: un giorno diverso, o
       // un filtro diverso, non la contiene più. Tenerne a schermo la ruota
       // significherebbe mostrare un confronto che nessuna riga rivendica.

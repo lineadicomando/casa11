@@ -35,6 +35,26 @@ export class RequestError extends Error {
   }
 }
 
+/**
+ * La località dietro un identificativo.
+ *
+ * Serve alle pagine che si rimettono in piedi da un indirizzo: là il luogo è un
+ * numero, e per riempire il campo di ricerca ci vogliono il nome e il fuso.
+ * `null` quando quel numero non è di nessuno — un indirizzo scritto a mano, o
+ * un dataset reimportato — e la pagina prosegue senza luogo invece di fermarsi.
+ */
+export async function fetchLocation(id: number): Promise<Location | null> {
+  try {
+    const body = await request<{ results: Location[] }>(
+      `/api/locations?id=${id}`,
+      'Località non trovata',
+    );
+    return body.results[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export interface ChartResponse {
   chart: NatalChart;
   place?: { label: string; refined: boolean };

@@ -35,6 +35,32 @@
    * in corso a metà parola.
    */
   let query = $state(untrack(() => (selected ? describe(selected) : '')));
+
+  /**
+   * Se qualcuno abbia mai scritto in questo campo.
+   *
+   * Distingue il campo vuoto perché non è stato ancora usato da quello svuotato
+   * apposta. Senza, cancellare il testo lo farebbe ricomparire: `onInput`
+   * azzera la selezione, ma fra la riga che svuota il campo e quella che la
+   * azzera l'effetto qui sotto vedrebbe un campo vuoto e una località ancora
+   * scelta, e lo riempirebbe di nuovo.
+   */
+  let toccato = false;
+
+  /**
+   * Una località che arriva da fuori riempie il campo, se il campo è ancora
+   * intonso.
+   *
+   * Il valore iniziale non basta più: le pagine che si rimettono in piedi dal
+   * proprio indirizzo hanno solo un numero, e per trasformarlo in un nome
+   * devono chiederlo al server — quando la risposta arriva, questo componente
+   * è montato da un pezzo. Senza questa riga il cielo si calcolava per Napoli
+   * mostrando un campo del luogo vuoto, cioè dicendo il contrario.
+   */
+  $effect(() => {
+    const scelto = selected;
+    if (scelto && !toccato && untrack(() => query) === '') query = describe(scelto);
+  });
   let results = $state<Location[]>([]);
   let open = $state(false);
   let loading = $state(false);
@@ -81,6 +107,7 @@
   }
 
   function onInput(event: Event): void {
+    toccato = true;
     query = (event.target as HTMLInputElement).value;
     // La selezione decade appena il testo cambia: evita che il tema venga
     // calcolato per un luogo diverso da quello che si legge nel campo.

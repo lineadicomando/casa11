@@ -2,7 +2,10 @@
   import type { HouseSystem, SkyChart } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
   import { onMount } from 'svelte';
+  import { replaceState } from '$app/navigation';
+  import { page } from '$app/state';
   import {
+    fetchLocation,
     fetchSky,
     fetchSkyCalendar,
     RequestError,
@@ -22,6 +25,7 @@
   import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
   import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
   import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
+  import { houseSystemOrDefault } from '$lib/house-systems';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
   import { Evidenza } from '$lib/evidenza.svelte';
 
@@ -58,10 +62,53 @@
   /** Senza luogo non ci sono case da domificare, e senza ora nemmeno. */
   const housesDisabled = $derived(location === null || moment.time === '');
 
+  /**
+   * L'istante e il luogo possono arrivare già scritti nell'indirizzo.
+   *
+   * Qui non c'è nessuna nascita: un giorno, un'ora e un luogo da cui guardare
+   * il cielo non dicono niente di chi guarda, e quindi possono stare in una
+   * query string — che finisce nella cronologia, nei registri del server e nel
+   * referer. È la ragione per cui il tema e i transiti non lo fanno.
+   *
+   * Senza `date` nell'indirizzo non si tocca niente: vale «adesso», che è il
+   * valore da cui la pagina è già partita.
+   */
+  async function dallIndirizzo(parametri: URLSearchParams): Promise<void> {
+    const date = parametri.get('date');
+    if (!date) return;
+
+    moment = {
+      date,
+      time: parametri.get('time') ?? '',
+      timezone: parametri.get('timezone') || nowMoment().timezone,
+    };
+    houseSystem = houseSystemOrDefault(parametri.get('houseSystem'));
+    minorAspects = parametri.get('minorAspects') === 'true';
+
+    const id = Number(parametri.get('locationId'));
+    if (Number.isInteger(id) && id > 0) location = await fetchLocation(id);
+  }
+
+  /**
+   * Rimette nell'indirizzo quello che si sta guardando.
+   *
+   * `replaceState` e non `pushState`: le frecce del passo si premono in fretta,
+   * e un giorno per volta riempirebbero la cronologia di decine di voci da
+   * risalire una a una. Quello che si guadagna è la ricarica, il segnalibro e
+   * il link da mandare a qualcuno — non il tasto Indietro.
+   */
+  function nellIndirizzo(): void {
+    const parametri = skyParameters(moment, { houseSystem, minorAspects }, location);
+    replaceState(`?${parametri}`, {});
+  }
+
   // Il cielo di adesso non ha bisogno di essere chiesto: è la risposta che la
   // pagina può dare prima ancora della domanda, ed è il senso della sezione.
   onMount(() => {
-    void load();
+    void (async () => {
+      await dallIndirizzo(page.url.searchParams);
+      await load();
+    })();
   });
 
   /**
@@ -89,6 +136,7 @@
       // Il calendario partiva dal giorno precedente: si ricomincia da capo.
       calendar = null;
       calendarError = null;
+      nellIndirizzo();
       return true;
     } catch (cause) {
       if (richiesta !== ultima) return false;
