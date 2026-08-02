@@ -1,4 +1,5 @@
 import { computeAspects } from './aspects.js';
+import { computeDistribution } from './distribution.js';
 import { DEFAULT_BODIES } from './constants.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
 import { computeHouses, houseOf } from './houses.js';
@@ -54,12 +55,25 @@ export function computeSky(moment: SkyMoment, options: SkyOptions = {}): SkyChar
     bodies,
     houses: [],
     aspects: computeAspects(bodies, { minorAspects: options.minorAspects ?? false }),
+    distribution: computeDistribution({ bodies }),
     warnings,
+  };
+
+  /**
+   * Conta e restituisce.
+   *
+   * Da qui si esce in tre punti — senza luogo, senza ora, e con tutto — e la
+   * distribuzione va ricontata in ognuno, perché con gli assi cambia. Una
+   * funzione sola invece di tre righe uguali: due si allineano, la terza no.
+   */
+  const concludi = (): SkyChart => {
+    sky.distribution = computeDistribution(sky);
+    return sky;
   };
 
   // Senza luogo il cielo è completo così: le posizioni valgono ovunque, ed è
   // proprio questo a rendere la sezione utile senza chiedere dove si è.
-  if (!place) return sky;
+  if (!place) return concludi();
 
   sky.place = place;
   sky.siderealTime = localSiderealTime(time.julianDayUT, place.longitude);
@@ -69,7 +83,7 @@ export function computeSky(moment: SkyMoment, options: SkyOptions = {}): SkyChar
       "Assi e case non calcolati: al luogo va aggiunta l'ora. A mezzogiorno " +
         "sarebbero inventati, non approssimati.",
     );
-    return sky;
+    return concludi();
   }
 
   const houseSystem = options.houseSystem ?? 'placidus';
@@ -95,5 +109,5 @@ export function computeSky(moment: SkyMoment, options: SkyOptions = {}): SkyChar
   const sun = sky.bodies.find((body) => body.id === 'sole');
   if (sun) sky.sect = chartSect(sun.longitude, houseResult.angles.descendant);
 
-  return sky;
+  return concludi();
 }

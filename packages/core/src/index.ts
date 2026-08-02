@@ -14,6 +14,7 @@ export { findSignIngresses, findStations } from './sky-events.js';
 export { findElectionHours, MAX_ELECTION_DAYS } from './election.js';
 export { riseOrSet } from './rise.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
+export { computeDistribution, type DistributionInput } from './distribution.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
 export {
   computeBodies,
@@ -63,7 +64,10 @@ export {
   HOUSE_SYSTEM_CODES,
   MEAN_DAILY_MOTION,
   NATAL_POINT_NAMES,
+  PLANETS,
   SIGN_ABBR,
+  SIGN_ELEMENT,
+  SIGN_MODALITY,
   WEEKDAY_RULERS,
   TRANSIT_ORB_BONUS,
   TRANSIT_ORBS,
@@ -82,12 +86,16 @@ export type {
   CelestialBody,
   ChartOptions,
   ChartPoint,
+  Distribution,
+  DistributionGroup,
   ElectionOptions,
   ElectionResult,
+  Element,
   EphemerisMode,
   House,
   HouseSystem,
   LocalMoment,
+  Modality,
   NatalChart,
   NatalPointId,
   PassageOptions,

@@ -268,6 +268,11 @@ export interface NatalChart {
   siderealTime: SiderealTime;
   aspects: Aspect[];
   /**
+   * Quanti punti cadono in ciascun elemento e in ciascuna modalità, divisi per
+   * gruppo. È un conteggio e non una lettura: vedi `Distribution`.
+   */
+  distribution: Distribution;
+  /**
    * Avvertimenti non bloccanti: ora ambigua o inesistente per il cambio
    * ora legale, ripiego sulle effemeridi Moshier, corpi non calcolabili,
    * sistema di case non applicabile alla latitudine.
@@ -317,6 +322,8 @@ export interface SkyChart {
   sect?: Sect;
   /** Aspetti reciproci fra i corpi, con le orbite di un tema. */
   aspects: Aspect[];
+  /** Come nel tema. Il gruppo degli assi resta vuoto senza luogo o senza ora. */
+  distribution: Distribution;
   /**
    * Avvertimenti non bloccanti: ora non indicata, luogo senza ora, ripiego
    * sulle effemeridi Moshier, corpi non calcolabili.
@@ -338,6 +345,49 @@ export type NatalPointId =
   | 'discendente'
   | 'fondo-cielo'
   | 'fortuna';
+
+/** La triplicità di un segno. */
+export type Element = 'fuoco' | 'terra' | 'aria' | 'acqua';
+
+/** La quadruplicità di un segno. */
+export type Modality = 'cardinale' | 'fisso' | 'mobile';
+
+/**
+ * Quanti punti di un gruppo cadono in ciascun elemento e in ciascuna modalità.
+ *
+ * `counted` non è un di più: è ciò che rende il conteggio verificabile. Un
+ * numero nudo — «Fuoco 3» — non si può ricontare, e chi legge non ha modo di
+ * sapere se dentro ci siano i nodi, Chirone o l'Ascendente. Con l'elenco, chi
+ * segue una convenzione diversa dalla nostra rifà la somma invece di doverci
+ * credere.
+ */
+export interface DistributionGroup {
+  elements: Record<Element, number>;
+  modalities: Record<Modality, number>;
+  counted: NatalPointId[];
+}
+
+/**
+ * La distribuzione dei punti fra elementi e modalità, divisa per gruppo.
+ *
+ * Spezzata e non sommata di proposito. Non esiste un conteggio solo: c'è chi
+ * conta i sette pianeti tradizionali, chi i dieci, chi aggiunge i nodi, chi
+ * l'Ascendente, chi pesa i luminari più del resto. Dare un totale unico
+ * significherebbe scegliere una scuola in silenzio e presentarne il risultato
+ * come un fatto.
+ *
+ * Con i gruppi separati ogni convenzione si ricava sommando: chi vuole i soli
+ * pianeti legge `planets`, chi vuole anche l'Ascendente aggiunge `angles`.
+ * Il motore conta, la scelta di che cosa contare resta a chi legge.
+ */
+export interface Distribution {
+  /** I dieci fra luminari e pianeti. */
+  planets: DistributionGroup;
+  /** Nodi, Lilith, Chirone, Parte di Fortuna: quelli che il tema porta. */
+  points: DistributionGroup;
+  /** Ascendente e Medio Cielo. Vuoto senza ora di nascita. */
+  angles: DistributionGroup;
+}
 
 /** L'istante di cui si vogliono i transiti, in ora locale. */
 export type TransitMoment = LocalMoment;

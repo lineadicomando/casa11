@@ -5,6 +5,8 @@ import type {
   Aspect,
   BodyId,
   CelestialBody,
+  Distribution,
+  DistributionGroup,
   ElectionResult,
   House,
   NatalChart,
@@ -60,6 +62,7 @@ export function formatChartCompact(chart: NatalChart): string {
   if (chart.houses.length > 0) lines.push('', 'CUSPIDI', ...cuspLines(chart.houses));
 
   lines.push('', 'ASPETTI', ...aspectLines(chart));
+  lines.push('', 'DISTRIBUZIONE', ...distributionLines(chart.distribution));
   lines.push(...warningLines(chart.warnings));
 
   return lines.join('\n');
@@ -99,6 +102,7 @@ export function formatSkyCompact(sky: SkyChart): string {
   if (sky.houses.length > 0) lines.push('', 'CUSPIDI', ...cuspLines(sky.houses));
 
   lines.push('', 'ASPETTI', ...aspectLines(sky));
+  lines.push('', 'DISTRIBUZIONE', ...distributionLines(sky.distribution));
   lines.push(...warningLines(sky.warnings));
 
   return lines.join('\n');
@@ -429,6 +433,36 @@ function aspectLines(chart: { bodies: readonly CelestialBody[]; aspects: readonl
       `${formatDegrees(aspect.orb).padStart(7)}  ${direction}`
     );
   });
+}
+
+/**
+ * La distribuzione, in tre righe.
+ *
+ * I gruppi restano distinti anche qui, e il totale non viene scritto: sommarli
+ * vorrebbe dire scegliere una convenzione, che è proprio ciò che il conteggio
+ * spezzato evita. Chi legge somma le righe che gli servono.
+ *
+ * I gruppi vuoti si saltano: un tema senza ora non ha assi, e una riga di zeri
+ * si leggerebbe come «nessun asse in nessun elemento» invece che «non pervenuti».
+ */
+function distributionLines(distribution: Distribution): string[] {
+  const gruppi: [string, DistributionGroup][] = [
+    ['Pianeti', distribution.planets],
+    ['Punti', distribution.points],
+    ['Assi', distribution.angles],
+  ];
+
+  return gruppi
+    .filter(([, gruppo]) => gruppo.counted.length > 0)
+    .map(([nome, gruppo]) => {
+      const elementi = (['fuoco', 'terra', 'aria', 'acqua'] as const)
+        .map((elemento) => `${elemento} ${gruppo.elements[elemento]}`)
+        .join('  ');
+      const modalita = (['cardinale', 'fisso', 'mobile'] as const)
+        .map((modo) => `${modo} ${gruppo.modalities[modo]}`)
+        .join('  ');
+      return `${nome.padEnd(8)} ${elementi.padEnd(38)} | ${modalita}`;
+    });
 }
 
 function warningLines(warnings: readonly string[]): string[] {

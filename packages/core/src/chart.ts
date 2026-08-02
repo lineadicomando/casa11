@@ -1,5 +1,6 @@
 import { computeAspects } from './aspects.js';
 import { DEFAULT_BODIES } from './constants.js';
+import { computeDistribution } from './distribution.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
 import { computeHouses, houseOf } from './houses.js';
 import { validatePlace } from './place.js';
@@ -54,6 +55,8 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
     houses: [],
     siderealTime: localSiderealTime(time.julianDayUT, birth.longitude),
     aspects: computeAspects(bodies, { minorAspects: options.minorAspects ?? false }),
+    // Riempita in fondo, quando anche assi e Parte di Fortuna esistono.
+    distribution: computeDistribution({ bodies }),
     warnings,
   };
 
@@ -100,6 +103,11 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
       );
     }
   }
+
+  // Per ultima: conta quello che c'è, e a questo punto ci sono anche gli assi
+  // e la Parte di Fortuna. Calcolarla prima darebbe un tema senza assi anche
+  // quando l'ora di nascita è nota.
+  chart.distribution = computeDistribution(chart);
 
   return chart;
 }

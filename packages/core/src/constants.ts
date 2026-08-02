@@ -1,4 +1,12 @@
-import type { AspectId, BodyId, HouseSystem, NatalPointId, ZodiacSign } from './types.js';
+import type {
+  AspectId,
+  BodyId,
+  Element,
+  HouseSystem,
+  Modality,
+  NatalPointId,
+  ZodiacSign,
+} from './types.js';
 
 export const ZODIAC_SIGNS: readonly ZodiacSign[] = [
   'ariete',
@@ -13,6 +21,65 @@ export const ZODIAC_SIGNS: readonly ZodiacSign[] = [
   'capricorno',
   'acquario',
   'pesci',
+];
+
+/**
+ * L'elemento di ciascun segno: la triplicità.
+ *
+ * Non è interpretazione ma classificazione, e su questa non esiste scuola che
+ * dissenta — l'Ariete è di fuoco da Tolomeo in poi. Quel che è interpretazione
+ * comincia un passo più in là, quando dal conteggio si tirano conclusioni: e
+ * quello il motore non lo fa.
+ */
+export const SIGN_ELEMENT: Readonly<Record<ZodiacSign, Element>> = {
+  ariete: 'fuoco',
+  leone: 'fuoco',
+  sagittario: 'fuoco',
+  toro: 'terra',
+  vergine: 'terra',
+  capricorno: 'terra',
+  gemelli: 'aria',
+  bilancia: 'aria',
+  acquario: 'aria',
+  cancro: 'acqua',
+  scorpione: 'acqua',
+  pesci: 'acqua',
+};
+
+/** La modalità di ciascun segno: la quadruplicità. */
+export const SIGN_MODALITY: Readonly<Record<ZodiacSign, Modality>> = {
+  ariete: 'cardinale',
+  cancro: 'cardinale',
+  bilancia: 'cardinale',
+  capricorno: 'cardinale',
+  toro: 'fisso',
+  leone: 'fisso',
+  scorpione: 'fisso',
+  acquario: 'fisso',
+  gemelli: 'mobile',
+  vergine: 'mobile',
+  sagittario: 'mobile',
+  pesci: 'mobile',
+};
+
+/**
+ * I dieci fra luminari e pianeti, senza i punti calcolati.
+ *
+ * È il gruppo su cui quasi tutti concordano quando si conta la distribuzione:
+ * ciò che sta oltre — nodi, Lilith, Chirone, la Parte di Fortuna — dipende
+ * dalla scuola, e per questo viene contato a parte invece che escluso.
+ */
+export const PLANETS: readonly BodyId[] = [
+  'sole',
+  'luna',
+  'mercurio',
+  'venere',
+  'marte',
+  'giove',
+  'saturno',
+  'urano',
+  'nettuno',
+  'plutone',
 ];
 
 /** Abbreviazioni a tre lettere, per l'output tabellare compatto. */
