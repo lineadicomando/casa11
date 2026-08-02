@@ -425,6 +425,25 @@ dice quale pianeta regge un'ora e se la Luna sia vuota, non se quell'ora sia
 buona per qualcosa. Il significato è di chi consuma, come per ogni altro numero
 che questo motore produce.
 
+### L'ora eletta sul tema di nascita
+
+Nella tradizione l'elezione si radica nel tema di chi commissiona l'impresa, e
+l'interfaccia lo lascia fare senza che il motore ne sappia niente: nella sezione
+`/elezione` la nascita è un blocco **facoltativo** del modulo, e con una nascita
+ogni riga della tabella si apre come istante sul tema — la biruota, gli aspetti
+al natale, le posizioni dei due cieli.
+
+Non serve nessun calcolo nuovo, ed è la ragione per cui la cosa costa una
+schermata e non un endpoint: **un'ora planetaria è un istante**, e i transiti
+sono già il confronto fra una nascita e un istante qualsiasi. La riga scelta
+diventa `transitDate` e `transitTime` di `/api/transits`, con il fuso del luogo
+eletto e non quello di nascita.
+
+Resta fuori ciò che sarebbe un giudizio: nessuna ora viene ordinata, segnata o
+consigliata in base al tema. Giustapporre non è valutare — l'elenco è lo stesso
+con o senza nascita — e il contesto per scegliere sta nelle domande che
+l'astrologo fa al cliente, non in una tabella.
+
 ## Le località
 
 Il dataset GeoNames è importato in un database SQLite locale: 235.073 località,
@@ -602,6 +621,7 @@ stanno perciò in `$lib` e non nella pagina:
 | | |
 |---|---|
 | `lib/birth.ts` | lo stato del modulo di nascita, con `isComplete` e le coordinate corrette |
+| `lib/birth-store.svelte.ts` | quella nascita, condivisa fra le sezioni: in memoria, finché la pagina non viene ricaricata |
 | `lib/moment.ts` | lo stato del modulo dell'istante, con il fuso di chi guarda |
 | `lib/clock.ts` | l'ora da parete in un fuso: la stessa risposta al server e al browser |
 | `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |

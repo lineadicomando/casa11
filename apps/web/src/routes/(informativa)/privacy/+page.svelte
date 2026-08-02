@@ -144,6 +144,14 @@
   aperta e spariscono quando la chiudi.
 </p>
 
+<p>
+  Lo stesso vale per i dati di nascita, con una precisazione che ti riguarda:
+  passando dal tema ai transiti o all'elezione <strong>li ritrovi già
+  scritti</strong>, per non doverli ridigitare a ogni sezione. Restano nella
+  memoria della pagina aperta, non in un archivio e non sul disco: ricaricando
+  il sito i campi tornano vuoti.
+</p>
+
 <h2>Nessuna profilazione, nessun marketing</h2>
 
 <p>
