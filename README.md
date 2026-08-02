@@ -679,6 +679,7 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/components/MomentFields.svelte` | giorno, ora, «adesso» e il passo avanti o indietro: l'istante che i transiti e il cielo chiedono allo stesso modo |
 | `lib/components/ChartSettings.svelte` | sistema di case e aspetti minori; nella striscia del modulo chiuso ricalcola da sé |
 | `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
+| `lib/components/Wordmark.svelte` | il marchio, disegnato inline perché le lettere seguano il colore del testo |
 | `lib/nodal-axis.ts` | accorpa l'asse dei Nodi, che si presenta sempre in coppia |
 | `lib/components/*Table.svelte` | le tabelle dei risultati |
 

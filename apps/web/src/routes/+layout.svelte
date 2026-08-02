@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import Wordmark from '$lib/components/Wordmark.svelte';
   import { isActive, SECTIONS } from '$lib/navigation';
   import { REPOSITORY_URL } from '$lib/project';
   import '../app.css';
@@ -9,7 +10,7 @@
 
 <div class="guscio">
   <header>
-    <a class="marchio" href="/">undicesimacasa</a>
+    <a class="marchio" href="/"><Wordmark /></a>
 
     <nav aria-label="Sezioni">
       <ul>
@@ -50,7 +51,7 @@
   .guscio {
     max-width: 72rem;
     margin: 0 auto;
-    padding: 2.5rem 1.25rem 4rem;
+    padding: 1.0rem 1.25rem 4rem;
   }
 
   header {
@@ -63,15 +64,13 @@
      nelle pagine, che così hanno ciascuna il proprio `h1`. */
   .marchio {
     display: inline-block;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 1.1rem;
-    letter-spacing: 0.02em;
-    text-decoration: none;
-    color: var(--testo-tenue);
+    /* Il disegno è l'unico contenuto del link: senza questo la riga di testo
+       che lo contiene gli lascia sotto qualche pixel di spazio. */
+    line-height: 0;
   }
 
   .marchio:hover {
-    color: var(--testo);
+    opacity: 0.75;
   }
 
   nav ul {
