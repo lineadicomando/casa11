@@ -26,6 +26,7 @@
   import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
+  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
 
@@ -50,6 +51,8 @@
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   const evidenza = new Evidenza();
+  /** Il nodo della ruota, che gli strumenti devono avere in mano per salvarla. */
+  let disegno = $state<SVGSVGElement | null>(null);
 
   /**
    * Se il modulo mostri anche il resto di sé.
@@ -255,7 +258,8 @@
   >
     <div class="griglia">
       <div class="ruota">
-        <ChartWheel {chart} {transits} {evidenza} />
+        <ChartWheel {chart} {transits} {evidenza} bind:elemento={disegno} />
+        <StrumentiRuota svg={disegno} {evidenza} nome={['transiti', placeLabel, transits.input.date]} />
         <p class="suggerimento">
           Anello esterno: i corpi in transito. Anello interno: il tema di nascita.
           Le linee al centro sono gli aspetti fra i due.

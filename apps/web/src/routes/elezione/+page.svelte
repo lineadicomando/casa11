@@ -27,6 +27,7 @@
   import LocationSearch from '$lib/components/LocationSearch.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
+  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { formatDegrees } from '$lib/format';
   import { BODY_LABEL, SIGN_LABEL } from '$lib/glyphs';
@@ -85,6 +86,8 @@
   let loadingConfronto = $state(false);
   let confrontoError = $state<string | null>(null);
   const evidenza = new Evidenza();
+  /** Il nodo della ruota, che gli strumenti devono avere in mano per salvarla. */
+  let disegno = $state<SVGSVGElement | null>(null);
   let confronto = $state<HTMLElement | null>(null);
 
   /**
@@ -402,7 +405,10 @@
   >
     <div class="griglia">
       <div class="ruota">
-        <ChartWheel {chart} {transits} {evidenza} />
+        <ChartWheel {chart} {transits} {evidenza} bind:elemento={disegno} />
+        <StrumentiRuota svg={disegno} {evidenza}
+          nome={['ora', BODY_LABEL[scelta.ruler], scelta.local.start.slice(0, 10)]}
+        />
         <p class="suggerimento">
           Anello esterno: il cielo dell'ora scelta. Anello interno: il tema di nascita.
           Le linee al centro sono gli aspetti fra i due.

@@ -375,3 +375,84 @@ tbody tr.evidenziato {
   color: var(--accento);
   font-weight: 500;
 }
+
+/* La carta.
+
+   Un tema natale si stampa: è il documento su cui si lavora, e finiva su carta
+   con la testata, il menù, la striscia del modulo appesa in mezzo alla pagina e
+   il piè di pagina con la licenza. Qui resta il risultato e nient'altro.
+
+   Chi stampa dal tema scuro otterrebbe pagine nere: `color-scheme` torna a
+   `light` anche quando l'attributo dice il contrario, e va nominato insieme
+   all'attributo o la regola più specifica di quello vincerebbe. */
+@media print {
+  :root,
+  :root[data-color-scheme='dark'] {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+    font-size: 11pt;
+  }
+
+  /* Il guscio serviva a tenere la riga leggibile su uno schermo largo: il
+     foglio la larghezza ce l'ha già. */
+  .guscio {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* Quello che sullo schermo porta altrove, o chiede un altro calcolo: su carta
+     non porta da nessuna parte. Il modulo in particolare è la domanda, e la
+     risposta se la porta scritta nell'intestazione. Un'istruzione — «scegli un
+     corpo per isolarne gli aspetti» — su un foglio è una promessa che nessuno
+     può mantenere; le spiegazioni del dominio restano, che su carta servono
+     quanto a schermo. */
+  header,
+  footer,
+  .modulo,
+  .sottotitolo,
+  .secondario,
+  .istruzione {
+    display: none;
+  }
+
+  .risultato {
+    margin-top: 0;
+  }
+
+  /* Due colonne su A4 le fanno entrambe strette: la ruota va in cima, larga
+     quanto le serve per restare leggibile, e le tabelle sotto. */
+  .griglia {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .ruota {
+    position: static;
+  }
+
+  .ruota svg {
+    max-width: 14cm;
+    margin: 0 auto;
+  }
+
+  /* Una riga spezzata fra due fogli è una riga persa: il numero resta di qua e
+     il segno passa di là. L'intestazione invece si ripete su ogni foglio, che è
+     ciò che i browser fanno da soli con un `thead` — purché non lo si tolga dal
+     flusso delle righe. */
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  .avvertenze {
+    break-inside: avoid;
+  }
+
+  /* Le tabelle sono componenti a sé e si spezzano volentieri a metà titolo. */
+  .tabelle > * {
+    break-inside: avoid-page;
+  }
+}

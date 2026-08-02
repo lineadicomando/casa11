@@ -12,6 +12,7 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
+  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
 
   // La nascita non è di questa pagina: chi la scrive qui la ritrova nei
   // transiti e nell'elezione, e viceversa.
@@ -24,6 +25,8 @@
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   const evidenza = new Evidenza();
+  /** Il nodo della ruota, che gli strumenti devono avere in mano per salvarla. */
+  let disegno = $state<SVGSVGElement | null>(null);
 
   /**
    * Se il modulo mostri anche il resto di sé.
@@ -162,9 +165,10 @@
   >
     <div class="griglia">
       <div class="ruota">
-        <ChartWheel {chart} {evidenza} />
+        <ChartWheel {chart} {evidenza} bind:elemento={disegno} />
+        <StrumentiRuota svg={disegno} {evidenza} nome={['tema', placeLabel, chart.input.date]} />
         {#if chart.aspects.length > 0}
-          <p class="suggerimento">
+          <p class="suggerimento istruzione">
             Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti. Resta
             scelto finché non lo si sceglie di nuovo.
           </p>

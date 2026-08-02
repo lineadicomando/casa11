@@ -19,6 +19,7 @@
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
+  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
   import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
   import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
@@ -34,6 +35,8 @@
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   const evidenza = new Evidenza();
+  /** Il nodo della ruota, che gli strumenti devono avere in mano per salvarla. */
+  let disegno = $state<SVGSVGElement | null>(null);
 
   /**
    * Se il modulo mostri anche il resto di sé.
@@ -209,7 +212,12 @@
           chart={sky}
           {evidenza}
           label="Ruota del cielo con le posizioni planetarie e i loro aspetti"
+          bind:elemento={disegno}
         />
+        <StrumentiRuota svg={disegno} {evidenza} nome={['cielo', placeLabel, sky.input.date]} />
+        <!-- Due frasi e non una: la prima spiega da che parte è girata la ruota
+             e vale anche su carta, la seconda è un gesto che su un foglio non
+             si può fare. -->
         <p class="suggerimento">
           {#if sky.angles}
             L'Ascendente è a sinistra, come in un tema.
@@ -217,6 +225,8 @@
             Senza luogo la ruota comincia da 0° dell'Ariete: non c'è nessun Ascendente
             da mettere a sinistra.
           {/if}
+        </p>
+        <p class="suggerimento istruzione">
           Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti.
         </p>
       </div>

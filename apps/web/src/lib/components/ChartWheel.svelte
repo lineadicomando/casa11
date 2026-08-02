@@ -44,6 +44,13 @@
      * tema e non va annunciato come tale.
      */
     label?: string;
+    /**
+     * Il nodo del disegno, per chi lo deve portare via.
+     *
+     * Lo usa la barra degli strumenti: esportare vuol dire leggere questo SVG
+     * e fissarne i valori calcolati, e per farlo bisogna averlo in mano.
+     */
+    elemento?: SVGSVGElement | null;
   }
 
   let {
@@ -51,6 +58,7 @@
     transits = null,
     evidenza,
     label = 'Ruota del tema natale con posizioni planetarie, case e aspetti',
+    elemento = $bindable(null),
   }: Props = $props();
 
   const highlighted = $derived(evidenza.attivo);
@@ -123,6 +131,7 @@
 </script>
 
 <svg
+  bind:this={elemento}
   viewBox="{-PADDING} {-PADDING} {SIZE + PADDING * 2} {SIZE + PADDING * 2}"
   class="wheel"
   role="img"
