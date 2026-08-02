@@ -22,6 +22,7 @@
   import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
   import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
+  import { Evidenza } from '$lib/evidenza.svelte';
 
   let moment = $state(nowMoment());
   let location = $state<Location | null>(null);
@@ -32,7 +33,7 @@
   let placeLabel = $state<string | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
-  let highlighted = $state<string | null>(null);
+  const evidenza = new Evidenza();
 
   /**
    * Se il modulo mostri anche il resto di sé.
@@ -206,7 +207,7 @@
       <div class="ruota">
         <ChartWheel
           chart={sky}
-          {highlighted}
+          {evidenza}
           label="Ruota del cielo con le posizioni planetarie e i loro aspetti"
         />
         <p class="suggerimento">
@@ -216,18 +217,18 @@
             Senza luogo la ruota comincia da 0° dell'Ariete: non c'è nessun Ascendente
             da mettere a sinistra.
           {/if}
-          Passa sopra un corpo nella tabella per isolarne gli aspetti.
+          Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti.
         </p>
       </div>
 
       <div class="tabelle">
-        <BodyTable bodies={sky.bodies} bind:highlighted />
+        <BodyTable bodies={sky.bodies} {evidenza} />
 
         {#if sky.angles}
           <AngleTable angles={sky.angles} houses={sky.houses} />
         {/if}
 
-        <AspectTable aspects={sky.aspects} bind:highlighted />
+        <AspectTable aspects={sky.aspects} {evidenza} />
       </div>
     </div>
 

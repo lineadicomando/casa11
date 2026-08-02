@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TransitChart } from '@undicesimacasa/core';
+  import type { Evidenza } from '$lib/evidenza.svelte';
   import {
     ASPECT_COLOR,
     ELEMENT_COLOR,
@@ -29,8 +30,14 @@
      * sovrapporre le due trame renderebbe illeggibili entrambe.
      */
     transits?: TransitChart | null;
-    /** Corpo evidenziato: gli aspetti che non lo toccano vengono attenuati. */
-    highlighted?: string | null;
+    /**
+     * Il corpo isolato: gli aspetti che non lo toccano vengono attenuati.
+     *
+     * Condiviso con le tabelle. Il disegno non si limita a subirlo: ogni glifo
+     * è un bersaglio, e da qui la scelta può partire invece che arrivare
+     * soltanto — che è il gesto naturale, e l'unico possibile con un dito.
+     */
+    evidenza: Evidenza;
     /**
      * Descrizione per chi non vede il disegno. Ha un valore predefinito
      * perché la ruota nasce per il tema, ma il cielo di un istante non è un
@@ -42,9 +49,24 @@
   let {
     chart,
     transits = null,
-    highlighted = null,
+    evidenza,
     label = 'Ruota del tema natale con posizioni planetarie, case e aspetti',
   }: Props = $props();
+
+  const highlighted = $derived(evidenza.attivo);
+
+  /**
+   * Invio e barra spaziatrice fanno quello che fa il clic.
+   *
+   * Un `<g>` con `role="button"` non è un `<button>`: il browser non gli dà
+   * nessuno dei due tasti, e va scritto. La barra va anche fermata, o la pagina
+   * scorrerebbe di uno schermo mentre si sceglie un pianeta.
+   */
+  function daTastiera(event: KeyboardEvent, id: string): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    evidenza.commuta(id);
+  }
 
   /** Ampiezza minima dell'arco di una congiunzione, in gradi. */
   const CONJUNCTION_MIN_SPAN = 5;
@@ -244,7 +266,23 @@
       {@const tickOuter = toXY(point.longitude, R.zodiacInner)}
       {@const tickInner = toXY(point.longitude, R.outerBodies + 16)}
       {@const dimmed = highlighted !== null && highlighted !== point.id}
-      <g class="corpo transito" opacity={dimmed ? 0.3 : 1}>
+      <g
+        class="corpo transito"
+        class:scelto={evidenza.fissato === point.id}
+        opacity={dimmed ? 0.3 : 1}
+        role="button"
+        tabindex="0"
+        aria-pressed={evidenza.fissato === point.id}
+        aria-label="{point.label}. Isola i suoi aspetti."
+        onclick={() => evidenza.commuta(point.id)}
+        onkeydown={(event) => daTastiera(event, point.id)}
+        onmouseenter={() => evidenza.sorvola(point.id)}
+        onmouseleave={() => evidenza.sorvola(null)}
+      >
+        <!-- Il bersaglio del dito, invisibile: i glifi sono alti una ventina di
+             pixel sullo schermo, molto sotto i quarantaquattro che un tocco
+             vuole per non mancare il segno. -->
+        <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" />
         <line
           x1={tickOuter.x}
           y1={tickOuter.y}
@@ -283,7 +321,24 @@
     {@const tickOuter = toXY(point.longitude, R.houses)}
     {@const tickInner = toXY(point.longitude, R.bodies + 16)}
     {@const dimmed = highlighted !== null && highlighted !== point.id}
-    <g class="corpo" class:attenuato={dimmed} opacity={dimmed ? 0.3 : 1}>
+    <g
+      class="corpo"
+      class:attenuato={dimmed}
+      class:scelto={evidenza.fissato === point.id}
+      opacity={dimmed ? 0.3 : 1}
+      role="button"
+      tabindex="0"
+      aria-pressed={evidenza.fissato === point.id}
+      aria-label="{point.label}. Isola i suoi aspetti."
+      onclick={() => evidenza.commuta(point.id)}
+      onkeydown={(event) => daTastiera(event, point.id)}
+      onmouseenter={() => evidenza.sorvola(point.id)}
+      onmouseleave={() => evidenza.sorvola(null)}
+    >
+      <!-- Il bersaglio del dito, invisibile: i glifi sono alti una ventina di
+           pixel sullo schermo, molto sotto i quarantaquattro che un tocco vuole
+           per non mancare il segno. -->
+      <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" />
       <!-- Trattino alla longitudine reale: il glifo può essere stato spostato -->
       <line
         x1={tickOuter.x}
@@ -374,5 +429,29 @@
 
   .corpo {
     transition: opacity 0.15s ease;
+    cursor: pointer;
+  }
+
+  /* Il fuoco della tastiera si vede attorno al glifo e non attorno al gruppo,
+     che comprende anche il trattino e arriverebbe fino all'anello dei segni. */
+  .corpo:focus-visible {
+    outline: none;
+  }
+
+  .corpo:focus-visible circle {
+    fill: var(--accento-tenue);
+    stroke: var(--accento);
+    stroke-width: 2;
+  }
+
+  /* Scelto, il glifo resta acceso anche quando il puntatore è altrove: è la
+     differenza fra l'aver guardato e l'aver deciso. */
+  .corpo.scelto .glifo-corpo {
+    fill: var(--accento);
+    font-weight: 600;
+  }
+
+  .corpo.scelto circle {
+    fill: var(--accento-tenue);
   }
 </style>

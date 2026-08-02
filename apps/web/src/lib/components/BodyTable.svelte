@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ChartPoint, TransitingBody } from '@undicesimacasa/core';
+  import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
   import { BODY_GLYPH, POINT_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '$lib/glyphs';
 
@@ -17,8 +18,8 @@
      */
     bodies: TransitingBody[];
     partOfFortune?: ChartPoint | undefined;
-    /** Corpo sotto il puntatore, condiviso con la ruota e con gli aspetti. */
-    highlighted?: string | null;
+    /** Il corpo isolato, condiviso con la ruota e con gli aspetti. */
+    evidenza: Evidenza;
     title?: string;
     /**
      * Intestazione della colonna delle case. Nei transiti la casa non è del
@@ -33,7 +34,7 @@
   let {
     bodies,
     partOfFortune = undefined,
-    highlighted = $bindable(null),
+    evidenza,
     title = 'Corpi',
     houseTitle = 'Casa',
     secondHouseTitle = "Casa dell'istante",
@@ -69,12 +70,25 @@
     <tbody>
       {#each bodies as body (body.id)}
         <tr
-          onmouseenter={() => (highlighted = body.id)}
-          onmouseleave={() => (highlighted = null)}
-          class:evidenziato={highlighted === body.id}
+          onmouseenter={() => evidenza.sorvola(body.id)}
+          onmouseleave={() => evidenza.sorvola(null)}
+          class:evidenziato={evidenza.attivo === body.id}
         >
           <td class="glifo">{BODY_GLYPH[body.id]}</td>
-          <td>{body.name}{body.retrograde ? ' ℞' : ''}</td>
+          <!-- Il nome è un pulsante e non del testo: il passaggio del mouse
+               isolava già gli aspetti di questo corpo, ma solo per chi un mouse
+               ce l'ha. Qui lo stesso fa un tocco, o l'Invio dopo esserci
+               arrivati con il tabulatore. -->
+          <td>
+            <button
+              type="button"
+              class="scelta"
+              aria-pressed={evidenza.fissato === body.id}
+              onclick={() => evidenza.commuta(body.id)}
+            >
+              {body.name}{body.retrograde ? ' ℞' : ''}
+            </button>
+          </td>
           <td>
             {formatDegrees(body.signDegree)}
             <span class="glifo-piccolo">{SIGN_GLYPH[body.sign]}</span>
@@ -119,5 +133,30 @@
   /* Vedi ChartWheel: ⊗ è un operatore matematico e nasce sovradimensionato. */
   .glifo-punto {
     font-size: 0.9rem;
+  }
+
+  /* Un pulsante che si legge come la riga in cui sta: il gesto lo suggerisce il
+     puntatore e la sottolineatura al passaggio, non un bordo attorno a ognuno
+     dei quattordici nomi. */
+  .scelta {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: underline transparent;
+    text-underline-offset: 2px;
+  }
+
+  tr:hover .scelta,
+  .scelta:focus-visible {
+    text-decoration-color: var(--linea-forte);
+  }
+
+  .scelta[aria-pressed='true'] {
+    color: var(--accento);
+    font-weight: 600;
   }
 </style>

@@ -17,6 +17,7 @@
     type ElectionResponse,
   } from '$lib/api';
   import { isComplete } from '$lib/birth';
+  import { Evidenza } from '$lib/evidenza.svelte';
   import { birthStore } from '$lib/birth-store.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
   import BodyTable from '$lib/components/BodyTable.svelte';
@@ -83,7 +84,7 @@
   let transits = $state<TransitChart | null>(null);
   let loadingConfronto = $state(false);
   let confrontoError = $state<string | null>(null);
-  let highlighted = $state<string | null>(null);
+  const evidenza = new Evidenza();
   let confronto = $state<HTMLElement | null>(null);
 
   /**
@@ -401,7 +402,7 @@
   >
     <div class="griglia">
       <div class="ruota">
-        <ChartWheel {chart} {transits} {highlighted} />
+        <ChartWheel {chart} {transits} {evidenza} />
         <p class="suggerimento">
           Anello esterno: il cielo dell'ora scelta. Anello interno: il tema di nascita.
           Le linee al centro sono gli aspetti fra i due.
@@ -409,20 +410,20 @@
       </div>
 
       <div class="tabelle">
-        <TransitAspectTable aspects={transits.aspects} bind:highlighted />
+        <TransitAspectTable aspects={transits.aspects} {evidenza} />
 
         <BodyTable
           bodies={transits.transiting}
           title="Nell'ora scelta"
           houseTitle="Casa natale"
-          bind:highlighted
+          {evidenza}
         />
 
         <BodyTable
           bodies={chart.bodies}
           partOfFortune={chart.partOfFortune}
           title="Tema di nascita"
-          bind:highlighted
+          {evidenza}
         />
       </div>
     </div>

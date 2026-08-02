@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TransitAspect } from '@undicesimacasa/core';
+  import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
   import {
     ASPECT_GLYPH,
@@ -17,12 +18,12 @@
    */
   interface Props {
     aspects: TransitAspect[];
-    /** Corpo sotto il puntatore, condiviso con la ruota e con le altre tabelle. */
-    highlighted?: string | null;
+    /** Il corpo isolato, condiviso con la ruota e con le altre tabelle. */
+    evidenza: Evidenza;
     title?: string;
   }
 
-  let { aspects, highlighted = $bindable(null), title = 'Aspetti al tema' }: Props = $props();
+  let { aspects, evidenza, title = 'Aspetti al tema' }: Props = $props();
 
   // I due nodi sono opposti per definizione: ogni loro contatto arriva in
   // coppia e descrive un fatto solo. Vedi `lib/nodal-axis.ts`.
@@ -47,19 +48,32 @@
       <tbody>
         {#each righe as aspect, index (index)}
           <tr
-            onmouseenter={() => (highlighted = aspect.transiting)}
-            onmouseleave={() => (highlighted = null)}
-            class:evidenziato={highlighted === aspect.transiting}
+            onmouseenter={() => evidenza.sorvola(aspect.transiting)}
+            onmouseleave={() => evidenza.sorvola(null)}
+            class:evidenziato={evidenza.attivo === aspect.transiting}
             class:minore={!ASPECT_MAJOR[aspect.aspect]}
           >
             <!-- Gli stessi glifi dell'altro lato: con un luogo del transito
-                 anche qui può comparire un asse, e i corpi li rendono uguale. -->
-            <td
-              class="glifo-piccolo"
-              class:sigla={isNatalPointSigla(aspect.transiting)}
-              title={natalPointLabel(aspect.transiting)}
-            >
-              {natalPointGlyph(aspect.transiting)}{aspect.retrograde ? ' ℞' : ''}
+                 anche qui può comparire un asse, e i corpi li rendono uguale.
+
+                 Il transitante è un pulsante, il punto natale no: nella ruota
+                 si isolano i corpi dell'anello esterno, e un aspetto attenuato
+                 lo è già rispetto a quelli.
+
+                 Fuori dal giro del tabulatore: la ruota e la tabella dei corpi
+                 in transito lo attraversano già, e qui le righe sono troppe
+                 perché la tastiera possa scavalcarle. -->
+            <td class="glifo-piccolo" class:sigla={isNatalPointSigla(aspect.transiting)}>
+              <button
+                type="button"
+                class="scelta"
+                tabindex="-1"
+                aria-label="{natalPointLabel(aspect.transiting)} in transito. Isola i suoi aspetti."
+                aria-pressed={evidenza.fissato === aspect.transiting}
+                onclick={() => evidenza.commuta(aspect.transiting)}
+              >
+                {natalPointGlyph(aspect.transiting)}{aspect.retrograde ? ' ℞' : ''}
+              </button>
             </td>
             <td>{aspect.aspect}</td>
             <td
@@ -110,5 +124,20 @@
   .sigla {
     font-size: 0.72rem;
     letter-spacing: 0.02em;
+  }
+
+  /* Il glifo è già il disegno: il pulsante non ne aggiunge nessuno, e si fa
+     riconoscere dal puntatore e dal colore quando è scelto. */
+  .scelta {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .scelta[aria-pressed='true'] {
+    color: var(--accento);
   }
 </style>

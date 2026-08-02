@@ -2,6 +2,7 @@
   import type { HouseSystem, NatalChart } from '@undicesimacasa/core';
   import { chartParameters, fetchChart, RequestError } from '$lib/api';
   import { isComplete } from '$lib/birth';
+  import { Evidenza } from '$lib/evidenza.svelte';
   import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import AspectTable from '$lib/components/AspectTable.svelte';
@@ -22,7 +23,7 @@
   let placeLabel = $state<string | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
-  let highlighted = $state<string | null>(null);
+  const evidenza = new Evidenza();
 
   /**
    * Se il modulo mostri anche il resto di sé.
@@ -161,22 +162,23 @@
   >
     <div class="griglia">
       <div class="ruota">
-        <ChartWheel {chart} {highlighted} />
+        <ChartWheel {chart} {evidenza} />
         {#if chart.aspects.length > 0}
           <p class="suggerimento">
-            Passa sopra un corpo nella tabella per isolarne gli aspetti nella ruota.
+            Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti. Resta
+            scelto finché non lo si sceglie di nuovo.
           </p>
         {/if}
       </div>
 
       <div class="tabelle">
-        <BodyTable bodies={chart.bodies} partOfFortune={chart.partOfFortune} bind:highlighted />
+        <BodyTable bodies={chart.bodies} partOfFortune={chart.partOfFortune} {evidenza} />
 
         {#if chart.angles}
           <AngleTable angles={chart.angles} houses={chart.houses} />
         {/if}
 
-        <AspectTable aspects={chart.aspects} bind:highlighted />
+        <AspectTable aspects={chart.aspects} {evidenza} />
       </div>
     </div>
   </Risultato>

@@ -14,6 +14,7 @@
     transitParameters,
   } from '$lib/api';
   import { isComplete } from '$lib/birth';
+  import { Evidenza } from '$lib/evidenza.svelte';
   import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
@@ -48,7 +49,7 @@
   let transitPlaceLabel = $state<string | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
-  let highlighted = $state<string | null>(null);
+  const evidenza = new Evidenza();
 
   /**
    * Se il modulo mostri anche il resto di sé.
@@ -254,7 +255,7 @@
   >
     <div class="griglia">
       <div class="ruota">
-        <ChartWheel {chart} {transits} {highlighted} />
+        <ChartWheel {chart} {transits} {evidenza} />
         <p class="suggerimento">
           Anello esterno: i corpi in transito. Anello interno: il tema di nascita.
           Le linee al centro sono gli aspetti fra i due.
@@ -262,13 +263,13 @@
       </div>
 
       <div class="tabelle">
-        <TransitAspectTable aspects={transits.aspects} bind:highlighted />
+        <TransitAspectTable aspects={transits.aspects} {evidenza} />
 
         <BodyTable
           bodies={transits.transiting}
           title="In transito"
           houseTitle="Casa natale"
-          bind:highlighted
+          {evidenza}
         />
 
         {#if transits.angles}
@@ -289,7 +290,7 @@
           bodies={chart.bodies}
           partOfFortune={chart.partOfFortune}
           title="Tema di nascita"
-          bind:highlighted
+          {evidenza}
         />
       </div>
     </div>
