@@ -3,8 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Calcolo del tema natale: posizioni planetarie, case e aspetti." />
+    <!-- La descrizione la dà ogni pagina, con `lib/components/Meta.svelte`: una
+         qui sarebbe la prima del documento, e resterebbe quella che i motori di
+         ricerca leggono per tutte e cinque le sezioni. -->
     <link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+    <!--
+      Il colore della barra del browser su mobile, che va scelto due volte
+      perché la pagina ha due fondi: dichiararne uno solo lascia una striscia
+      chiara sopra una pagina scura, o il contrario. Sono i due valori di
+      `--sfondo`, che qui non si possono leggere — questo tag è testo, non CSS.
+    -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf8f4" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1917" />
     <!--
       L'aspetto scelto va applicato prima che la pagina si disegni: deciderlo
       da un componente vorrebbe dire un lampo chiaro in faccia a chi ha scelto

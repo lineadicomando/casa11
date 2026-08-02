@@ -13,6 +13,7 @@
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
   import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
@@ -128,9 +129,7 @@
   });
 </script>
 
-<svelte:head>
-  <title>Tema natale — undicesimacasa</title>
-</svelte:head>
+<Meta titolo="Tema natale" descrizione="Posizioni planetarie, case e aspetti di un tema di nascita, calcolati con le effemeridi Swiss Ephemeris." />
 
 <!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->

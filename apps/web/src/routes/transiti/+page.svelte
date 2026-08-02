@@ -26,6 +26,7 @@
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
@@ -219,9 +220,10 @@
   }
 </script>
 
-<svelte:head>
-  <title>Transiti — undicesimacasa</title>
-</svelte:head>
+<Meta
+  titolo="Transiti"
+  descrizione="Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita."
+/>
 
 <!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->

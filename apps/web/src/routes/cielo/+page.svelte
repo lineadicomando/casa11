@@ -19,6 +19,7 @@
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
@@ -196,9 +197,10 @@
   }
 </script>
 
-<svelte:head>
-  <title>Cielo — undicesimacasa</title>
-</svelte:head>
+<Meta
+  titolo="Cielo"
+  descrizione="Dove sono i pianeti in un dato momento e che aspetti formano fra loro."
+/>
 
 <!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->

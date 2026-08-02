@@ -28,6 +28,7 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
   import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
@@ -287,9 +288,10 @@
   }
 </script>
 
-<svelte:head>
-  <title>Elezione — undicesimacasa</title>
-</svelte:head>
+<Meta
+  titolo="Elezione"
+  descrizione="Le ore planetarie di un luogo, l'Ascendente che sorge, i tratti in cui la Luna è vuota di corso."
+/>
 
 <h1 class="nascosto">Elezione</h1>
 

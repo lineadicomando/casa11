@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Meta from '$lib/components/Meta.svelte';
   import { REPOSITORY_URL } from '$lib/project';
 
   /**
@@ -13,13 +14,10 @@
   const RITENZIONE_LOG = 7;
 </script>
 
-<svelte:head>
-  <title>Privacy e cookie — undicesimacasa</title>
-  <meta
-    name="description"
-    content="Informativa privacy e cookie: il sito non usa cookie, non profila e non conserva i dati di nascita inseriti."
-  />
-</svelte:head>
+<Meta
+  titolo="Privacy e cookie"
+  descrizione="Informativa privacy e cookie: il sito non usa cookie, non profila e non conserva i dati di nascita inseriti."
+/>
 
 <h1>Privacy e cookie</h1>
 <p class="aggiornamento">Ultimo aggiornamento: {AGGIORNAMENTO}</p>
