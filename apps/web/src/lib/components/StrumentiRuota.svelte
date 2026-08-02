@@ -20,9 +20,40 @@
     nome: readonly (string | null | undefined)[];
     /** La selezione in corso, che va tolta prima di portare via il disegno. */
     evidenza: Evidenza;
+    /**
+     * I parametri con cui rifare questo calcolo, per chi vuole il collegamento.
+     *
+     * Solo dove c'è: il cielo e l'elezione tengono già l'indirizzo aggiornato
+     * da sé, e là il collegamento è quello nella barra del browser. Qui invece
+     * l'indirizzo resta pulito — dentro c'è una data di nascita, e va scritta
+     * solo se qualcuno lo chiede.
+     */
+    link?: () => URLSearchParams;
   }
 
-  let { svg, nome, evidenza }: Props = $props();
+  let { svg, nome, evidenza, link }: Props = $props();
+
+  /** Quanto resta scritto «copiato», prima di tornare a offrirsi. */
+  const CONFERMA = 2500;
+  let copiato = $state(false);
+  let orologio: ReturnType<typeof setTimeout> | undefined;
+
+  async function copiaLink(): Promise<void> {
+    if (!link) return;
+    errore = null;
+    const indirizzo = `${window.location.origin}${window.location.pathname}?${link()}`;
+
+    try {
+      await navigator.clipboard.writeText(indirizzo);
+      copiato = true;
+      clearTimeout(orologio);
+      orologio = setTimeout(() => (copiato = false), CONFERMA);
+    } catch {
+      // Gli appunti si negano da soli su una connessione non cifrata, e negarsi
+      // in silenzio lascerebbe credere che il collegamento sia stato copiato.
+      errore = "Gli appunti non si sono lasciati scrivere: l'indirizzo è " + indirizzo;
+    }
+  }
 
   /**
    * La carta intera, non quella che si sta esaminando.
@@ -93,7 +124,23 @@
   <!-- La stampa il browser la sa già fare, e chi la conosce usa la scorciatoia:
        questo pulsante è per chi non sa che questa pagina è fatta per finirci. -->
   <button type="button" class="strumento" onclick={() => window.print()}>Stampa</button>
+
+  {#if link}
+    <!-- `aria-live` sul pulsante stesso: la conferma è il pulsante che cambia
+         parola, e chi non la vede deve sentirsi dire che è successo qualcosa. -->
+    <button type="button" class="strumento" onclick={copiaLink} aria-live="polite">
+      {copiato ? 'Copiato' : 'Copia link'}
+    </button>
+  {/if}
 </div>
+
+{#if link}
+  <p class="suggerimento istruzione">
+    Il collegamento porta con sé la data e il luogo di nascita: finiscono nella
+    cronologia di chi lo apre e nei registri dei server che attraversa. È per questo
+    che l'indirizzo di questa pagina resta pulito finché non lo si chiede.
+  </p>
+{/if}
 
 {#if errore}
   <p class="errore" role="alert">{errore}</p>

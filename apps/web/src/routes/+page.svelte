@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { HouseSystem, NatalChart } from '@undicesimacasa/core';
-  import { chartParameters, fetchChart, RequestError } from '$lib/api';
-  import { isComplete } from '$lib/birth';
+  import { onMount } from 'svelte';
+  import { page } from '$app/state';
+  import { chartParameters, fetchChart, fetchLocation, RequestError } from '$lib/api';
+  import { birthFromParameters, isComplete } from '$lib/birth';
   import { Evidenza } from '$lib/evidenza.svelte';
+  import { houseSystemOrDefault } from '$lib/house-systems';
   import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import AspectTable from '$lib/components/AspectTable.svelte';
@@ -97,6 +100,32 @@
     // perché la cosa da correggere sta dentro i dettagli.
     if (await calcola()) aperto = false;
   }
+
+  /**
+   * Questa pagina **legge** il proprio indirizzo ma non lo scrive mai.
+   *
+   * Dentro c'è una data di nascita, che finisce nella cronologia di chi apre il
+   * collegamento e nei registri dei server che attraversa: è un dato che si
+   * manda in giro solo di proposito, ed è per questo che l'indirizzo si compone
+   * dal pulsante «copia link» e non a ogni calcolo. Chi quel collegamento lo
+   * riceve, però, deve trovarci un tema — e per questo la lettura c'è.
+   */
+  onMount(() => {
+    void (async () => {
+      const parametri = page.url.searchParams;
+      if (!parametri.get('date')) return;
+
+      const id = Number(parametri.get('locationId'));
+      const luogo = Number.isInteger(id) && id > 0 ? await fetchLocation(id) : null;
+      if (!luogo) return;
+
+      birthStore.value = birthFromParameters(parametri, luogo);
+      houseSystem = houseSystemOrDefault(parametri.get('houseSystem'));
+      minorAspects = parametri.get('minorAspects') === 'true';
+
+      if (await calcola()) aperto = false;
+    })();
+  });
 </script>
 
 <svelte:head>
@@ -166,7 +195,12 @@
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {evidenza} bind:elemento={disegno} />
-        <StrumentiRuota svg={disegno} {evidenza} nome={['tema', placeLabel, chart.input.date]} />
+        <StrumentiRuota
+          svg={disegno}
+          {evidenza}
+          nome={['tema', placeLabel, chart.input.date]}
+          link={() => chartParameters(birth, { houseSystem, minorAspects })}
+        />
         {#if chart.aspects.length > 0}
           <p class="suggerimento istruzione">
             Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti. Resta

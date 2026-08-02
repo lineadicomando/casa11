@@ -6,14 +6,18 @@
     TransitPassage,
   } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
+  import { onMount } from 'svelte';
+  import { page } from '$app/state';
   import {
+    fetchLocation,
     fetchPassages,
     fetchTransits,
     passageParameters,
     RequestError,
     transitParameters,
   } from '$lib/api';
-  import { isComplete } from '$lib/birth';
+  import { birthFromParameters, isComplete } from '$lib/birth';
+  import { houseSystemOrDefault } from '$lib/house-systems';
   import { Evidenza } from '$lib/evidenza.svelte';
   import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
@@ -97,6 +101,42 @@
       ` · effemeridi ${quadro.ephemerisMode}${da}`
     );
   }
+
+  /**
+   * Anche questa pagina **legge** il proprio indirizzo ma non lo scrive mai:
+   * dentro c'è una data di nascita. Vale la stessa ragione del tema, e il
+   * collegamento si compone dal pulsante «copia link».
+   */
+  onMount(() => {
+    void (async () => {
+      const parametri = page.url.searchParams;
+      if (!parametri.get('date')) return;
+
+      const id = Number(parametri.get('locationId'));
+      const luogo = Number.isInteger(id) && id > 0 ? await fetchLocation(id) : null;
+      if (!luogo) return;
+
+      birthStore.value = birthFromParameters(parametri, luogo);
+      houseSystem = houseSystemOrDefault(parametri.get('houseSystem'));
+      minorAspects = parametri.get('minorAspects') === 'true';
+
+      const transitDate = parametri.get('transitDate');
+      if (transitDate) {
+        transit = {
+          date: transitDate,
+          time: parametri.get('transitTime') ?? '',
+          timezone: parametri.get('transitTimezone') || nowMoment().timezone,
+        };
+      }
+
+      const luogoTransito = Number(parametri.get('transitLocationId'));
+      if (Number.isInteger(luogoTransito) && luogoTransito > 0) {
+        transitLocation = await fetchLocation(luogoTransito);
+      }
+
+      if (await calcola()) aperto = false;
+    })();
+  });
 
   async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -259,7 +299,13 @@
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {transits} {evidenza} bind:elemento={disegno} />
-        <StrumentiRuota svg={disegno} {evidenza} nome={['transiti', placeLabel, transits.input.date]} />
+        <StrumentiRuota
+          svg={disegno}
+          {evidenza}
+          nome={['transiti', placeLabel, transits.input.date]}
+          link={() =>
+            transitParameters(birth, { houseSystem, minorAspects }, transit, transitLocation)}
+        />
         <p class="suggerimento">
           Anello esterno: i corpi in transito. Anello interno: il tema di nascita.
           Le linee al centro sono gli aspetti fra i due.

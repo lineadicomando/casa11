@@ -64,6 +64,44 @@ export function refinedCoordinates(
 }
 
 /**
+ * La nascita scritta in un indirizzo, rimessa nella forma del modulo.
+ *
+ * Sono gli stessi nomi che l'API già usa — `date`, `time`, `locationId`,
+ * `latitude`, `longitude` — perché il collegamento che si copia dal tema è
+ * fatto con quei parametri: un elenco solo, invece di due da tenere allineati.
+ *
+ * La località non si risolve qui: è una domanda al server, e questa funzione
+ * non ne fa. Chi chiama la passa già risolta, o `null`.
+ *
+ * L'assenza di `time` vale come ora ignota, che è il modo in cui l'API stessa
+ * la esprime: un tema senza ora è una carta senza case, non un tema a
+ * mezzanotte.
+ */
+export function birthFromParameters(
+  parametri: URLSearchParams,
+  location: Location | null,
+): BirthInput {
+  const input = emptyBirthInput();
+  input.date = parametri.get('date') ?? '';
+  input.time = parametri.get('time') ?? '';
+  input.timeUnknown = input.time === '';
+  input.location = location;
+  resetCoordinates(input);
+
+  // Le coordinate corrette si riconoscono dall'essere scritte: l'API le manda
+  // solo quando qualcuno le ha davvero cambiate.
+  const latitude = parametri.get('latitude');
+  const longitude = parametri.get('longitude');
+  if (latitude !== null && longitude !== null) {
+    input.refineCoordinates = true;
+    input.latitude = latitude;
+    input.longitude = longitude;
+  }
+
+  return input;
+}
+
+/**
  * `true` quando il modulo basta a calcolare.
  *
  * Le coordinate corrette a mano devono essere interpretabili **o** disattivate:
