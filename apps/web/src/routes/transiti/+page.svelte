@@ -521,6 +521,23 @@
     font-size: 0.78rem;
     color: var(--testo-tenue);
     margin-top: 0.5rem;
+  /* La colonna delle tabelle è molto più alta del disegno — qui i corpi sono
+     due insiemi invece di uno — e senza appendere la bi-ruota, chi scende a
+     leggere gli aspetti se l'è già lasciata alle spalle. */
+  .ruota {
+    position: sticky;
+    top: var(--striscia);
+  }
+
+  /* A una colonna la ruota sta già sopra le tabelle, e appesa si prenderebbe
+     lo schermo per tutto lo scorrimento; su uno schermo basso non ci sta
+     comunque, e appenderla ne taglierebbe il fondo. */
+  @media (max-width: 60rem), (max-height: 44rem) {
+    .ruota {
+      position: static;
+    }
+  }
+
   }
 
   .tabelle {

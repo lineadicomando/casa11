@@ -10,6 +10,12 @@
 :root {
   color-scheme: light dark;
 
+  /* Quanto spazio si prende in cima alla pagina la striscia del modulo chiuso.
+     Non serve a lei — che sta a `top: 0` — ma a chi le si deve appendere
+     sotto: le ruote, che restano in vista mentre si scorrono le tabelle. Sta
+     prima della palette perché non è un colore: è una misura del guscio. */
+  --striscia: 4.5rem;
+
   --sfondo: light-dark(#faf8f4, #1a1917);
   --superficie: light-dark(#ffffff, #232220);
   --testo: light-dark(#2b2a26, #ebe7de);
