@@ -674,12 +674,14 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |
 | `lib/wheel.ts` | la geometria della ruota, senza SVG e quindi verificabile |
 | `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
+| `lib/color-scheme.ts` | l'aspetto chiaro o scuro scelto dal pulsante, con la chiave dichiarata nell'informativa |
 | `lib/server/{place,birth,moment,range}.ts` | lettura dei parametri, condivisa fra gli endpoint |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
 | `lib/components/MomentFields.svelte` | giorno, ora, «adesso» e il passo avanti o indietro: l'istante che i transiti e il cielo chiedono allo stesso modo |
 | `lib/components/ChartSettings.svelte` | sistema di case e aspetti minori; nella striscia del modulo chiuso ricalcola da sé |
 | `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
 | `lib/components/Wordmark.svelte` | il marchio, disegnato inline perché le lettere seguano il colore del testo |
+| `lib/components/ColorSchemeToggle.svelte` | il pulsante che scorre fra aspetto automatico, chiaro e scuro |
 | `lib/nodal-axis.ts` | accorpa l'asse dei Nodi, che si presenta sempre in coppia |
 | `lib/components/*Table.svelte` | le tabelle dei risultati |
 
@@ -703,11 +705,17 @@ imposta cookie**, non ha account, non profila e non carica nessuna risorsa da
 domini terzi. I dati di nascita sono calcolati in memoria e non vengono
 conservati da nessuna parte. L'informativa sta su `/privacy`.
 
-L'unica scrittura sul dispositivo è `sveltekit:scroll` nella `sessionStorage`,
-dove il router del framework tiene la posizione dello scorrimento per il
-ritorno indietro: due numeri per pagina, nessun identificativo, cancellati alla
-chiusura della scheda. È dichiarata nell'informativa — che deve descrivere
-quello che il sito fa, non quello che vorremmo facesse.
+Sul dispositivo restano due sole scritture, entrambe dichiarate
+nell'informativa — che deve descrivere quello che il sito fa, non quello che
+vorremmo facesse:
+
+- `sveltekit:scroll` nella `sessionStorage`, dove il router del framework tiene
+  la posizione dello scorrimento per il ritorno indietro: due numeri per
+  pagina, nessun identificativo, cancellati alla chiusura della scheda;
+- `undicesimacasa:color-scheme` nella `localStorage`, la parola `light` o
+  `dark` scritta dal pulsante dell'aspetto. Non esiste finché il pulsante non
+  viene toccato e sparisce tornando su «automatico»: è la ragione per cui
+  quello stato si chiama `auto` e non è un terzo colore.
 
 Restano due punti che dipendono da **come si mette in rete** l'applicazione, e
 sono descritti in [`docs/proxy-e-log.md`](docs/proxy-e-log.md):
