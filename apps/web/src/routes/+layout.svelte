@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import ColorSchemeToggle from '$lib/components/ColorSchemeToggle.svelte';
   import Wordmark from '$lib/components/Wordmark.svelte';
   import { isActive, SECTIONS } from '$lib/navigation';
   import { REPOSITORY_URL } from '$lib/project';
@@ -10,7 +11,10 @@
 
 <div class="guscio">
   <header>
-    <a class="marchio" href="/"><Wordmark /></a>
+    <div class="testata">
+      <a class="marchio" href="/"><Wordmark /></a>
+      <ColorSchemeToggle />
+    </div>
 
     <nav aria-label="Sezioni">
       <ul>
@@ -62,6 +66,14 @@
 
   /* Il marchio non è il titolo della pagina: con più sezioni il titolo scende
      nelle pagine, che così hanno ciascuna il proprio `h1`. */
+  .testata {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   .marchio {
     display: inline-block;
     /* Il disegno è l'unico contenuto del link: senza questo la riga di testo

@@ -7,7 +7,7 @@
    * a ogni ricostruzione, e un'informativa che si dice aggiornata senza
    * esserlo dice il falso proprio sul punto in cui deve essere credibile.
    */
-  const AGGIORNAMENTO = '31 luglio 2026';
+  const AGGIORNAMENTO = '2 agosto 2026';
 
   /** Giorni di conservazione dei log del server. Vedi `docs/proxy-e-log.md`. */
   const RITENZIONE_LOG = 7;
@@ -122,19 +122,30 @@
 
 <p>
   <strong>Il sito non installa cookie.</strong> Non tecnici, non analitici, non
-  di terze parti. Non usa la memoria persistente del browser
-  (<em>localStorage</em>) né alcuna tecnologia equivalente per riconoscerti fra
-  una visita e l'altra.
+  di terze parti. Non usa nessuna tecnologia per riconoscerti fra una visita e
+  l'altra: non ti viene assegnato nessun identificativo, e niente di quello che
+  resta sul tuo dispositivo dice chi sei.
 </p>
 
-<p>
-  Una cosa il browser la conserva, e sarebbe scorretto tacerla: passando da una
-  pagina all'altra il sistema di navigazione registra nella
-  <em>sessionStorage</em> la posizione dello scorrimento, alla voce
-  <code>sveltekit:scroll</code>, per riportarti dove eri se torni indietro. Sono
-  due numeri per pagina — nessun identificativo, nessun dato che ti riguardi — e
-  spariscono chiudendo la scheda.
-</p>
+<p>Due cose il browser le conserva, e sarebbe scorretto tacerle.</p>
+
+<ul>
+  <li>
+    Passando da una pagina all'altra il sistema di navigazione registra nella
+    <em>sessionStorage</em> la posizione dello scorrimento, alla voce
+    <code>sveltekit:scroll</code>, per riportarti dove eri se torni indietro.
+    Sono due numeri per pagina — nessun identificativo, nessun dato che ti
+    riguardi — e spariscono chiudendo la scheda.
+  </li>
+  <li>
+    Se scegli l'aspetto della pagina con il pulsante in alto, quella scelta —
+    la parola <code>light</code> o <code>dark</code>, nient'altro — resta nella
+    <em>localStorage</em> alla voce <code>undicesimacasa:color-scheme</code>,
+    così ricaricando il sito lo ritrovi come lo avevi lasciato. Finché non
+    tocchi il pulsante non viene scritto nulla, e riportandolo su «automatico»
+    la voce viene cancellata.
+  </li>
+</ul>
 
 <p>
   Nessuno di questi elementi richiede il tuo consenso: sono strettamente

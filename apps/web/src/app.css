@@ -1,26 +1,34 @@
+/* I due valori di ogni colore stanno in `light-dark()` invece che in due
+   blocchi separati perché la scelta chiaro/scuro dev'essere ribaltabile dal
+   pulsante nella testata: qui basta cambiare `color-scheme` sotto, mentre con
+   `@media (prefers-color-scheme: dark)` la palette scura andrebbe ripetuta una
+   terza volta per l'attributo.
+
+   `color-scheme` non è solo la chiave di `light-dark()`: dice anche al browser
+   di che colore disegnare quello che disegna lui — barre di scorrimento,
+   calendario della data, orologio dell'ora. */
 :root {
-  --sfondo: #faf8f4;
-  --superficie: #ffffff;
-  --testo: #2b2a26;
-  --testo-tenue: #6f6a60;
-  --linea: #e3ddd2;
-  --linea-forte: #c4bcac;
-  --accento: #b4442a;
-  --accento-tenue: #f5e9e5;
+  color-scheme: light dark;
+
+  --sfondo: light-dark(#faf8f4, #1a1917);
+  --superficie: light-dark(#ffffff, #232220);
+  --testo: light-dark(#2b2a26, #ebe7de);
+  --testo-tenue: light-dark(#6f6a60, #9d968a);
+  --linea: light-dark(#e3ddd2, #35332e);
+  --linea-forte: light-dark(#c4bcac, #55514a);
+  --accento: light-dark(#b4442a, #d9704f);
+  --accento-tenue: light-dark(#f5e9e5, #2e2320);
   --raggio: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --sfondo: #1a1917;
-    --superficie: #232220;
-    --testo: #ebe7de;
-    --testo-tenue: #9d968a;
-    --linea: #35332e;
-    --linea-forte: #55514a;
-    --accento: #d9704f;
-    --accento-tenue: #2e2320;
-  }
+/* Senza attributo comanda il sistema: l'aspetto `auto` non ha una regola sua
+   perché è l'assenza delle altre due. */
+:root[data-color-scheme='light'] {
+  color-scheme: light;
+}
+
+:root[data-color-scheme='dark'] {
+  color-scheme: dark;
 }
 
 *,
