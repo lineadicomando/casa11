@@ -16,6 +16,8 @@ import type {
   SkyPassage,
   Station,
   TransitChart,
+  TransitingBody,
+  TransitingPointId,
   TransitPassage,
 } from './types.js';
 
@@ -125,19 +127,32 @@ export function formatTransitsCompact(natal: NatalChart, transits: TransitChart)
   lines.push(
     `Case natali: ${natal.houseSystem} | Effemeridi: ${transits.ephemerisMode} | UT: ${time.utc}`,
   );
+  if (transits.place) {
+    const siderale = transits.siderealTime ? ` | TSL: ${transits.siderealTime.formatted}` : '';
+    const domificazione = transits.houseSystem ? ` | Case dell'istante: ${transits.houseSystem}` : '';
+    lines.push(`Luogo del transito: ${formatPlace(transits.place)}${siderale}${domificazione}`);
+  }
 
-  // La casa è quella natale in cui il transito cade: è il senso della colonna.
-  lines.push('', 'IN TRANSITO', ...bodyLines(transits.transiting));
+  // Due case per corpo vanno spiegate una volta sola, in cima alla colonna:
+  // ripeterlo su ogni riga costerebbe più di quanto chiarisca.
+  const intestazione = transits.houses.length > 0
+    ? "IN TRANSITO (casa natale, fra parentesi la casa dell'istante)"
+    : 'IN TRANSITO';
+  lines.push('', intestazione, ...transitingLines(transits.transiting));
+
+  if (transits.angles) lines.push('', "ASSI DELL'ISTANTE", ...angleLines(transits.angles));
+  if (transits.houses.length > 0) {
+    lines.push('', "CUSPIDI DELL'ISTANTE", ...cuspLines(transits.houses));
+  }
 
   lines.push('', 'ASPETTI (in transito → natale)');
   if (transits.aspects.length === 0) {
     lines.push('(nessuno entro le orbite dei transiti)');
   }
   for (const aspect of transits.aspects) {
-    const moving = transits.transiting.find((body) => body.id === aspect.transiting);
     const direction = aspect.applying ? 'applicativo' : 'separativo';
     lines.push(
-      `${(moving?.name ?? aspect.transiting).padEnd(11)} ${aspect.aspect.padEnd(15)} ` +
+      `${transitingName(transits, aspect.transiting).padEnd(11)} ${aspect.aspect.padEnd(15)} ` +
         `${natalPointName(natal, aspect.natal).padEnd(11)} ` +
         `${formatDegrees(aspect.orb).padStart(7)}  ${direction}${aspect.retrograde ? '  R' : ''}`,
     );
@@ -361,6 +376,27 @@ function bodyLines(bodies: readonly CelestialBody[]): string[] {
   });
 }
 
+/**
+ * I transitanti, con una casa o con due.
+ *
+ * La colonna natale resta dov'è sempre stata e quella dell'istante si aggiunge
+ * dopo, fra parentesi: senza un luogo la riga è identica a prima, e con un
+ * luogo l'ordine dice da sé quale delle due si legge per prima.
+ */
+function transitingLines(bodies: readonly TransitingBody[]): string[] {
+  const conLuogo = bodies.some((body) => body.transitHouse !== undefined);
+
+  return bodies.map((body) => {
+    const retro = body.retrograde ? ' R' : '  ';
+    const natale = body.house !== undefined ? ` casa ${String(body.house).padStart(2)}` : '';
+    const istante = conLuogo ? `  (${String(body.transitHouse ?? '—').padStart(2)})` : '';
+    return (
+      `${body.name.padEnd(11)} ${formatZodiacal(body.longitude).padEnd(11)}` +
+      `${retro}${natale}${istante}`
+    );
+  });
+}
+
 function angleLines(angles: Angles): string[] {
   return [
     `ASC ${formatZodiacal(angles.ascendant)}   MC  ${formatZodiacal(angles.midheaven)}`,
@@ -415,6 +451,16 @@ const POINT_NAMES: Readonly<Partial<Record<NatalPointId, string>>> = NATAL_POINT
 /** Il nome di un bersaglio natale: un corpo del tema, oppure un asse. */
 function natalPointName(chart: NatalChart, id: NatalPointId): string {
   return POINT_NAMES[id] ?? nameOf(chart, id);
+}
+
+/**
+ * Il nome di un transitante: un corpo del cielo, oppure un asse dell'istante.
+ *
+ * Gli assi non stanno fra i corpi calcolati — non lo sono — e cercarveli
+ * lascerebbe nella tabella l'identificatore grezzo al posto del nome.
+ */
+function transitingName(transits: TransitChart, id: TransitingPointId): string {
+  return POINT_NAMES[id] ?? nameOf({ bodies: transits.transiting }, id);
 }
 
 function formatPlace(place: Place): string {

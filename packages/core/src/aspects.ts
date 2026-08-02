@@ -8,8 +8,19 @@ import {
 import { angularSeparation } from './math.js';
 import type { Aspect, AspectId, AspectPoint, BodyId, CelestialBody, PointAspect } from './types.js';
 
-/** Passo temporale, in giorni, per stabilire se un aspetto è applicativo. */
+/** Passo temporale massimo, in giorni, per stabilire se un aspetto è applicativo. */
 const APPLYING_PROBE_DAYS = 0.05;
+
+/**
+ * Quanto al più deve spostarsi il più rapido dei due punti durante la sonda.
+ *
+ * Un'ora e un quarto è un passo giusto per un pianeta, che in tanto tempo
+ * percorre frazioni di grado. Non lo è per l'Ascendente in transito, che ne
+ * percorre diciotto: la sonda scavalcherebbe l'aspetto e lo direbbe separativo
+ * proprio mentre si chiude. Il passo si accorcia quindi con la velocità, che è
+ * anche il modo di avvicinarsi alla derivata che questo calcolo vuole essere.
+ */
+const APPLYING_PROBE_ARC = 0.1;
 
 /**
  * Bonus predefinito: i luminari, secondo la prassi natale corrente.
@@ -157,14 +168,19 @@ function sortByOrb<T extends { orb: number }>(aspects: T[]): T[] {
  * muovere lo scarto basta uno dei due.
  */
 function isApplying(a: AspectPoint, b: AspectPoint, angle: number): boolean {
+  const step = probeStep(a, b);
   const now = Math.abs(angularSeparation(a.longitude, b.longitude) - angle);
   const later = Math.abs(
-    angularSeparation(
-      a.longitude + a.speed * APPLYING_PROBE_DAYS,
-      b.longitude + b.speed * APPLYING_PROBE_DAYS,
-    ) - angle,
+    angularSeparation(a.longitude + a.speed * step, b.longitude + b.speed * step) - angle,
   );
   return later < now;
+}
+
+/** Il passo della sonda: abbastanza corto da non superare ciò che misura. */
+function probeStep(a: AspectPoint, b: AspectPoint): number {
+  const fastest = Math.max(Math.abs(a.speed), Math.abs(b.speed));
+  if (fastest === 0) return APPLYING_PROBE_DAYS;
+  return Math.min(APPLYING_PROBE_DAYS, APPLYING_PROBE_ARC / fastest);
 }
 
 function isNonAspectingPair(a: BodyId, b: BodyId): boolean {

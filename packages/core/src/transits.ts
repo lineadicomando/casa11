@@ -1,14 +1,23 @@
 import { computeCrossAspects } from './aspects.js';
 import { DEFAULT_TRANSIT_BODIES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from './constants.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
-import { houseOf } from './houses.js';
+import { computeHouses, houseOf } from './houses.js';
+import { validatePlace } from './place.js';
+import { localSiderealTime } from './sidereal.js';
 import { resolveTime } from './time.js';
+import type { EphemerisContext } from './ephemeris.js';
 import type {
+  Angles,
   AspectPoint,
+  HouseSystem,
   NatalChart,
   NatalPointId,
+  Place,
+  ResolvedTime,
   TransitAspect,
   TransitChart,
+  TransitingBody,
+  TransitingPointId,
   TransitMoment,
   TransitOptions,
 } from './types.js';
@@ -23,12 +32,20 @@ import type {
  */
 const DEFAULT_ANGLE_TARGETS: readonly NatalPointId[] = ['ascendente', 'medio-cielo'];
 
+/** Un minuto, in giorni: il passo con cui si misura la corsa degli assi. */
+const ANGLE_SPEED_STEP = 1 / 1440;
+
 /**
  * Calcola i transiti a un istante su un tema natale già calcolato.
  *
  * Prende il tema e non i dati di nascita: evita di ricalcolarlo e garantisce
  * che le case in cui i transiti cadono siano quelle che la persona ha sotto
  * gli occhi, nello stesso sistema di domificazione.
+ *
+ * Con un luogo in `options.place` si aggiunge il cielo come lo si vede da lì:
+ * assi e case dell'istante, tempo siderale, e i due assi fra i transitanti.
+ * Non sostituisce nulla — i corpi restano dove sono per chiunque, e la casa
+ * natale in cui cadono resta la colonna che si legge di solito.
  *
  * Il risultato è astronomico come il tema: posizioni e aspetti, nessuna
  * previsione. Un transito è una fase, non un evento con una data.
@@ -47,14 +64,15 @@ export function computeTransits(
   moment: TransitMoment,
   options: TransitOptions = {},
 ): TransitChart {
+  const { place } = options;
+  if (place) validatePlace(place);
+
   const context = initEphemeris(options.ephemerisPath);
   const { time, warnings: timeWarnings } = resolveTime(moment);
   const bodyIds = options.bodies ?? DEFAULT_TRANSIT_BODIES;
-  const { bodies: transiting, warnings: bodyWarnings } = computeBodies(
-    time.julianDayUT,
-    bodyIds,
-    context,
-  );
+  const { bodies, warnings: bodyWarnings } = computeBodies(time.julianDayUT, bodyIds, context);
+  // La casa dell'istante, se ci sarà, si scrive su questi stessi oggetti.
+  const transiting: TransitingBody[] = bodies;
 
   const warnings = [...context.warnings, ...timeWarnings, ...bodyWarnings];
 
@@ -65,8 +83,8 @@ export function computeTransits(
     );
   }
 
-  // Le case sono quelle di nascita: un transito si legge nel settore del tema
-  // in cui cade, non in una domificazione propria dell'istante.
+  // `house` resta la casa di nascita: un transito si legge anzitutto nel
+  // settore del tema in cui cade, e quella lettura non dipende da dove si è.
   if (natal.houses.length === 12) {
     for (const body of transiting) {
       body.house = houseOf(body.longitude, natal.houses);
@@ -78,9 +96,57 @@ export function computeTransits(
     );
   }
 
+  const chart: TransitChart = {
+    input: moment,
+    time,
+    ephemerisMode: context.mode,
+    transiting,
+    houses: [],
+    aspects: [],
+    warnings,
+  };
+
+  // I transitanti sono i corpi, più gli assi dell'istante quando c'è un luogo
+  // che li definisca: si compone qui perché è il luogo a deciderne il numero.
+  const moving: AspectPoint<TransitingPointId>[] = [...transiting];
+
+  if (place) {
+    chart.place = place;
+    chart.siderealTime = localSiderealTime(time.julianDayUT, place.longitude);
+
+    if (time.timeKnown) {
+      const houseSystem = options.houseSystem ?? 'placidus';
+      const domification = computeHouses(
+        time.julianDayUT,
+        place.latitude,
+        place.longitude,
+        houseSystem,
+        context,
+      );
+      warnings.push(...domification.warnings);
+
+      chart.houseSystem = houseSystem;
+      chart.houses = domification.houses;
+      chart.angles = domification.angles;
+
+      // La seconda casa di ogni corpo: dove sta in cielo per chi è lì adesso,
+      // non in quale settore della vita sta passando.
+      for (const body of transiting) {
+        body.transitHouse = houseOf(body.longitude, domification.houses);
+      }
+
+      moving.push(...movingAngles(domification.angles, time, place, houseSystem, context));
+    } else {
+      warnings.push(
+        "Luogo del transito senza ora: assi e case dell'istante non calcolati. " +
+          "A mezzogiorno l'Ascendente sarebbe inventato, non approssimato.",
+      );
+    }
+  }
+
   const targets = natalTargets(natal, options.targets, warnings);
 
-  const aspects = computeCrossAspects(transiting, targets, {
+  chart.aspects = computeCrossAspects(moving, targets, {
     minorAspects: options.minorAspects ?? false,
     orbs: { ...TRANSIT_ORBS, ...options.orbs },
     orbBonuses: TRANSIT_ORB_BONUS,
@@ -91,17 +157,64 @@ export function computeTransits(
     natal: aspect.to,
     orb: aspect.orb,
     applying: aspect.applying,
+    // Un asse non trova nessun corpo con il suo nome, e non è retrogrado: non
+    // ha un moto proprio da invertire, solo la rotazione terrestre sotto.
     retrograde: transiting.find((body) => body.id === aspect.from)?.retrograde ?? false,
   }));
 
-  return {
-    input: moment,
-    time,
-    ephemerisMode: context.mode,
-    transiting,
-    aspects,
-    warnings,
-  };
+  return chart;
+}
+
+/**
+ * Ascendente e Medio Cielo dell'istante, come punti capaci di fare aspetto.
+ *
+ * La velocità serve al verso di `applying`, e non è una costante da scrivere
+ * a mano: l'Ascendente percorre l'eclittica a scatti — lentissimo sui segni di
+ * ascensione breve, rapidissimo sugli altri — e lo scarto cresce con la
+ * latitudine. Si misura dove ci si trova, come differenza fra due
+ * domificazioni distanti un minuto, invece di dedurla dai 360° al giorno che
+ * sono una media giusta solo all'equatore.
+ *
+ * Gli avvisi della seconda domificazione si scartano: sono gli stessi della
+ * prima, un minuto dopo.
+ */
+function movingAngles(
+  angles: Angles,
+  time: ResolvedTime,
+  place: Place,
+  houseSystem: HouseSystem,
+  context: EphemerisContext,
+): AspectPoint<TransitingPointId>[] {
+  const later = computeHouses(
+    time.julianDayUT + ANGLE_SPEED_STEP,
+    place.latitude,
+    place.longitude,
+    houseSystem,
+    context,
+  );
+
+  return [
+    {
+      id: 'ascendente',
+      longitude: angles.ascendant,
+      speed: degreesPerDay(angles.ascendant, later.angles.ascendant),
+    },
+    {
+      id: 'medio-cielo',
+      longitude: angles.midheaven,
+      speed: degreesPerDay(angles.midheaven, later.angles.midheaven),
+    },
+  ];
+}
+
+/**
+ * Gradi al giorno fra due posizioni distanti un passo, per la via breve.
+ *
+ * In un minuto nemmeno l'Ascendente alle latitudini alte fa mezzo giro, quindi
+ * l'arco più corto fra le due è sempre quello che ha davvero percorso.
+ */
+function degreesPerDay(from: number, to: number): number {
+  return (((to - from + 540) % 360) - 180) / ANGLE_SPEED_STEP;
 }
 
 /**

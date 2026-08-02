@@ -63,6 +63,9 @@ Transiti
   --on <YYYY-MM-DD>     Giorno del transito. Se omesso, adesso
   --at <HH:mm>          Ora del transito. Se omessa, mezzogiorno locale
   --transit-tz <IANA>   Fuso del transito. Se omesso, quello di nascita
+  --transit-lat <gradi> Luogo da cui si guarda il transito: facoltativo, non
+  --transit-lon <gradi> sposta i corpi né le case natali in cui cadono. Aggiunge
+                        assi e case dell'istante, e vuole anche --at
 
 Passaggi
   --passages            Elenca gli istanti in cui i transiti si perfezionano
@@ -121,6 +124,8 @@ function main(argv: string[]): number {
       on: { type: 'string' },
       at: { type: 'string' },
       'transit-tz': { type: 'string' },
+      'transit-lat': { type: 'string' },
+      'transit-lon': { type: 'string' },
     },
     allowPositionals: false,
   });
@@ -204,7 +209,9 @@ function main(argv: string[]): number {
   if (!values.transits) {
     // Le opzioni del transito senza `--transits` verrebbero ignorate in
     // silenzio, e chi le ha scritte aspetterebbe un risultato che non arriva.
-    const orphans = (['on', 'at', 'transit-tz'] as const).filter((key) => values[key]);
+    const orphans = (['on', 'at', 'transit-tz', 'transit-lat', 'transit-lon'] as const).filter(
+      (key) => values[key],
+    );
     if (orphans.length > 0) {
       process.stderr.write(
         `${orphans.map((o) => `--${o}`).join(', ')} richiede --transits oppure --sky.\n`,
@@ -218,9 +225,25 @@ function main(argv: string[]): number {
     return 0;
   }
 
+  // Mezzo luogo è un errore: una coordinata sola metterebbe chi guarda su un
+  // meridiano arbitrario, e le cuspidi che ne uscirebbero sarebbero di nessuno.
+  if (Boolean(values['transit-lat']) !== Boolean(values['transit-lon'])) {
+    process.stderr.write('--transit-lat e --transit-lon vanno indicate insieme.\n');
+    return 2;
+  }
+
   const moment = momentFrom(values, birth.timezone);
   const transitOptions: TransitOptions = { minorAspects: values.minor };
   if (values.ephe) transitOptions.ephemerisPath = values.ephe;
+  // Lo stesso sistema delle case natali: chiederne due sarebbe un'opzione in
+  // più per un confronto che nessuno fa.
+  if (values.houses) transitOptions.houseSystem = values.houses as HouseSystem;
+  if (values['transit-lat'] && values['transit-lon']) {
+    transitOptions.place = {
+      latitude: Number(values['transit-lat']),
+      longitude: Number(values['transit-lon']),
+    };
+  }
 
   const transits = computeTransits(chart, moment, transitOptions);
   process.stdout.write(

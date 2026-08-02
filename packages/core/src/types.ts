@@ -342,9 +342,39 @@ export type NatalPointId =
 /** L'istante di cui si vogliono i transiti, in ora locale. */
 export type TransitMoment = LocalMoment;
 
+/**
+ * Un punto che può trovarsi in transito.
+ *
+ * Ai corpi si aggiungono i due assi **dell'istante**, che esistono solo se al
+ * transito è stato dato un luogo: l'Ascendente di adesso dipende da dove lo si
+ * guarda, e senza coordinate non è definito. Discendente e Fondo Cielo restano
+ * fuori per la stessa ragione per cui non sono bersagli predefiniti — sono
+ * l'opposizione esatta degli altri due, e ogni loro contatto compare già.
+ */
+export type TransitingPointId = BodyId | 'ascendente' | 'medio-cielo';
+
 export interface TransitOptions {
   /** Corpi in transito. Default: `DEFAULT_TRANSIT_BODIES`. */
   bodies?: BodyId[];
+  /**
+   * Luogo da cui si guarda il transito.
+   *
+   * Facoltativo, e senza non manca nulla di ciò che il transito aveva prima:
+   * le longitudini dei corpi sono geocentriche e i loro aspetti al tema non
+   * cambiano di un secondo d'arco. Serve alle sole cose che un orizzonte
+   * definisce — assi dell'istante, case dell'istante, tempo siderale — e
+   * vuole anche l'ora, senza la quale l'Ascendente compie un giro in un
+   * giorno.
+   *
+   * Non è il luogo di nascita rilocato: il tema natale resta quello che è, e
+   * le case in cui i transiti si leggono restano le sue.
+   */
+  place?: Place;
+  /**
+   * Domificazione delle case **dell'istante**. Default: `placidus`. Vale solo
+   * con un luogo, e non tocca le case natali, che il tema porta già con sé.
+   */
+  houseSystem?: HouseSystem;
   /**
    * Punti natali da bersagliare. Default: i corpi del tema più Ascendente e
    * Medio Cielo. Un bersaglio assente dal tema produce un avviso, non un errore.
@@ -371,7 +401,12 @@ export interface TransitAspect {
   aspect: AspectId;
   /** Angolo esatto dell'aspetto in gradi. */
   angle: number;
-  transiting: BodyId;
+  /**
+   * Un corpo, oppure un asse dell'istante se al transito è stato dato un
+   * luogo. Gli assi si muovono di un grado ogni quattro minuti: un loro
+   * contatto dura minuti, non giorni come quello di un pianeta.
+   */
+  transiting: TransitingPointId;
   natal: NatalPointId;
   /** Scarto dall'angolo esatto, in gradi. */
   orb: number;
@@ -380,7 +415,10 @@ export interface TransitAspect {
    * transito: il punto natale è fermo.
    */
   applying: boolean;
-  /** Il corpo in transito è retrogrado all'istante considerato. */
+  /**
+   * Il transitante è retrogrado all'istante considerato. Sempre `false` per
+   * gli assi, che non hanno moto proprio da invertire.
+   */
   retrograde: boolean;
 }
 
@@ -533,6 +571,24 @@ export interface Station {
   signDegree: number;
 }
 
+/**
+ * Un corpo in transito, che può trovarsi in **due** case per volta.
+ *
+ * Non è una contraddizione ma la differenza fra due domande. `house` risponde
+ * a «in quale settore della vita di questa persona sta passando», e vale
+ * ovunque la persona si trovi. `transitHouse` risponde a «dove sta in cielo,
+ * adesso, per chi è in quel posto»: sopra o sotto l'orizzonte, a oriente o a
+ * occidente. La prima è quella che si legge di solito; la seconda esiste solo
+ * se al transito è stato dato un luogo.
+ */
+export interface TransitingBody extends CelestialBody {
+  /**
+   * Casa **dell'istante**, 1-12: quella della domificazione calcolata sul
+   * luogo del transito. Assente senza luogo o senza ora.
+   */
+  transitHouse?: number;
+}
+
 export interface TransitChart {
   input: TransitMoment;
   time: ResolvedTime;
@@ -541,11 +597,26 @@ export interface TransitChart {
    * Posizioni all'istante del transito. `house` è la casa **natale** in cui il
    * corpo cade, ed è assente se il tema di nascita non ha case.
    */
-  transiting: CelestialBody[];
+  transiting: TransitingBody[];
   aspects: TransitAspect[];
+  /** Il luogo da cui il transito è guardato, se ne è stato indicato uno. */
+  place?: Place;
+  /**
+   * Case **dell'istante**, non quelle natali: la domificazione del luogo del
+   * transito. Vuote senza luogo o senza ora — in un giorno le cuspidi fanno
+   * un giro intero. Le case natali restano nel tema, dove sono sempre state.
+   */
+  houses: House[];
+  /** Assi dell'istante. Assenti alle stesse condizioni delle case. */
+  angles?: Angles;
+  /** Domificazione usata per `houses`. Presente solo se sono state calcolate. */
+  houseSystem?: HouseSystem;
+  /** Presente solo con un luogo: è locale, dipende dalla longitudine. */
+  siderealTime?: SiderealTime;
   /**
    * Avvertimenti non bloccanti: ora del transito non fornita, tema natale
-   * senza case, bersagli richiesti e non disponibili, corpi non calcolabili.
+   * senza case, luogo senza ora, bersagli richiesti e non disponibili, corpi
+   * non calcolabili.
    */
   warnings: string[];
 }

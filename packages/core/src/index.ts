@@ -108,6 +108,8 @@ export type {
   Station,
   TransitAspect,
   TransitChart,
+  TransitingBody,
+  TransitingPointId,
   TransitMoment,
   TransitPassage,
   TransitOptions,
