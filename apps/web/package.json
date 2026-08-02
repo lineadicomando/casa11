@@ -5,7 +5,9 @@
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/build-icons.mjs",
     "dev": "vite dev",
+    "prebuild": "node scripts/build-icons.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "start": "node build/index.js",
@@ -17,6 +19,7 @@
     "@undicesimacasa/geo": "*"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@sveltejs/adapter-node": "^5.2.14",
     "@sveltejs/kit": "^2.22.0",
     "@sveltejs/vite-plugin-svelte": "^5.1.1",

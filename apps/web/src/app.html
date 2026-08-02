@@ -7,6 +7,11 @@
          qui sarebbe la prima del documento, e resterebbe quella che i motori di
          ricerca leggono per tutte e cinque le sezioni. -->
     <link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+    <!-- Safari vuole un PNG e non guarda l'SVG: senza, il sito aggiunto alla
+         schermata iniziale diventa un rettangolo bianco con dentro una
+         miniatura della pagina. Lo rasterizza `scripts/build-icons.mjs` dal
+         favicon, prima di ogni build. -->
+    <link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
     <!--
       Il colore della barra del browser su mobile, che va scelto due volte
       perché la pagina ha due fondi: dichiararne uno solo lascia una striscia
