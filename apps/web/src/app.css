@@ -155,6 +155,123 @@ label {
   margin: 0;
 }
 
+/* Il guscio delle sezioni.
+
+   Sono le quattro pagine viste quattro volte: la stessa riga di sottotitolo, lo
+   stesso pulsante di invio, la stessa griglia con il disegno a sinistra e le
+   tabelle a destra. Stavano scritte per intero in ciascuna, ed è da lì che
+   nascevano le differenze — non c'era nessun posto in cui correggerle tutte.
+   Vale lo stesso ragionamento che teneva già qui le tabelle, qualche riga più
+   sotto. Quello che una sezione ha di suo resta nella sua pagina. */
+
+.sottotitolo {
+  margin: 0 0 1.1rem;
+  color: var(--testo-tenue);
+  font-size: 0.9rem;
+}
+
+/* La riga di campi che si dividono la larghezza: quanti ce ne stanno per riga
+   lo decide `auto-fit`, non un numero di colonne scritto a mano, perché fra una
+   sezione e l'altra i campi non sono gli stessi. */
+.campi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.invia {
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.4rem;
+  background: var(--accento);
+  color: var(--su-accento);
+  border: none;
+  border-radius: var(--raggio);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Spento, non a metà di un caricamento: è quello che sembrava sbiadendo
+   l'accento. Qui il pulsante perde il colore del comando e prende quello del
+   testo tenue, come ogni altra cosa inattiva. */
+.invia:disabled {
+  background: var(--linea);
+  color: var(--testo-tenue);
+  cursor: not-allowed;
+}
+
+/* Il comando che chiede una seconda richiesta — i passaggi, il calendario:
+   costa, e non tutti lo vogliono. Ha il colore dell'accento ma non il suo peso,
+   perché non è il motivo per cui si è arrivati sulla pagina. */
+.secondario {
+  padding: 0.5rem 1.1rem;
+  background: none;
+  color: var(--accento);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.secondario:hover {
+  border-color: var(--accento);
+}
+
+.secondario:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.griglia {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  margin-top: 1.75rem;
+  align-items: start;
+}
+
+@media (max-width: 60rem) {
+  .griglia {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* La colonna delle tabelle è molto più alta del disegno — sul tema natale più
+   del triplo — e senza appendere la ruota, chi scende a leggere gli aspetti se
+   l'è già lasciata alle spalle; l'evidenziazione al passaggio del mouse
+   illuminerebbe qualcosa che non è più sullo schermo. */
+.ruota {
+  position: sticky;
+  top: var(--striscia);
+}
+
+/* A una colonna la ruota sta già sopra le tabelle, e appesa si prenderebbe lo
+   schermo per tutto lo scorrimento; su uno schermo basso non ci sta comunque,
+   e appenderla ne taglierebbe il fondo. */
+@media (max-width: 60rem), (max-height: 44rem) {
+  .ruota {
+    position: static;
+  }
+}
+
+/* Le tabelle sono componenti a sé: la spaziatura fra loro sta qui, con una
+   colonna flex, perché uno `section + section` scritto in una pagina non
+   raggiungerebbe elementi resi da un altro componente. */
+.tabelle {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Quel che si dice sotto un disegno o sotto una tabella: come si legge, che
+   cosa il calcolo non dice. Non è una didascalia di servizio — spesso è la
+   riga che spiega il dominio — ma non deve competere con i dati. */
+.suggerimento {
+  font-size: 0.78rem;
+  color: var(--testo-tenue);
+  margin-top: 0.5rem;
+}
+
 /* Tabelle dei risultati.
    Stanno qui invece che nei singoli componenti perché sono la stessa tabella
    vista tre volte — corpi, cuspidi, aspetti — e le sezioni che verranno la

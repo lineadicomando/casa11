@@ -265,83 +265,6 @@
 {/if}
 
 <style>
-  .sottotitolo {
-    margin: 0 0 1.1rem;
-    color: var(--testo-tenue);
-    font-size: 0.9rem;
-  }
-
-  .campi {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    gap: 1.25rem;
-    align-items: start;
-  }
-
-  .invia {
-    margin-top: 1.5rem;
-    padding: 0.6rem 1.4rem;
-    background: var(--accento);
-    color: var(--su-accento);
-    border: none;
-    border-radius: var(--raggio);
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  /* Spento, non a metà di un caricamento: è quello che sembrava sbiadendo
-     l'accento. Qui il pulsante perde il colore del comando e prende quello del
-     testo tenue, come ogni altra cosa inattiva. */
-  .invia:disabled {
-    background: var(--linea);
-    color: var(--testo-tenue);
-    cursor: not-allowed;
-  }
-
-  .griglia {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 2.5rem;
-    margin-top: 1.75rem;
-    align-items: start;
-  }
-
-  @media (max-width: 60rem) {
-    .griglia {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* La colonna delle tabelle è molto più alta del disegno: senza appendere la
-     ruota, chi scende a leggere gli aspetti se l'è già lasciata alle spalle —
-     e l'evidenziazione al passaggio del mouse illumina qualcosa che non è più
-     sullo schermo. */
-  .ruota {
-    position: sticky;
-    top: var(--striscia);
-  }
-
-  /* A una colonna la ruota sta già sopra le tabelle, e appesa si prenderebbe
-     lo schermo per tutto lo scorrimento; su uno schermo basso non ci sta
-     comunque, e appenderla ne taglierebbe il fondo. */
-  @media (max-width: 60rem), (max-height: 44rem) {
-    .ruota {
-      position: static;
-    }
-  }
-
-  .suggerimento {
-    font-size: 0.78rem;
-    color: var(--testo-tenue);
-    margin-top: 0.5rem;
-  }
-
-  .tabelle {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
   .calendario {
     display: block;
     margin-top: 2.5rem;
@@ -362,24 +285,5 @@
     .due {
       grid-template-columns: 1fr;
     }
-  }
-
-  .secondario {
-    padding: 0.5rem 1.1rem;
-    background: none;
-    color: var(--accento);
-    border: 1px solid var(--linea-forte);
-    border-radius: var(--raggio);
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-
-  .secondario:hover {
-    border-color: var(--accento);
-  }
-
-  .secondario:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 </style>

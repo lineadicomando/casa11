@@ -147,13 +147,6 @@
 {/if}
 
 <style>
-  .campi {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    gap: 1.25rem;
-    align-items: start;
-  }
-
   .coordinate-toggle {
     margin-top: 1.25rem;
   }
