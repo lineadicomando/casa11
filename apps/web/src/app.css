@@ -105,6 +105,20 @@ select {
   width: 100%;
 }
 
+/* La data e l'ora hanno una lunghezza propria, che non dipende dalla cella in
+   cui capitano: con la sola `width: 100%` la stessa data di nascita risultava
+   larga una colonna sul tema, due sui transiti e mezza sull'elezione, e un
+   campo `gg/mm/aaaa` lungo mezzo schermo è la cosa che fa sembrare improvvisato
+   un modulo. Un massimo e non una larghezza fissa: dove lo spazio è meno di
+   così comanda ancora il 100%, e il campo si stringe invece di sporgere. */
+input[type='date'] {
+  max-width: 11rem;
+}
+
+input[type='time'] {
+  max-width: 8rem;
+}
+
 input:focus-visible,
 select:focus-visible,
 button:focus-visible {

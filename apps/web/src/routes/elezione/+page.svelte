@@ -236,18 +236,24 @@
 <form onsubmit={submit} class="modulo" class:chiuso={!aperto} bind:this={modulo} novalidate>
   <div class="testa">
     <div class="giorno">
-      <label for="elezione-da">Dal giorno</label>
-      <input id="elezione-da" type="date" bind:value={from} required />
-      {#if !aperto && election}
-        <span class="passi">
-          <button type="button" onclick={() => passo(-GIORNI)} aria-label="Giorni precedenti">
-            ‹
-          </button>
-          <button type="button" onclick={() => passo(GIORNI)} aria-label="Giorni successivi">
-            ›
-          </button>
-        </span>
-      {/if}
+      <!-- L'etichetta si nasconde alla vista, non alla lettura: nella striscia
+           l'altezza è spazio tolto alle ore che si stanno guardando, e il
+           giorno è comunque scritto per esteso nell'intestazione del risultato.
+           È la stessa scelta che fanno i campi dell'istante altrove. -->
+      <label for="elezione-da" class:nascosto={!aperto}>Dal giorno</label>
+      <div class="riga">
+        <input id="elezione-da" type="date" bind:value={from} required />
+        {#if !aperto && election}
+          <span class="passi">
+            <button type="button" onclick={() => passo(-GIORNI)} aria-label="Giorni precedenti">
+              ‹
+            </button>
+            <button type="button" onclick={() => passo(GIORNI)} aria-label="Giorni successivi">
+              ›
+            </button>
+          </span>
+        {/if}
+      </div>
     </div>
 
     <!-- Aperto senza un elenco calcolato non c'è niente da chiudere: la X
@@ -556,6 +562,9 @@
     font-weight: 600;
   }
 
+  /* Spento, non a metà di un caricamento: è quello che sembrava sbiadendo
+     l'accento. Qui il pulsante perde il colore del comando e prende quello del
+     testo tenue, come ogni altra cosa inattiva. */
   .invia:disabled {
     background: var(--linea);
     color: var(--testo-tenue);
@@ -563,9 +572,6 @@
   }
 
   .risultato {
-  /* Spento, non a metà di un caricamento: è quello che sembrava sbiadendo
-     l'accento. Qui il pulsante perde il colore del comando e prende quello del
-     testo tenue, come ogni altra cosa inattiva. */
     margin-top: 2.5rem;
   }
 
@@ -616,12 +622,6 @@
     }
   }
 
-  .tabelle {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
   /* La colonna delle tabelle è molto più alta del disegno: senza appendere la
      bi-ruota, chi scende a leggere gli aspetti se l'è già lasciata alle spalle. */
   .ruota {
@@ -636,6 +636,12 @@
     .ruota {
       position: static;
     }
+  }
+
+  .tabelle {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
   }
 
   .suggerimento {
@@ -682,15 +688,13 @@
     color: var(--testo-tenue);
   }
 
-  .giorno {
+  /* L'etichetta sta sopra il campo, come in ogni altro modulo del sito: a
+     fianco andava a capo su due righe, ed era l'unica sezione a metterla lì.
+     Le frecce restano invece accanto alla data, che è ciò che spostano. */
+  .giorno .riga {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-  }
-
-  .giorno label {
-    font-size: 0.85rem;
-    color: var(--testo-tenue);
   }
 
   .passi {
@@ -708,10 +712,5 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-  }
-
-  .filtri label {
-    font-size: 0.85rem;
-    color: var(--testo-tenue);
   }
 </style>
