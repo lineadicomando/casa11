@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Location } from '@undicesimacasa/geo';
+  import { untrack } from 'svelte';
 
   interface Props {
     selected: Location | null;
@@ -21,7 +22,19 @@
 
   let { selected, onselect, label = 'Luogo di nascita', id = 'luogo' }: Props = $props();
 
-  let query = $state('');
+  /**
+   * Il campo parte da ciò che è già scelto, se qualcosa lo è.
+   *
+   * Il testo digitato appartiene a questo componente, la località a chi lo
+   * contiene: cambiando sezione ne nasce uno nuovo, e senza questa riga la
+   * nascita che viene dalle altre pagine si presenterebbe come un campo vuoto
+   * accanto a delle coordinate — cioè come qualcosa da riscrivere.
+   *
+   * Solo il valore iniziale, e `untrack` lo dichiara: dopo comanda ciò che si
+   * digita, e una località che ripiombasse nel campo cancellerebbe la ricerca
+   * in corso a metà parola.
+   */
+  let query = $state(untrack(() => (selected ? describe(selected) : '')));
   let results = $state<Location[]>([]);
   let open = $state(false);
   let loading = $state(false);
