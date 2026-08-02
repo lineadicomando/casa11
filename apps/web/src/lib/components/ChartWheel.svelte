@@ -124,7 +124,7 @@
          A {R.zodiacOuter} {R.zodiacOuter} 0 0 0 {corners[2].x} {corners[2].y}
          L {corners[3].x} {corners[3].y}
          A {R.zodiacInner} {R.zodiacInner} 0 0 1 {corners[0].x} {corners[0].y} Z"
-      fill={ELEMENT_COLOR[SIGN_ELEMENT[sign]]}
+      style:fill={ELEMENT_COLOR[SIGN_ELEMENT[sign]]}
       fill-opacity="0.12"
       stroke="var(--linea)"
       stroke-width="1"
@@ -133,7 +133,7 @@
       x={mid.x}
       y={mid.y}
       class="glifo-segno"
-      fill={ELEMENT_COLOR[SIGN_ELEMENT[sign]]}
+      style:fill={ELEMENT_COLOR[SIGN_ELEMENT[sign]]}
       text-anchor="middle"
       dominant-baseline="central">{SIGN_GLYPH[sign]}</text
     >
@@ -205,14 +205,18 @@
   <g class="aspetti">
     {#each lines as line, index (index)}
       {@const spessore = line.orb < 2 ? 1.8 : 1}
-      {@const opacita = Math.max(0.2, 0.85 - line.orb / 12)}
+      <!-- L'orbita si legge dalla trasparenza: stretta è netta, larga è
+           sfumata. Il fondo scala però resta 0,4 e la cima è piena — sotto,
+           una linea già sottile perdeva il poco contrasto che il suo colore
+           le dava, e nessuna arrivava mai a mostrarlo tutto. -->
+      {@const opacita = Math.max(0.4, 1 - line.orb / 14)}
       {#if line.aspect === 'congiunzione'}
         <!-- Una corda fra due longitudini quasi uguali è invisibile: l'arco
              la rende visibile e ne mostra l'ampiezza. -->
         <path
           d={arcPath(line.from, line.to, R.aspects, rotation, CONJUNCTION_MIN_SPAN)}
           fill="none"
-          stroke={ASPECT_COLOR[line.aspect]}
+          style:stroke={ASPECT_COLOR[line.aspect]}
           stroke-width={spessore + 1.2}
           stroke-opacity={opacita}
           stroke-linecap="round"
@@ -225,7 +229,7 @@
           y1={from.y}
           x2={to.x}
           y2={to.y}
-          stroke={ASPECT_COLOR[line.aspect]}
+          style:stroke={ASPECT_COLOR[line.aspect]}
           stroke-width={spessore}
           stroke-opacity={opacita}
         />

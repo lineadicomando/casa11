@@ -549,7 +549,7 @@
     margin-top: 1.5rem;
     padding: 0.6rem 1.4rem;
     background: var(--accento);
-    color: #fff;
+    color: var(--su-accento);
     border: none;
     border-radius: var(--raggio);
     cursor: pointer;
@@ -557,11 +557,15 @@
   }
 
   .invia:disabled {
-    opacity: 0.45;
+    background: var(--linea);
+    color: var(--testo-tenue);
     cursor: not-allowed;
   }
 
   .risultato {
+  /* Spento, non a metà di un caricamento: è quello che sembrava sbiadendo
+     l'accento. Qui il pulsante perde il colore del comando e prende quello del
+     testo tenue, come ogni altra cosa inattiva. */
     margin-top: 2.5rem;
   }
 
@@ -618,10 +622,6 @@
     gap: 2rem;
   }
 
-  .suggerimento {
-    font-size: 0.78rem;
-    color: var(--testo-tenue);
-    margin-top: 0.5rem;
   /* La colonna delle tabelle è molto più alta del disegno: senza appendere la
      bi-ruota, chi scende a leggere gli aspetti se l'è già lasciata alle spalle. */
   .ruota {
@@ -638,6 +638,10 @@
     }
   }
 
+  .suggerimento {
+    font-size: 0.78rem;
+    color: var(--testo-tenue);
+    margin-top: 0.5rem;
   }
 
   /* La nascita è un secondo argomento dentro lo stesso modulo, non altri campi

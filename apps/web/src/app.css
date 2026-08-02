@@ -24,7 +24,33 @@
   --linea-forte: light-dark(#c4bcac, #55514a);
   --accento: light-dark(#b4442a, #d9704f);
   --accento-tenue: light-dark(#f5e9e5, #2e2320);
+  /* Il colore che sta *sopra* l'accento, non accanto. Il bianco andava bene
+     sull'accento chiaro (5,5:1) ma non su quello scuro, che è più luminoso
+     (3,3:1, sotto il minimo per il testo): là serve scrivere in scuro. */
+  --su-accento: light-dark(#ffffff, #2a1710);
   --raggio: 0.5rem;
+
+  /* I colori del disegno.
+
+     Stanno qui e non in `lib/glyphs.ts` perché sono i soli valori della ruota
+     che devono cambiare con l'aspetto della pagina. Esadecimali fissi, gli
+     stessi nei due aspetti, lasciavano i glifi dell'aria a 2,3:1 sul fondo
+     chiaro e i trigoni a 3,1:1 su quello scuro — sotto il minimo di 3:1 che
+     WCAG chiede agli oggetti grafici. Ogni coppia qui sta sopra 4,5:1 sul
+     proprio fondo.
+
+     Gli aspetti hanno nomi loro anche dove il valore coincide con quello di un
+     elemento: rosso di tensione e rosso del fuoco dicono due cose diverse, e
+     ritoccare l'uno non deve trascinare l'altro. */
+  --elemento-fuoco: light-dark(#b8492a, #e08160);
+  --elemento-terra: light-dark(#5f7440, #9ab471);
+  --elemento-aria: light-dark(#8a6a12, #d4ae3a);
+  --elemento-acqua: light-dark(#39658a, #7aa8cc);
+
+  --aspetto-tensione: light-dark(#b8492a, #e08160);
+  --aspetto-fluidita: light-dark(#39658a, #7aa8cc);
+  --aspetto-neutro: light-dark(#7d7260, #a49a88);
+  --aspetto-minore: light-dark(#8c8069, #9b917e);
 }
 
 /* Senza attributo comanda il sistema: l'aspetto `auto` non ha una regola sua

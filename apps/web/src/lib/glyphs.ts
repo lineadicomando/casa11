@@ -164,11 +164,19 @@ export const SIGN_ELEMENT: Readonly<Record<ZodiacSign, Element>> = {
   pesci: 'acqua',
 };
 
+/**
+ * Riferimenti alle custom property, non esadecimali.
+ *
+ * I valori stanno in `app.css`, dove `light-dark()` ne tiene due per ciascuno:
+ * un colore fisso è leggibile su un fondo solo, e la ruota si guarda in
+ * entrambi gli aspetti. Qui resta la mappa da elemento a nome del colore, che
+ * è l'unica cosa che il dominio abbia da dire in proposito.
+ */
 export const ELEMENT_COLOR: Readonly<Record<Element, string>> = {
-  fuoco: '#c1512f',
-  terra: '#6b7f4a',
-  aria: '#c9a227',
-  acqua: '#3d6b8c',
+  fuoco: 'var(--elemento-fuoco)',
+  terra: 'var(--elemento-terra)',
+  aria: 'var(--elemento-aria)',
+  acqua: 'var(--elemento-acqua)',
 };
 
 /**
@@ -177,15 +185,15 @@ export const ELEMENT_COLOR: Readonly<Record<Element, string>> = {
  * grafica corrente e rende la trama leggibile a colpo d'occhio.
  */
 export const ASPECT_COLOR: Readonly<Record<AspectId, string>> = {
-  congiunzione: '#8a7f6a',
-  opposizione: '#c1512f',
-  quadrato: '#c1512f',
-  trigono: '#3d6b8c',
-  sestile: '#3d6b8c',
-  semisestile: '#a89c85',
-  quinconce: '#a89c85',
-  semiquadrato: '#a89c85',
-  sesquiquadrato: '#a89c85',
+  congiunzione: 'var(--aspetto-neutro)',
+  opposizione: 'var(--aspetto-tensione)',
+  quadrato: 'var(--aspetto-tensione)',
+  trigono: 'var(--aspetto-fluidita)',
+  sestile: 'var(--aspetto-fluidita)',
+  semisestile: 'var(--aspetto-minore)',
+  quinconce: 'var(--aspetto-minore)',
+  semiquadrato: 'var(--aspetto-minore)',
+  sesquiquadrato: 'var(--aspetto-minore)',
 };
 
 export const ASPECT_MAJOR: Readonly<Record<AspectId, boolean>> = {

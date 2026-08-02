@@ -454,15 +454,19 @@
     margin-top: 1.5rem;
     padding: 0.6rem 1.4rem;
     background: var(--accento);
-    color: #fff;
+    color: var(--su-accento);
     border: none;
     border-radius: var(--raggio);
     cursor: pointer;
     font-weight: 600;
   }
 
+  /* Spento, non a metà di un caricamento: è quello che sembrava sbiadendo
+     l'accento. Qui il pulsante perde il colore del comando e prende quello del
+     testo tenue, come ogni altra cosa inattiva. */
   .invia:disabled {
-    opacity: 0.45;
+    background: var(--linea);
+    color: var(--testo-tenue);
     cursor: not-allowed;
   }
 
@@ -517,10 +521,6 @@
     }
   }
 
-  .suggerimento {
-    font-size: 0.78rem;
-    color: var(--testo-tenue);
-    margin-top: 0.5rem;
   /* La colonna delle tabelle è molto più alta del disegno — qui i corpi sono
      due insiemi invece di uno — e senza appendere la bi-ruota, chi scende a
      leggere gli aspetti se l'è già lasciata alle spalle. */
@@ -538,6 +538,10 @@
     }
   }
 
+  .suggerimento {
+    font-size: 0.78rem;
+    color: var(--testo-tenue);
+    margin-top: 0.5rem;
   }
 
   .tabelle {
