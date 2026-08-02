@@ -5,6 +5,7 @@
     TransitChart,
     TransitPassage,
   } from '@undicesimacasa/core';
+  import type { Location } from '@undicesimacasa/geo';
   import {
     fetchPassages,
     fetchTransits,
@@ -14,10 +15,12 @@
   } from '$lib/api';
   import { isComplete } from '$lib/birth';
   import { birthStore } from '$lib/birth-store.svelte';
+  import AngleTable from '$lib/components/AngleTable.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
   import BodyTable from '$lib/components/BodyTable.svelte';
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
+  import LocationSearch from '$lib/components/LocationSearch.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
@@ -27,12 +30,21 @@
   // La stessa nascita del tema e dell'elezione: si scrive una volta sola.
   const birth = $derived(birthStore.value);
   let transit = $state(nowMoment());
+  /**
+   * Il luogo da cui si guarda il transito, che può non esserci.
+   *
+   * Non è quello di nascita e non lo eredita: chi guarda i propri transiti da
+   * dove vive adesso troverebbe compilata una città in cui non è, e il campo
+   * vuoto è l'unico modo di non decidere al posto suo.
+   */
+  let transitLocation = $state<Location | null>(null);
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
 
   let chart = $state<NatalChart | null>(null);
   let transits = $state<TransitChart | null>(null);
   let placeLabel = $state<string | null>(null);
+  let transitPlaceLabel = $state<string | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   let highlighted = $state<string | null>(null);
@@ -100,12 +112,13 @@
 
     try {
       const body = await fetchTransits(
-        transitParameters(birth, { houseSystem, minorAspects }, transit),
+        transitParameters(birth, { houseSystem, minorAspects }, transit, transitLocation),
       );
       if (richiesta !== ultima) return false;
       chart = body.chart;
       transits = body.transits;
       placeLabel = body.place?.label ?? null;
+      transitPlaceLabel = body.transitPlace?.label ?? null;
       // Il calendario riguardava l'istante precedente: si ricomincia da capo.
       passages = null;
       passagesError = null;
@@ -120,6 +133,22 @@
     } finally {
       if (richiesta === ultima) loading = false;
     }
+  }
+
+  /**
+   * Scegliere un luogo per il transito sposta anche l'orologio.
+   *
+   * «Le nove» in un campo accanto al nome di una città sono le nove di lì: se
+   * il fuso restasse quello di chi guarda, l'istante calcolato sarebbe un
+   * altro, e la differenza — fino a mezzo giro di Ascendente — non si vedrebbe
+   * da nessuna parte. Il fuso resta scritto sotto i campi dell'istante, che
+   * così lo mostra cambiare.
+   */
+  function selectTransitLocation(location: Location | null): void {
+    transitLocation = location;
+    // Tolto il luogo si torna all'orologio di chi guarda, che è il fuso da cui
+    // la pagina era partita. Data e ora restano quelle impostate.
+    transit = { ...transit, timezone: location?.timezone ?? nowMoment().timezone };
   }
 
   async function loadPassages(): Promise<void> {
@@ -194,6 +223,26 @@
       {/snippet}
     </BirthForm>
 
+    <div class="luogo-transito">
+      <LocationSearch
+        selected={transitLocation}
+        onselect={selectTransitLocation}
+        label="Luogo del transito (facoltativo)"
+        id="luogo-transito"
+      />
+
+      <p class="nota">
+        {#if transitLocation === null}
+          I pianeti sono allo stesso grado dello zodiaco ovunque, e le case in cui i
+          transiti cadono restano quelle di nascita. Un luogo aggiunge il cielo come
+          si vede da lì in quel momento: Ascendente, Medio Cielo e case dell'istante.
+        {:else}
+          L'ora del transito si legge ora sull'orologio di {transitLocation.name}.
+          Le case natali non cambiano: quelle dell'istante si affiancano.
+        {/if}
+      </p>
+    </div>
+
     <button type="submit" class="invia" disabled={!canSubmit || loading}>
       {loading ? 'Calcolo…' : 'Calcola i transiti'}
     </button>
@@ -216,7 +265,9 @@
           : ' (mezzogiorno)'} · {transits.input.timezone} · UT
         {transits.time.utc.replace('T', ' ').replace('Z', '')} · su nascita del
         {chart.input.date}{chart.time.timeKnown ? ` alle ${chart.input.time}` : ' (ora ignota)'} ·
-        case {chart.houseSystem} · effemeridi {transits.ephemerisMode}
+        case {chart.houseSystem} · effemeridi {transits.ephemerisMode}{transitPlaceLabel
+          ? ` · guardato da ${transitPlaceLabel}`
+          : ''}
       </p>
     </div>
 
@@ -249,6 +300,20 @@
           houseTitle="Casa natale"
           bind:highlighted
         />
+
+        {#if transits.angles}
+          <AngleTable
+            angles={transits.angles}
+            houses={transits.houses}
+            title="Assi e cuspidi dell'istante"
+          />
+          <p class="suggerimento">
+            Il cielo come si vede da {transitPlaceLabel ?? 'quel luogo'} in quel momento.
+            Non sostituisce le case di nascita, in cui i transiti continuano a cadere:
+            dice dove i corpi stanno rispetto all'orizzonte di lì, e gli aspetti che
+            partono da questi due assi durano minuti, non giorni.
+          </p>
+        {/if}
 
         <BodyTable
           bodies={chart.bodies}
@@ -366,6 +431,14 @@
 
   .dettagli {
     margin-top: 1.5rem;
+  }
+
+  /* Il luogo del transito non appartiene alla nascita: una riga lo separa dal
+     modulo che sta sopra, perché scritti di seguito sembrerebbero lo stesso posto. */
+  .luogo-transito {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--linea);
   }
 
   .invia {

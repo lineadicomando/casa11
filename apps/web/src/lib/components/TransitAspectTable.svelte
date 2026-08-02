@@ -4,8 +4,6 @@
   import {
     ASPECT_GLYPH,
     ASPECT_MAJOR,
-    BODY_GLYPH,
-    BODY_LABEL,
     isNatalPointSigla,
     natalPointGlyph,
     natalPointLabel,
@@ -54,8 +52,14 @@
             class:evidenziato={highlighted === aspect.transiting}
             class:minore={!ASPECT_MAJOR[aspect.aspect]}
           >
-            <td class="glifo-piccolo" title={BODY_LABEL[aspect.transiting]}>
-              {BODY_GLYPH[aspect.transiting]}{aspect.retrograde ? ' ℞' : ''}
+            <!-- Gli stessi glifi dell'altro lato: con un luogo del transito
+                 anche qui può comparire un asse, e i corpi li rendono uguale. -->
+            <td
+              class="glifo-piccolo"
+              class:sigla={isNatalPointSigla(aspect.transiting)}
+              title={natalPointLabel(aspect.transiting)}
+            >
+              {natalPointGlyph(aspect.transiting)}{aspect.retrograde ? ' ℞' : ''}
             </td>
             <td>{aspect.aspect}</td>
             <td

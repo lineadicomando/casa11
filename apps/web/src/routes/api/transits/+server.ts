@@ -3,7 +3,7 @@ import { json } from '@sveltejs/kit';
 import { placeLabel, readBirth, readChartOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';
 import { resolveTransitMoment } from '$lib/server/moment';
-import { isHttpError } from '$lib/server/place';
+import { isHttpError, LUOGO_TRANSITO, resolveOptionalPlace } from '$lib/server/place';
 import type { RequestHandler } from './$types';
 
 /**
@@ -11,10 +11,12 @@ import type { RequestHandler } from './$types';
  *
  * I parametri della nascita sono gli stessi di `/api/chart`: un indirizzo che
  * calcola un tema calcola i suoi transiti cambiando solo il percorso.
- * A questi si aggiungono `transitDate`, `transitTime` e `transitTimezone`.
+ * A questi si aggiungono `transitDate`, `transitTime` e `transitTimezone`, e
+ * il luogo da cui si guarda: `transitLocationId`, oppure `transitLatitude` e
+ * `transitLongitude` insieme.
  *
- * Senza `transitDate` valgono l'istante e il giorno correnti. Il fuso
- * predefinito del transito è quello della nascita.
+ * Senza `transitDate` valgono l'istante e il giorno correnti. Il luogo del
+ * transito è facoltativo: senza, la risposta è quella di prima.
  *
  * Risponde con il tema **e** i transiti: le posizioni natali servono comunque
  * a leggere il quadro, e chiederle due volte significherebbe ricalcolarle.
@@ -26,8 +28,24 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     const options = readChartOptions(parameters);
     const chart = computeNatalChart(birth, options);
 
-    const { moment, explicit } = resolveTransitMoment(parameters, birth.timezone);
+    // Il luogo si risolve prima dell'istante perché può fornirne il fuso: chi
+    // sceglie una città per il transito intende «le nove là», non le nove
+    // dell'orologio con cui è nato.
+    const transitPlace = resolveOptionalPlace(parameters, LUOGO_TRANSITO);
+    const { moment, explicit } = resolveTransitMoment(
+      parameters,
+      transitPlace?.timezone ?? birth.timezone,
+    );
+
     const transitOptions: TransitOptions = { minorAspects: options.minorAspects ?? false };
+    if (options.houseSystem) transitOptions.houseSystem = options.houseSystem;
+    if (transitPlace) {
+      transitOptions.place = {
+        latitude: transitPlace.latitude,
+        longitude: transitPlace.longitude,
+      };
+    }
+
     const transits = computeTransits(chart, moment, transitOptions);
 
     // Un istante indicato rende la risposta una funzione pura dei parametri,
@@ -37,7 +55,12 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     setHeaders({
       'cache-control': explicit ? 'private, max-age=86400' : 'no-store',
     });
-    return json({ chart, transits, place: placeLabel(place) });
+    return json({
+      chart,
+      transits,
+      place: placeLabel(place),
+      transitPlace: placeLabel(transitPlace),
+    });
   } catch (cause) {
     // Gli errori già formati da `error()` hanno la propria risposta: si rilanciano.
     if (isHttpError(cause)) throw cause;

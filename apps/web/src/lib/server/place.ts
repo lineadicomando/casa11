@@ -1,5 +1,5 @@
 /**
- * Il luogo di nascita, ricavato dai parametri della richiesta.
+ * Un luogo, ricavato dai parametri della richiesta.
  *
  * Sta in un modulo suo perché lo usano tutte le sezioni che partono da una
  * nascita — il tema, i transiti — e due copie di questa logica divergerebbero
@@ -9,6 +9,31 @@
 
 import { getLocation, type Location } from '@undicesimacasa/geo';
 import { error } from '@sveltejs/kit';
+
+/**
+ * Come si chiamano i parametri del luogo.
+ *
+ * Una richiesta di transiti porta **due** luoghi — dove si è nati e da dove si
+ * guarda — e senza due nomi distinti il secondo sovrascriverebbe il primo. È
+ * la stessa ragione per cui l'istante ha `date` e `transitDate`.
+ */
+export interface PlaceFields {
+  locationId: string;
+  latitude: string;
+  longitude: string;
+}
+
+export const LUOGO_NASCITA: PlaceFields = {
+  locationId: 'locationId',
+  latitude: 'latitude',
+  longitude: 'longitude',
+};
+
+export const LUOGO_TRANSITO: PlaceFields = {
+  locationId: 'transitLocationId',
+  latitude: 'transitLatitude',
+  longitude: 'transitLongitude',
+};
 
 export interface ResolvedPlace {
   latitude: number;
@@ -35,8 +60,11 @@ export interface ResolvedPlace {
  * un valore errato ma valido (`Europe/London` per `Europe/Rome`) non è
  * intercettabile da nessun controllo.
  */
-export function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
-  const rawLocationId = parameters.get('locationId');
+export function resolvePlace(
+  parameters: URLSearchParams,
+  fields: PlaceFields = LUOGO_NASCITA,
+): ResolvedPlace {
+  const rawLocationId = parameters.get(fields.locationId);
 
   if (rawLocationId) {
     const locationId = Number(rawLocationId);
@@ -44,7 +72,7 @@ export function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
     // ripiegare sulle coordinate e rispondere che "manca il luogo".
     if (!Number.isInteger(locationId) || locationId <= 0) {
       throw error(400, {
-        message: `Valore di "locationId" non valido: atteso un identificatore GeoNames intero positivo.`,
+        message: `Valore di "${fields.locationId}" non valido: atteso un identificatore GeoNames intero positivo.`,
         code: 'LOCALITA_NON_VALIDA',
       });
     }
@@ -57,7 +85,7 @@ export function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
       });
     }
 
-    const overrides = readCoordinateOverrides(parameters);
+    const overrides = readCoordinateOverrides(parameters, fields);
 
     return {
       latitude: overrides.latitude ?? location.latitude,
@@ -68,15 +96,15 @@ export function resolvePlace(parameters: URLSearchParams): ResolvedPlace {
     };
   }
 
-  const latitude = Number(parameters.get('latitude'));
-  const longitude = Number(parameters.get('longitude'));
+  const latitude = Number(parameters.get(fields.latitude));
+  const longitude = Number(parameters.get(fields.longitude));
   const timezone = parameters.get('timezone');
 
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !timezone) {
     throw error(400, {
       message:
-        'Luogo non specificato: indica "locationId" oppure ' +
-        'tutti e tre "latitude", "longitude" e "timezone".',
+        `Luogo non specificato: indica "${fields.locationId}" oppure ` +
+        `tutti e tre "${fields.latitude}", "${fields.longitude}" e "timezone".`,
       code: 'LUOGO_MANCANTE',
     });
   }
@@ -106,15 +134,18 @@ export interface OptionalPlace {
  * orientare assi e case. Assente, non è un errore — mezzo assente sì, perché
  * una coordinata sola metterebbe l'osservatore su un meridiano arbitrario.
  */
-export function resolveOptionalPlace(parameters: URLSearchParams): OptionalPlace | null {
-  if (parameters.get('locationId')) return resolvePlace(parameters);
+export function resolveOptionalPlace(
+  parameters: URLSearchParams,
+  fields: PlaceFields = LUOGO_NASCITA,
+): OptionalPlace | null {
+  if (parameters.get(fields.locationId)) return resolvePlace(parameters, fields);
 
-  const { latitude, longitude } = readCoordinateOverrides(parameters);
+  const { latitude, longitude } = readCoordinateOverrides(parameters, fields);
   if (latitude === undefined && longitude === undefined) return null;
 
   if (latitude === undefined || longitude === undefined) {
     throw error(400, {
-      message: 'Luogo incompleto: "latitude" e "longitude" vanno indicate insieme.',
+      message: `Luogo incompleto: "${fields.latitude}" e "${fields.longitude}" vanno indicate insieme.`,
       code: 'LUOGO_INCOMPLETO',
     });
   }
@@ -128,16 +159,20 @@ export function resolveOptionalPlace(parameters: URLSearchParams): OptionalPlace
  * Un valore malformato è un errore, non un motivo per ripiegare in silenzio
  * sul centroide: chi le passa lo fa proprio perché il centroide non gli basta.
  */
-function readCoordinateOverrides(parameters: URLSearchParams): {
+function readCoordinateOverrides(
+  parameters: URLSearchParams,
+  fields: PlaceFields,
+): {
   latitude?: number;
   longitude?: number;
 } {
   const overrides: { latitude?: number; longitude?: number } = {};
 
-  for (const [nome, limite] of [
+  for (const [chiave, limite] of [
     ['latitude', 90],
     ['longitude', 180],
   ] as const) {
+    const nome = fields[chiave];
     const grezzo = parameters.get(nome);
     if (grezzo === null) continue;
 
@@ -148,7 +183,7 @@ function readCoordinateOverrides(parameters: URLSearchParams): {
         code: 'COORDINATE_NON_VALIDE',
       });
     }
-    overrides[nome] = valore;
+    overrides[chiave] = valore;
   }
 
   return overrides;

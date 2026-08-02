@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveOptionalPlace } from './place';
+import { LUOGO_TRANSITO, resolveOptionalPlace } from './place';
 
 /** Estrae status e corpo da un errore sollevato da `error()`. */
 function capture(run: () => unknown): { status: number; body: { message: string; code?: string } } {
@@ -41,5 +41,31 @@ describe('resolveOptionalPlace', () => {
     const result = capture(() => resolveOptionalPlace(params('latitude=91&longitude=12.5')));
 
     expect(result.body.code).toBe('COORDINATE_NON_VALIDE');
+  });
+
+  describe('sui parametri del transito', () => {
+    // Una richiesta di transiti porta due luoghi negli stessi parametri: sono
+    // i nomi a tenerli separati, e confonderli darebbe un tema di un altro posto.
+    const query = 'latitude=40.85&longitude=14.27&transitLatitude=35.69&transitLongitude=139.69';
+
+    it('legge il proprio luogo e non quello di nascita', () => {
+      expect(resolveOptionalPlace(params(query), LUOGO_TRANSITO)).toEqual({
+        latitude: 35.69,
+        longitude: 139.69,
+      });
+    });
+
+    it('non vede il luogo di nascita come proprio', () => {
+      expect(resolveOptionalPlace(params('latitude=40.85&longitude=14.27'), LUOGO_TRANSITO)).toBeNull();
+    });
+
+    it('nomina i propri parametri quando li rifiuta', () => {
+      const result = capture(() =>
+        resolveOptionalPlace(params('transitLatitude=35.69'), LUOGO_TRANSITO),
+      );
+
+      expect(result.body.code).toBe('LUOGO_INCOMPLETO');
+      expect(result.body.message).toContain('transitLongitude');
+    });
   });
 });

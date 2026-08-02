@@ -18,6 +18,8 @@ let databasePath: string;
 let client: Client;
 
 const ROMA_ID = 3169070;
+/** Serve al luogo del transito: lontano da Roma di fuso e di orizzonte. */
+const TOKYO_ID = 1850147;
 
 beforeAll(async () => {
   directory = mkdtempSync(join(tmpdir(), 'undicesimacasa-mcp-'));
@@ -36,8 +38,21 @@ beforeAll(async () => {
       41.8919, 12.5113, 'Europe/Rome', 2_318_895,
     );
   database
+    .prepare(
+      `INSERT INTO locations (id, name_en, name_it, country_code, country_en, country_it,
+                              region_en, region_it, latitude, longitude, timezone, population)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      TOKYO_ID, 'Tokyo', 'Tokyo', 'JP', 'Japan', 'Giappone', 'Tokyo', 'Tokyo',
+      35.6895, 139.6917, 'Asia/Tokyo', 8_336_599,
+    );
+  database
     .prepare('INSERT INTO location_names (location_id, search_name) VALUES (?, ?)')
     .run(ROMA_ID, normalizeName('Roma'));
+  database
+    .prepare('INSERT INTO location_names (location_id, search_name) VALUES (?, ?)')
+    .run(TOKYO_ID, normalizeName('Tokyo'));
   database.close();
 
   const server = createServer({ databasePath });
@@ -105,6 +120,10 @@ describe('superficie MCP', () => {
     // e dal trasformare un transito in una previsione.
     expect(transitTool?.description).toMatch(/ometti transit_date/i);
     expect(transitTool?.description).toMatch(/previsione/i);
+    // Due specie di case nello stesso risultato vanno tenute distinte, o
+    // l'agente leggerà le une per le altre.
+    expect(transitTool?.description).toMatch(/case dell'istante/i);
+    expect(transitTool?.inputSchema.properties).toHaveProperty('transit_location_id');
     expect(transitTool?.inputSchema.required).toEqual(['date']);
 
     const chartTool = tools.find((tool) => tool.name === 'compute_natal_chart');
@@ -355,6 +374,72 @@ describe('compute_transits', () => {
 
     expect(result.isError).toBe(true);
     expect(textOf(result)).toMatch(/search_location/);
+  });
+
+  describe('con un luogo del transito', () => {
+    const DA_TOKYO = {
+      ...NASCITA,
+      transit_date: '2026-08-15',
+      transit_time: '09:00',
+      transit_location_id: TOKYO_ID,
+    };
+
+    it('aggiunge assi e case dell istante senza toccare quelle natali', async () => {
+      const result = await client.callTool({
+        name: 'compute_transits',
+        arguments: { ...DA_TOKYO, format: 'json' },
+      });
+
+      const { transits } = JSON.parse(textOf(result));
+      expect(transits.angles).toBeDefined();
+      expect(transits.houses).toHaveLength(12);
+
+      for (const body of transits.transiting) {
+        expect(body.house).toBeGreaterThanOrEqual(1);
+        expect(body.transitHouse).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('intesta con entrambi i luoghi, che non sono lo stesso', async () => {
+      const result = await client.callTool({ name: 'compute_transits', arguments: DA_TOKYO });
+      const text = textOf(result);
+
+      expect(text).toContain('Luogo di nascita: Roma, Lazio, Italia');
+      expect(text).toContain('Luogo del transito: Tokyo, Giappone');
+      expect(text).toContain("ASSI DELL'ISTANTE");
+    });
+
+    it('legge l ora del transito sull orologio di quel luogo', async () => {
+      const result = await client.callTool({
+        name: 'compute_transits',
+        arguments: { ...DA_TOKYO, format: 'json' },
+      });
+
+      const { transits } = JSON.parse(textOf(result));
+      expect(transits.input.timezone).toBe('Asia/Tokyo');
+      // Le nove a Tokyo sono le ventitré del giorno prima in UT.
+      expect(transits.time.utc).toBe('2026-08-15T00:00:00Z');
+    });
+
+    it('lascia comandare transit_timezone quando c è', async () => {
+      const result = await client.callTool({
+        name: 'compute_transits',
+        arguments: { ...DA_TOKYO, transit_timezone: 'Europe/Rome', format: 'json' },
+      });
+
+      const { transits } = JSON.parse(textOf(result));
+      expect(transits.input.timezone).toBe('Europe/Rome');
+    });
+
+    it('nomina i propri parametri se il luogo è mezzo', async () => {
+      const result = await client.callTool({
+        name: 'compute_transits',
+        arguments: { ...NASCITA, transit_date: '2026-08-15', transit_latitude: 35.68 },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toMatch(/transit_longitude/);
+    });
   });
 });
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CelestialBody, ChartPoint } from '@undicesimacasa/core';
+  import type { ChartPoint, TransitingBody } from '@undicesimacasa/core';
   import { formatDegrees } from '$lib/format';
   import { BODY_GLYPH, POINT_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '$lib/glyphs';
 
@@ -10,7 +10,12 @@
    * legare la tabella a `NatalChart` costringerebbe a riscriverla.
    */
   interface Props {
-    bodies: CelestialBody[];
+    /**
+     * Un corpo può portare due case — quella natale e quella dell'istante —
+     * e nel tema ne porta una sola: il campo in più è facoltativo, quindi le
+     * posizioni di nascita si passano qui senza adattarle.
+     */
+    bodies: TransitingBody[];
     partOfFortune?: ChartPoint | undefined;
     /** Corpo sotto il puntatore, condiviso con la ruota e con gli aspetti. */
     highlighted?: string | null;
@@ -21,6 +26,8 @@
      * semplicemente «casa» lascerebbe credere a una domificazione dell'istante.
      */
     houseTitle?: string;
+    /** Intestazione della seconda colonna, quando i dati la riempiono. */
+    secondHouseTitle?: string;
   }
 
   let {
@@ -29,6 +36,7 @@
     highlighted = $bindable(null),
     title = 'Corpi',
     houseTitle = 'Casa',
+    secondHouseTitle = "Casa dell'istante",
   }: Props = $props();
 
   /**
@@ -41,6 +49,9 @@
   const withHouses = $derived(
     bodies.some((body) => body.house !== undefined) || partOfFortune?.house !== undefined,
   );
+
+  /** Vale lo stesso per la seconda: compare se e solo se i dati la portano. */
+  const withSecondHouses = $derived(bodies.some((body) => body.transitHouse !== undefined));
 </script>
 
 <section>
@@ -52,6 +63,7 @@
         <th>Corpo</th>
         <th>Posizione</th>
         {#if withHouses}<th class="numerico">{houseTitle}</th>{/if}
+        {#if withSecondHouses}<th class="numerico">{secondHouseTitle}</th>{/if}
       </tr>
     </thead>
     <tbody>
@@ -69,6 +81,7 @@
             <span class="tenue">{SIGN_LABEL[body.sign]}</span>
           </td>
           {#if withHouses}<td class="numerico">{body.house ?? '—'}</td>{/if}
+          {#if withSecondHouses}<td class="numerico">{body.transitHouse ?? '—'}</td>{/if}
         </tr>
       {/each}
       {#if partOfFortune}
@@ -81,6 +94,8 @@
             <span class="tenue">{SIGN_LABEL[partOfFortune.sign]}</span>
           </td>
           {#if withHouses}<td class="numerico">{partOfFortune.house ?? '—'}</td>{/if}
+          <!-- La Parte di Fortuna sta nel tema, che di case ne ha una sola. -->
+          {#if withSecondHouses}<td class="numerico">—</td>{/if}
         </tr>
       {/if}
     </tbody>

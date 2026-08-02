@@ -238,7 +238,10 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
         'nascita. Vuole i dati di nascita come compute_natal_chart, più il momento del transito. ' +
         'OMETTI transit_date per il cielo di adesso: la data corrente la mette il server, tu non ' +
         'la sai e non devi indovinarla. Le case indicate sono quelle NATALI, cioè il settore del ' +
-        'tema in cui il transito cade: i transiti non hanno una domificazione propria. ' +
+        'tema in cui il transito cade. Se indichi anche un luogo del transito se ne aggiungono le ' +
+        "case DELL'ISTANTE, che sono un'altra cosa: dicono dove i corpi stanno rispetto " +
+        "all'orizzonte di quel posto, non in quale settore della vita passano. Non confonderle e " +
+        'non sostituire le prime con le seconde. ' +
         'Le orbite sono molto più strette di quelle natali — due gradi contro otto — perché ' +
         'altrimenti un transito di Saturno risulterebbe attivo per mesi di fila. ' +
         'Un transito è una FASE, non un evento con una data: non trasformarlo in una previsione, ' +
@@ -287,9 +290,31 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
           .string()
           .optional()
           .describe(
-            'Fuso IANA in cui leggere transit_date e transit_time. Default: quello di nascita. ' +
+            'Fuso IANA in cui leggere transit_date e transit_time. Default: quello del luogo del ' +
+              'transito se ne indichi uno, altrimenti quello di nascita. ' +
               'Le posizioni non cambiano, cambia solo come si nomina l\'istante.',
           ),
+        transit_location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe(
+            'Luogo da cui si guarda il transito, da search_location. FACOLTATIVO: senza, i ' +
+              'transiti sono completi lo stesso. Non è il luogo di nascita e non va riempito con ' +
+              'quello. Indicalo solo se chi chiede dice da dove sta guardando.',
+          ),
+        transit_latitude: z
+          .number()
+          .min(-90)
+          .max(90)
+          .optional()
+          .describe('Alternativa a transit_location_id. Va insieme a transit_longitude.'),
+        transit_longitude: z
+          .number()
+          .min(-180)
+          .max(180)
+          .optional()
+          .describe('Alternativa a transit_location_id. Va insieme a transit_latitude.'),
         house_system: z
           .enum(HOUSE_SYSTEMS)
           .optional()
@@ -325,10 +350,28 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
         if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
 
         const chart = computeNatalChart(birth, options);
-        const moment = transitMoment(args, place.timezone);
+
+        // Il luogo del transito viaggia con i propri nomi: negli stessi
+        // parametri della nascita, uno dei due andrebbe perso.
+        const daDove = resolveObservation(
+          {
+            location_id: args.transit_location_id,
+            latitude: args.transit_latitude,
+            longitude: args.transit_longitude,
+          },
+          context,
+          "i transiti si calcolano lo stesso, senza assi né case dell'istante",
+          'transit_',
+        );
+        if ('error' in daDove) return fail(daDove.error);
+
+        // Chi nomina una città per il transito intende l'ora di lì.
+        const moment = transitMoment(args, daDove.timezone ?? place.timezone);
 
         const transitOptions: TransitOptions = { minorAspects: args.minor_aspects ?? false };
+        if (args.house_system) transitOptions.houseSystem = args.house_system as HouseSystem;
         if (context.ephemerisPath) transitOptions.ephemerisPath = context.ephemerisPath;
+        if (daDove.place) transitOptions.place = daDove.place;
 
         const transits = computeTransits(chart, moment, transitOptions);
 
@@ -336,7 +379,9 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
           return ok(JSON.stringify({ chart, transits }, null, 2));
         }
 
-        const header = place.label ? `Luogo di nascita: ${place.label}\n` : '';
+        const header =
+          (place.label ? `Luogo di nascita: ${place.label}\n` : '') +
+          (daDove.label ? `Luogo del transito: ${daDove.label}\n` : '');
         return ok(header + formatTransitsCompact(chart, transits));
       } catch (error) {
         return fail(describeError(error));
@@ -482,8 +527,17 @@ function skyMoment(
  * Il punto di osservazione, che può non esserci.
  *
  * A differenza della nascita, qui il luogo non è un requisito ma un'aggiunta:
- * senza, il cielo è comunque completo. Mezzo luogo invece è un errore, perché
- * una coordinata sola metterebbe l'osservatore su un meridiano arbitrario.
+ * senza, il risultato è comunque completo. Mezzo luogo invece è un errore,
+ * perché una coordinata sola metterebbe l'osservatore su un meridiano
+ * arbitrario.
+ *
+ * `senzaLuogo` è ciò che si perde omettendolo, e cambia con lo strumento: il
+ * cielo resterebbe senza Ascendente, i transiti senza gli assi dell'istante.
+ * Dirlo per esteso è il modo di far scegliere un agente invece di fargli
+ * indovinare un luogo pur di riprovare. `prefisso` serve allo stesso scopo:
+ * nei transiti i parametri si chiamano `transit_latitude` e
+ * `transit_longitude`, e un errore che nominasse gli altri manderebbe a
+ * correggere il campo sbagliato.
  */
 function resolveObservation(
   args: {
@@ -492,6 +546,8 @@ function resolveObservation(
     longitude?: number | undefined;
   },
   context: ToolContext,
+  senzaLuogo = 'il cielo si calcola lo stesso, senza Ascendente e senza case',
+  prefisso = '',
 ): { place?: Place; timezone?: string; label?: string } | { error: string } {
   if (args.location_id !== undefined) {
     const place = resolvePlace({ location_id: args.location_id }, context);
@@ -511,9 +567,8 @@ function resolveObservation(
   if (latitude === undefined || longitude === undefined) {
     return {
       error:
-        'Luogo incompleto: latitude e longitude vanno indicate insieme. ' +
-        'Se il luogo non ti serve, omettile entrambe: il cielo si calcola lo stesso, ' +
-        'senza Ascendente e senza case.',
+        `Luogo incompleto: ${prefisso}latitude e ${prefisso}longitude vanno indicate insieme. ` +
+        `Se il luogo non ti serve, omettile entrambe: ${senzaLuogo}.`,
     };
   }
 

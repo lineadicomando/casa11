@@ -198,6 +198,8 @@ export async function fetchElection(parameters: URLSearchParams): Promise<Electi
 
 export interface TransitsResponse extends ChartResponse {
   transits: TransitChart;
+  /** Il luogo da cui il transito è guardato, se ne è stato scelto uno. */
+  transitPlace?: { label: string; refined: boolean };
 }
 
 /**
@@ -206,11 +208,15 @@ export interface TransitsResponse extends ChartResponse {
  * Sono quelli del tema più l'istante: i due endpoint condividono la parte
  * della nascita di proposito, e qui si vede perché — una funzione sola che
  * ne chiama un'altra, invece di due elenchi da tenere allineati.
+ *
+ * Il luogo del transito è facoltativo e viaggia con i nomi prefissati: senza
+ * di essi sovrascriverebbe quello di nascita, che sta negli stessi parametri.
  */
 export function transitParameters(
   birth: BirthInput,
   options: ChartOptionsInput,
   transit: MomentInput,
+  location?: Location | null,
 ): URLSearchParams {
   const parameters = chartParameters(birth, options);
 
@@ -219,6 +225,7 @@ export function transitParameters(
   // Un'ora vuota non si manda: al suo posto il motore usa mezzogiorno e lo
   // dichiara fra le avvertenze, che è più onesto di un mezzogiorno implicito.
   if (transit.time) parameters.set('transitTime', transit.time);
+  if (location) parameters.set('transitLocationId', String(location.id));
 
   return parameters;
 }

@@ -17,11 +17,16 @@
  * e sta perciò nell'interfaccia.
  */
 
-import type { AspectId, BodyId, NatalPointId } from '@undicesimacasa/core';
+import type { AspectId, NatalPointId, TransitingPointId } from '@undicesimacasa/core';
 
-/** Ciò che basta per riconoscere il riflesso di un contatto sull'asse. */
+/**
+ * Ciò che basta per riconoscere il riflesso di un contatto sull'asse.
+ *
+ * Il lato in transito può essere un asse dell'istante e non solo un corpo:
+ * anche l'Ascendente di adesso tocca i due nodi in coppia.
+ */
 export interface NodalRow {
-  transiting: BodyId;
+  transiting: TransitingPointId;
   natal: NatalPointId;
   aspect: AspectId;
 }

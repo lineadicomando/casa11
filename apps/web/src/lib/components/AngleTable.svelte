@@ -6,9 +6,14 @@
   interface Props {
     angles: Angles;
     houses: House[];
+    /**
+     * Nei transiti sono gli assi **dell'istante**, non quelli del tema: senza
+     * dirlo la tabella sembrerebbe la domificazione di nascita.
+     */
+    title?: string;
   }
 
-  let { angles, houses }: Props = $props();
+  let { angles, houses, title = 'Assi e cuspidi' }: Props = $props();
 
   const AXES = $derived(
     [
@@ -21,7 +26,7 @@
 </script>
 
 <section>
-  <h3 class="titolo-sezione">Assi e cuspidi</h3>
+  <h3 class="titolo-sezione">{title}</h3>
   <div class="assi">
     {#each AXES as [label, longitude] (label)}
       <div>
