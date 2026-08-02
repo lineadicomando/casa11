@@ -41,7 +41,7 @@
           <th colspan="2">In transito</th>
           <th colspan="2">Al punto natale</th>
           <th class="numerico">Orbita</th>
-          <th></th>
+          <th>Direzione</th>
         </tr>
       </thead>
       <tbody>
@@ -71,7 +71,12 @@
             </td>
             <td class="tenue">{natalPointLabel(aspect.natal)}</td>
             <td class="numerico">{formatDegrees(aspect.orb)}</td>
-            <td class="tenue">{aspect.applying ? 'appl.' : 'sep.'}</td>
+            <!-- L'abbreviazione sta in colonna, la parola intera nel titolo:
+                 per esteso allargherebbe la tabella di quanto occupa
+                 «applicativo», che è la colonna più stretta che ci sia. -->
+            <td class="tenue" title={aspect.applying ? 'applicativo' : 'separativo'}>
+              {aspect.applying ? 'appl.' : 'sep.'}
+            </td>
           </tr>
         {/each}
       </tbody>

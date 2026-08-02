@@ -19,6 +19,18 @@
     <p class="tenue">Nessun aspetto entro le orbite previste.</p>
   {:else}
     <table>
+      <!-- Senza, le ultime due colonne sono un numero e un'abbreviazione che
+           nulla nella pagina nomina: chi non sa già che cosa sia un'orbita non
+           ha da dove scoprirlo. Le tre dei glifi ne condividono una sola,
+           perché insieme dicono una cosa sola. -->
+      <thead>
+        <tr>
+          <th colspan="3">Fra</th>
+          <th>Aspetto</th>
+          <th class="numerico">Orbita</th>
+          <th>Direzione</th>
+        </tr>
+      </thead>
       <tbody>
         {#each aspects as aspect, index (index)}
           <tr
@@ -31,7 +43,12 @@
             <td class="glifo-piccolo">{BODY_GLYPH[aspect.to]}</td>
             <td>{aspect.aspect}</td>
             <td class="numerico">{formatDegrees(aspect.orb)}</td>
-            <td class="tenue">{aspect.applying ? 'appl.' : 'sep.'}</td>
+            <!-- L'abbreviazione sta in colonna, la parola intera nel titolo:
+                 per esteso allargherebbe la tabella di quanto occupa
+                 «applicativo», che è la colonna più stretta che ci sia. -->
+            <td class="tenue" title={aspect.applying ? 'applicativo' : 'separativo'}>
+              {aspect.applying ? 'appl.' : 'sep.'}
+            </td>
           </tr>
         {/each}
       </tbody>

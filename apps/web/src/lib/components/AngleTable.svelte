@@ -36,6 +36,14 @@
     {/each}
   </div>
   <table class="cuspidi">
+    <!-- La colonna dei numeri, da sola, si lascia leggere come una posizione
+         in classifica: dice il numero della casa, e va detto. -->
+    <thead>
+      <tr>
+        <th class="numerico">Casa</th>
+        <th>Cuspide</th>
+      </tr>
+    </thead>
     <tbody>
       {#each houses as house (house.number)}
         <tr>
@@ -68,8 +76,11 @@
     letter-spacing: 0.04em;
   }
 
-  .cuspidi td:first-child {
-    width: 2rem;
+  /* L'intestazione condivide la colonna con i numeri, e «Casa» è più larga di
+     una cifra: la misura vale per entrambe, o la riga di sopra allargherebbe
+     quella di sotto senza allinearcisi. */
+  .cuspidi :is(td, th):first-child {
+    width: 2.6rem;
     color: var(--testo-tenue);
   }
 </style>

@@ -159,7 +159,10 @@ th {
   letter-spacing: 0.04em;
   color: var(--testo-tenue);
   font-weight: 600;
-  padding-bottom: 0.3rem;
+  /* Lo stesso scostamento a destra delle celle sotto: senza, due intestazioni
+     brevi in colonne strette si toccano — «ORBITA DIREZIONE» si leggeva come
+     una parola sola. */
+  padding: 0 0.4rem 0.3rem 0;
 }
 
 td {
