@@ -158,6 +158,7 @@
     aria-expanded={open}
     aria-controls="risultati-{id}"
     aria-autocomplete="list"
+    aria-activedescendant={open && activeIndex >= 0 ? `${id}-opzione-${activeIndex}` : undefined}
   />
 
   {#if loading}
@@ -169,17 +170,30 @@
   {/if}
 
   {#if open && results.length > 0}
+    <!-- Le voci sono `<li role="option">` e basta.
+
+         Prima ognuna conteneva un `<button>`, e nell'albero di accessibilità
+         quello vinceva: sotto il `listbox` comparivano dei pulsanti, non delle
+         opzioni, e l'elenco smetteva di essere un elenco fra cui scegliere.
+
+         Il fuoco resta sul campo — è il modello della combobox — e quale voce
+         sia in evidenza lo dice `aria-activedescendant` lassù, che senza queste
+         `id` non avrebbe niente da nominare: le frecce muovevano l'evidenza
+         senza che nessuno lo annunciasse.
+
+         `onmousedown` e non `onclick` perché il `blur` del campo chiude
+         l'elenco, e il clic arriverebbe su una voce già sparita. -->
     <ul id="risultati-{id}" class="risultati" role="listbox">
       {#each results as location, index (location.id)}
-        <li role="option" aria-selected={index === activeIndex}>
-          <button
-            type="button"
-            class:attivo={index === activeIndex}
-            onmousedown={() => choose(location)}
-          >
-            <span class="nome">{describe(location)}</span>
-            <span class="dettaglio">{location.timezone}</span>
-          </button>
+        <li
+          id="{id}-opzione-{index}"
+          role="option"
+          aria-selected={index === activeIndex}
+          class:attivo={index === activeIndex}
+          onmousedown={() => choose(location)}
+        >
+          <span class="nome">{describe(location)}</span>
+          <span class="dettaglio">{location.timezone}</span>
         </li>
       {/each}
     </ul>
@@ -233,18 +247,13 @@
     overflow-y: auto;
   }
 
-  .risultati button {
-    display: block;
-    width: 100%;
+  .risultati li {
     padding: 0.45rem 0.7rem;
-    background: none;
-    border: none;
-    text-align: left;
     cursor: pointer;
   }
 
-  .risultati button:hover,
-  .risultati button.attivo {
+  .risultati li:hover,
+  .risultati li.attivo {
     background: var(--accento-tenue);
   }
 

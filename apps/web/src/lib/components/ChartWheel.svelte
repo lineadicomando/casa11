@@ -307,19 +307,9 @@
           text-anchor="middle"
           dominant-baseline="central"
         >
-          {point.glyph}
+          {point.glyph}{#if point.retrograde}<tspan class="retrogrado" dy="-7">℞</tspan>{/if}
           <title>{point.label}</title>
         </text>
-        {#if point.retrograde}
-          {@const mark = toXY(display, R.outerBodies - 20)}
-          <text
-            x={mark.x}
-            y={mark.y}
-            class="retrogrado"
-            text-anchor="middle"
-            dominant-baseline="central">℞</text
-          >
-        {/if}
       </g>
     {/each}
   {/if}
@@ -357,6 +347,12 @@
         stroke="var(--linea-forte)"
         stroke-width="1"
       />
+      <!-- Il ℞ è un apice del glifo e non un segno a sé.
+
+           Stava su un anello suo, qualche pixel più in dentro: in uno stellium
+           i marchi di tre pianeti vicini si accavallavano fra loro e con i
+           trattini delle longitudini, e nessuno diceva più di chi fosse.
+           Attaccato al glifo non può appartenere a nessun altro. -->
       <text
         x={glyph.x}
         y={glyph.y}
@@ -365,19 +361,9 @@
         text-anchor="middle"
         dominant-baseline="central"
       >
-        {point.glyph}
+        {point.glyph}{#if point.retrograde}<tspan class="retrogrado" dy="-7">℞</tspan>{/if}
         <title>{point.label}</title>
       </text>
-      {#if point.retrograde}
-        {@const mark = toXY(display, R.bodies - 22)}
-        <text
-          x={mark.x}
-          y={mark.y}
-          class="retrogrado"
-          text-anchor="middle"
-          dominant-baseline="central">℞</text
-        >
-      {/if}
     </g>
   {/each}
 </svg>
@@ -422,6 +408,50 @@
   .retrogrado {
     font-size: 13px;
     fill: var(--testo-tenue);
+  }
+
+  /* Su uno schermo stretto la ruota scende sotto i trecento punti, e i glifi
+     con lei: a dieci pixel non si distingue più ♃ da ♄, e il ℞ sparisce del
+     tutto. Due rimedi insieme, perché nessuno dei due da solo basta.
+
+     Il primo: il disegno esce dai margini del guscio e si prende la larghezza
+     della finestra. Non con `100vw`, che conta anche la barra di scorrimento e
+     lascerebbe la pagina scorrevole di lato, ma recuperando esattamente il
+     padding che il guscio ha — che è noto, e sta scritto qui accanto. */
+  @media (max-width: 30rem) {
+    .wheel {
+      width: calc(100% + 2.5rem);
+      max-width: none;
+      margin-inline: -1.25rem;
+    }
+
+    /* Il secondo: i glifi crescono più della ruota. Il disegno è lo stesso a
+       ogni misura — è un SVG — ma la leggibilità no, e su un quadrante piccolo
+       vale più un glifo grande di uno spazio vuoto attorno. */
+    .glifo-segno {
+      font-size: 38px;
+    }
+
+    .glifo-corpo {
+      font-size: 36px;
+    }
+
+    .glifo-transito {
+      font-size: 32px;
+    }
+
+    .glifo-punto {
+      font-size: 28px;
+    }
+
+    .retrogrado {
+      font-size: 18px;
+    }
+
+    .numero-casa,
+    .etichetta-asse {
+      font-size: 19px;
+    }
   }
 
   .numero-casa {
