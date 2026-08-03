@@ -239,12 +239,6 @@
       <ChartSettings bind:houseSystem bind:minorAspects {housesDisabled} />
     </div>
 
-    {#if location === null}
-      <p class="nota">
-        Le posizioni nello zodiaco sono le stesse ovunque sulla Terra. Il luogo serve solo
-        a orientare il cielo rispetto all'orizzonte: senza, niente Ascendente e niente case.
-      </p>
-    {/if}
 
     <button
       type="submit"
@@ -278,17 +272,6 @@
         />
         <LegendaElementi />
         <StrumentiRuota svg={disegno} {evidenza} nome={['cielo', placeLabel, sky.input.date]} />
-        <!-- Due frasi e non una: la prima spiega da che parte è girata la ruota
-             e vale anche su carta, la seconda è un gesto che su un foglio non
-             si può fare. -->
-        <p class="suggerimento">
-          {#if sky.angles}
-            L'Ascendente è a sinistra, come in un tema.
-          {:else}
-            Senza luogo la ruota comincia da 0° dell'Ariete: non c'è nessun Ascendente
-            da mettere a sinistra.
-          {/if}
-        </p>
         <p class="suggerimento istruzione">
           Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti.
         </p>

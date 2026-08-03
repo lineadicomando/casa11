@@ -323,10 +323,6 @@
           link={() =>
             transitParameters(birth, { houseSystem, minorAspects }, transit, transitLocation)}
         />
-        <p class="suggerimento">
-          Anello esterno: i corpi in transito. Anello interno: il tema di nascita.
-          Le linee al centro sono gli aspetti fra i due.
-        </p>
       </div>
 
       <div class="tabelle">
@@ -345,12 +341,6 @@
             houses={transits.houses}
             title="Assi e cuspidi dell'istante"
           />
-          <p class="suggerimento">
-            Il cielo come si vede da {transitPlaceLabel ?? 'quel luogo'} in quel momento.
-            Non sostituisce le case di nascita, in cui i transiti continuano a cadere:
-            dice dove i corpi stanno rispetto all'orizzonte di lì, e gli aspetti che
-            partono da questi due assi durano minuti, non giorni.
-          </p>
         {/if}
 
         <BodyTable

@@ -134,13 +134,6 @@
   {/if}
 </div>
 
-{#if link}
-  <p class="suggerimento istruzione">
-    Il collegamento porta con sé la data e il luogo di nascita: finiscono nella
-    cronologia di chi lo apre e nei registri dei server che attraversa. È per questo
-    che l'indirizzo di questa pagina resta pulito finché non lo si chiede.
-  </p>
-{/if}
 
 {#if errore}
   <p class="errore" role="alert">{errore}</p>

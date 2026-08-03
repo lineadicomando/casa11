@@ -86,13 +86,6 @@
       {/each}
     </tbody>
   </table>
-
-  <p class="suggerimento">
-    Le righe non si sommano perché non esiste un conteggio solo: c'è chi conta
-    i sette pianeti tradizionali e chi i dieci, chi aggiunge i nodi e chi
-    l'Ascendente. Somma quelle che ti servono — il numero accanto al gruppo dice
-    quanti punti ci sono dentro.
-  </p>
 </section>
 
 <style>

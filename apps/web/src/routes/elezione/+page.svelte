@@ -381,13 +381,6 @@
     <section class="nascita">
       <h2>Tema di nascita <span class="facoltativo">facoltativo</span></h2>
 
-      <p class="nota">
-        Senza, l'elenco delle ore è completo lo stesso: sono del luogo, non di
-        una persona. Con, ogni ora si apre come istante sul tema di nascita, e
-        i due cieli si guardano insieme invece che in due schede. La nascita è
-        la stessa delle altre sezioni, resta finché la pagina non viene
-        ricaricata e non va da nessuna parte.
-      </p>
 
       <BirthForm bind:value={birthStore.value}>
         {#snippet options()}
@@ -434,15 +427,7 @@
       selected={scelta?.start ?? null}
     />
 
-    <!-- La pagina calcola e non consiglia, ed è la stessa linea che tiene il
-         motore: dire quale ora convenga sarebbe interpretazione, e non è di
-         chi fa i conti. Vale anche per il confronto qui sotto — mettere il
-         tema accanto a un'ora non è sceglierla. -->
-    <p class="suggerimento">
-      Un'ora planetaria è una delle dodici parti in cui si divide l'arco del giorno, o
-      quello della notte: dura sessanta minuti soltanto agli equinozi. Il giorno comincia
-      all'alba, non a mezzanotte. Che cosa farne di queste ore — se sceglierne una per
-      cominciare qualcosa, e quale — non lo dice il calcolo.
+    <p class="suggerimento istruzione">
       {#if conNascita}
         Da «confronta» l'ora si apre come istante sul tema di nascita.
       {:else}
@@ -476,10 +461,6 @@
         <StrumentiRuota svg={disegno} {evidenza}
           nome={['ora', BODY_LABEL[scelta.ruler], scelta.local.start.slice(0, 10)]}
         />
-        <p class="suggerimento">
-          Anello esterno: il cielo dell'ora scelta. Anello interno: il tema di nascita.
-          Le linee al centro sono gli aspetti fra i due.
-        </p>
       </div>
 
       <div class="tabelle">
