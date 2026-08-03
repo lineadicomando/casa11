@@ -1,5 +1,14 @@
 #!/usr/bin/env node
+import { writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
+import {
+  paletteDi,
+  ruotaSvg,
+  type NomeTema,
+  type OpzioniDisegno,
+  type WheelChart,
+} from '@undicesimacasa/ruota';
+import { ruotaPng } from '@undicesimacasa/ruota/png';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
 import {
@@ -58,6 +67,16 @@ Opzioni
   --ephe <percorso>     Cartella dei file .se1
   --help                Mostra questo messaggio
 
+Disegno
+  --svg <file>          Salva la ruota come disegno vettoriale
+  --png <file>          Salva la ruota come immagine, al doppio del riquadro
+  --tema <chiaro|scuro> Colori del disegno. Default chiaro, che è il fondo su
+                        cui una carta viene stampata o incollata
+  --larghezza <punti>   Larghezza del PNG. Default 1704
+                        Il disegno vale anche con --transits, dove diventa una
+                        bi-ruota, e con --sky. La tabella si stampa lo stesso:
+                        salvare un disegno non è un modo di non vedere i dati
+
 Transiti
   --transits            Calcola i transiti sul tema invece del tema soltanto
   --on <YYYY-MM-DD>     Giorno del transito. Se omesso, adesso
@@ -110,6 +129,10 @@ function main(argv: string[]): number {
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       ephe: { type: 'string' },
+      svg: { type: 'string' },
+      png: { type: 'string' },
+      tema: { type: 'string' },
+      larghezza: { type: 'string' },
       help: { type: 'boolean', default: false },
       transits: { type: 'boolean', default: false },
       passages: { type: 'boolean', default: false },
@@ -219,6 +242,9 @@ function main(argv: string[]): number {
       return 2;
     }
 
+    const disegno = scriviDisegno(chart, values);
+    if (disegno !== null) return disegno;
+
     process.stdout.write(
       values.json ? `${JSON.stringify(chart, null, 2)}\n` : `${formatChartCompact(chart)}\n`,
     );
@@ -246,12 +272,78 @@ function main(argv: string[]): number {
   }
 
   const transits = computeTransits(chart, moment, transitOptions);
+
+  // Con i transiti la ruota diventa una bi-ruota: i transitanti fuori, e al
+  // centro i loro aspetti al tema invece di quelli interni al tema.
+  const disegno = scriviDisegno(chart, values, {
+    transits,
+    label: 'Ruota con il tema natale, i corpi in transito e i loro aspetti',
+  });
+  if (disegno !== null) return disegno;
+
   process.stdout.write(
     values.json
       ? `${JSON.stringify({ chart, transits }, null, 2)}\n`
       : `${formatTransitsCompact(chart, transits)}\n`,
   );
   return 0;
+}
+
+interface OpzioniDisegnoCli {
+  svg?: string | undefined;
+  png?: string | undefined;
+  tema?: string | undefined;
+  larghezza?: string | undefined;
+  minor: boolean;
+}
+
+/**
+ * Salva la ruota, se è stata chiesta.
+ *
+ * Restituisce `null` quando è andato tutto bene — anche quando non c'era
+ * niente da salvare — e un codice d'uscita quando un valore non va. Il
+ * chiamante stampa comunque la tabella: un disegno si aggiunge ai dati, non
+ * li sostituisce.
+ */
+function scriviDisegno(
+  chart: WheelChart,
+  values: OpzioniDisegnoCli,
+  extra: OpzioniDisegno = {},
+): number | null {
+  if (!values.svg && !values.png) return null;
+
+  // Un valore non riconosciuto agirebbe come `chiaro` in silenzio, e chi ha
+  // scritto `--tema scura` si ritroverebbe il disegno sbagliato senza saperlo.
+  if (values.tema && values.tema !== 'chiaro' && values.tema !== 'scuro') {
+    process.stderr.write('Valore di --tema non riconosciuto: atteso "chiaro" oppure "scuro".\n');
+    return 2;
+  }
+
+  let larghezza: number | undefined;
+  if (values.larghezza) {
+    larghezza = Number(values.larghezza);
+    if (!Number.isFinite(larghezza) || larghezza < 100) {
+      process.stderr.write('--larghezza vuole un numero di punti, almeno 100.\n');
+      return 2;
+    }
+  }
+
+  const disegno: OpzioniDisegno = {
+    ...extra,
+    palette: paletteDi(values.tema as NomeTema | undefined),
+    aspettiMinori: values.minor,
+  };
+
+  if (values.svg) {
+    writeFileSync(values.svg, ruotaSvg(chart, disegno));
+    process.stderr.write(`${values.svg}\n`);
+  }
+  if (values.png) {
+    writeFileSync(values.png, ruotaPng(chart, { ...disegno, ...(larghezza ? { larghezza } : {}) }));
+    process.stderr.write(`${values.png}\n`);
+  }
+
+  return null;
 }
 
 /**
@@ -270,6 +362,10 @@ function printSky(values: {
   lon?: string | undefined;
   houses?: string | undefined;
   ephe?: string | undefined;
+  svg?: string | undefined;
+  png?: string | undefined;
+  tema?: string | undefined;
+  larghezza?: string | undefined;
   minor: boolean;
   json: boolean;
 }): number {
@@ -294,6 +390,14 @@ function printSky(values: {
   }
 
   const sky = computeSky(moment, options);
+
+  // Il cielo non è un tema: senza luogo non ha né assi né case, e va annunciato
+  // per quello che è a chi il disegno non lo vede.
+  const disegno = scriviDisegno(sky, values, {
+    label: 'Ruota del cielo con le posizioni planetarie e i loro aspetti',
+  });
+  if (disegno !== null) return disegno;
+
   process.stdout.write(
     values.json ? `${JSON.stringify(sky, null, 2)}\n` : `${formatSkyCompact(sky)}\n`,
   );

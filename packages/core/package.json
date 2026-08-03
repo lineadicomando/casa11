@@ -28,6 +28,7 @@
     "ephe:download": "node scripts/download-ephe.mjs"
   },
   "dependencies": {
+    "@undicesimacasa/ruota": "*",
     "luxon": "^3.7.2",
     "sweph": "^2.10.3-4"
   },
