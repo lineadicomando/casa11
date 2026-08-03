@@ -2,7 +2,15 @@
   import type { ChartPoint, TransitingBody } from '@undicesimacasa/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
-  import { BODY_GLYPH, POINT_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '$lib/glyphs';
+  import {
+    BODY_GLYPH,
+    ELEMENT_COLOR,
+    POINT_GLYPH,
+    SIGN_ELEMENT,
+    SIGN_GLYPH,
+    SIGN_LABEL,
+    SIGN_MODALITY,
+  } from '$lib/glyphs';
 
   /**
    * Prende i corpi, non il tema.
@@ -91,7 +99,16 @@
           </td>
           <td>
             {formatDegrees(body.signDegree)}
-            <span class="glifo-piccolo">{SIGN_GLYPH[body.sign]}</span>
+            <!-- Il glifo del segno porta il colore del suo elemento, lo stesso
+                 dei settori della ruota: lega le due viste senza aggiungere una
+                 colonna. È un rinforzo, non l'unica strada — l'elemento si
+                 ricava dal nome del segno, che è scritto qui accanto, e il
+                 titolo lo dice per esteso a chi lo cerca. -->
+            <span
+              class="glifo-piccolo"
+              style:color={ELEMENT_COLOR[SIGN_ELEMENT[body.sign]]}
+              title="{SIGN_ELEMENT[body.sign]} · {SIGN_MODALITY[body.sign]}"
+            >{SIGN_GLYPH[body.sign]}</span>
             <span class="tenue">{SIGN_LABEL[body.sign]}</span>
           </td>
           {#if withHouses}<td class="numerico">{body.house ?? '—'}</td>{/if}
@@ -104,7 +121,11 @@
           <td>Parte di Fortuna</td>
           <td>
             {formatDegrees(partOfFortune.signDegree)}
-            <span class="glifo-piccolo">{SIGN_GLYPH[partOfFortune.sign]}</span>
+            <span
+              class="glifo-piccolo"
+              style:color={ELEMENT_COLOR[SIGN_ELEMENT[partOfFortune.sign]]}
+              title="{SIGN_ELEMENT[partOfFortune.sign]} · {SIGN_MODALITY[partOfFortune.sign]}"
+            >{SIGN_GLYPH[partOfFortune.sign]}</span>
             <span class="tenue">{SIGN_LABEL[partOfFortune.sign]}</span>
           </td>
           {#if withHouses}<td class="numerico">{partOfFortune.house ?? '—'}</td>{/if}

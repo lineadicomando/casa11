@@ -20,6 +20,8 @@
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import DistributionTable from '$lib/components/DistributionTable.svelte';
+  import LegendaElementi from '$lib/components/LegendaElementi.svelte';
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
@@ -274,6 +276,7 @@
           label="Ruota del cielo con le posizioni planetarie e i loro aspetti"
           bind:elemento={disegno}
         />
+        <LegendaElementi />
         <StrumentiRuota svg={disegno} {evidenza} nome={['cielo', placeLabel, sky.input.date]} />
         <!-- Due frasi e non una: la prima spiega da che parte è girata la ruota
              e vale anche su carta, la seconda è un gesto che su un foglio non
@@ -296,6 +299,15 @@
 
         {#if sky.angles}
           <AngleTable angles={sky.angles} houses={sky.houses} />
+        {/if}
+
+        <!-- La guardia non è pedanteria: `/api/chart` si fa memorizzare per un
+             giorno, e una risposta in cache può venire da una versione
+             dell'applicazione precedente a questo campo. Senza, chi ha usato il
+             sito ieri troverebbe oggi una pagina bianca invece di un tema — che
+             è il contrario del fallimento parziale che il progetto si è dato. -->
+        {#if sky.distribution}
+          <DistributionTable distribution={sky.distribution} />
         {/if}
 
         <AspectTable aspects={sky.aspects} {evidenza} />

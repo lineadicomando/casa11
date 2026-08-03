@@ -1,4 +1,11 @@
-import type { AspectId, BodyId, NatalPointId, ZodiacSign } from '@undicesimacasa/core';
+import type {
+  AspectId,
+  BodyId,
+  Element,
+  Modality,
+  NatalPointId,
+  ZodiacSign,
+} from '@undicesimacasa/core';
 
 /**
  * Ordine dei segni, ridichiarato qui invece di importarlo da `@undicesimacasa/core`.
@@ -147,8 +154,12 @@ export const ASPECT_GLYPH: Readonly<Record<AspectId, string>> = {
   sesquiquadrato: `⚼${TESTO}`,
 };
 
-export type Element = 'fuoco' | 'terra' | 'aria' | 'acqua';
-
+/**
+ * Le due classificazioni dei segni, ridichiarate qui per la stessa ragione di
+ * `ZODIAC_ORDER`: sono valori, e un import di valore dal motore ne trascina
+ * l'intero grafo nel bundle. I *tipi* invece vengono da lì, dove il conteggio
+ * li usa — quelli non pesano niente.
+ */
 export const SIGN_ELEMENT: Readonly<Record<ZodiacSign, Element>> = {
   ariete: 'fuoco',
   leone: 'fuoco',
@@ -163,6 +174,27 @@ export const SIGN_ELEMENT: Readonly<Record<ZodiacSign, Element>> = {
   scorpione: 'acqua',
   pesci: 'acqua',
 };
+
+export const SIGN_MODALITY: Readonly<Record<ZodiacSign, Modality>> = {
+  ariete: 'cardinale',
+  cancro: 'cardinale',
+  bilancia: 'cardinale',
+  capricorno: 'cardinale',
+  toro: 'fisso',
+  leone: 'fisso',
+  scorpione: 'fisso',
+  acquario: 'fisso',
+  gemelli: 'mobile',
+  vergine: 'mobile',
+  sagittario: 'mobile',
+  pesci: 'mobile',
+};
+
+/** L'ordine in cui i quattro elementi si nominano da sempre. */
+export const ELEMENT_ORDER: readonly Element[] = ['fuoco', 'terra', 'aria', 'acqua'];
+
+/** E le tre modalità, dal segno che apre la stagione a quello che la chiude. */
+export const MODALITY_ORDER: readonly Modality[] = ['cardinale', 'fisso', 'mobile'];
 
 /**
  * Riferimenti alle custom property, non esadecimali.

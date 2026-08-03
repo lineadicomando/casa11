@@ -14,6 +14,8 @@
   import ChartSettings from '$lib/components/ChartSettings.svelte';
   import ChartWheel from '$lib/components/ChartWheel.svelte';
   import CampiMancanti from '$lib/components/CampiMancanti.svelte';
+  import DistributionTable from '$lib/components/DistributionTable.svelte';
+  import LegendaElementi from '$lib/components/LegendaElementi.svelte';
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
@@ -202,6 +204,7 @@
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {evidenza} bind:elemento={disegno} />
+        <LegendaElementi />
         <StrumentiRuota
           svg={disegno}
           {evidenza}
@@ -221,6 +224,15 @@
 
         {#if chart.angles}
           <AngleTable angles={chart.angles} houses={chart.houses} />
+        {/if}
+
+        <!-- La guardia non è pedanteria: `/api/chart` si fa memorizzare per un
+             giorno, e una risposta in cache può venire da una versione
+             dell'applicazione precedente a questo campo. Senza, chi ha usato il
+             sito ieri troverebbe oggi una pagina bianca invece di un tema — che
+             è il contrario del fallimento parziale che il progetto si è dato. -->
+        {#if chart.distribution}
+          <DistributionTable distribution={chart.distribution} />
         {/if}
 
         <AspectTable aspects={chart.aspects} {evidenza} />

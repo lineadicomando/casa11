@@ -29,6 +29,8 @@
   import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import ElectionTable from '$lib/components/ElectionTable.svelte';
   import LocationSearch from '$lib/components/LocationSearch.svelte';
+  import DistributionTable from '$lib/components/DistributionTable.svelte';
+  import LegendaElementi from '$lib/components/LegendaElementi.svelte';
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
@@ -470,6 +472,7 @@
     <div class="griglia">
       <div class="ruota">
         <ChartWheel {chart} {transits} {evidenza} bind:elemento={disegno} />
+        <LegendaElementi />
         <StrumentiRuota svg={disegno} {evidenza}
           nome={['ora', BODY_LABEL[scelta.ruler], scelta.local.start.slice(0, 10)]}
         />
@@ -495,6 +498,15 @@
           title="Tema di nascita"
           {evidenza}
         />
+
+        <!-- La guardia non è pedanteria: `/api/chart` si fa memorizzare per un
+             giorno, e una risposta in cache può venire da una versione
+             dell'applicazione precedente a questo campo. Senza, chi ha usato il
+             sito ieri troverebbe oggi una pagina bianca invece di un tema — che
+             è il contrario del fallimento parziale che il progetto si è dato. -->
+        {#if chart.distribution}
+          <DistributionTable distribution={chart.distribution} title="Distribuzione della nascita" />
+        {/if}
       </div>
     </div>
   </Risultato>
