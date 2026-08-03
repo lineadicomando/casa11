@@ -290,8 +290,12 @@
       >
         <!-- Il bersaglio del dito, invisibile: i glifi sono alti una ventina di
              pixel sullo schermo, molto sotto i quarantaquattro che un tocco
-             vuole per non mancare il segno. -->
-        <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" />
+             vuole per non mancare il segno.
+
+             `data-bersaglio` lo dichiara tale a chi esporta, che lo toglie: in
+             un file non c'è nessun dito, e `transparent` non sopravvive al
+             viaggio — vedi `lib/esporta.ts`. -->
+        <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" data-bersaglio />
         <line
           x1={tickOuter.x}
           y1={tickOuter.y}
@@ -334,10 +338,8 @@
       onmouseenter={() => evidenza.sorvola(point.id)}
       onmouseleave={() => evidenza.sorvola(null)}
     >
-      <!-- Il bersaglio del dito, invisibile: i glifi sono alti una ventina di
-           pixel sullo schermo, molto sotto i quarantaquattro che un tocco vuole
-           per non mancare il segno. -->
-      <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" />
+      <!-- Il bersaglio del dito: vedi il gemello nell'anello dei transiti. -->
+      <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" data-bersaglio />
       <!-- Trattino alla longitudine reale: il glifo può essere stato spostato -->
       <line
         x1={tickOuter.x}

@@ -35,9 +35,23 @@ const PROPRIETA = [
   'dominant-baseline',
 ] as const;
 
-/** Il colore del foglio su cui la ruota è disegnata, per chi non ha trasparenza. */
+/**
+ * Il colore del foglio su cui la ruota è disegnata, per chi non ha trasparenza.
+ *
+ * Non si legge da `--sfondo`. Le custom property non sono tipizzate, e
+ * `getPropertyValue` ne restituisce il token scritto invece del colore: ne
+ * usciva la stringa `light-dark(#faf8f4, #1a1917)`, che un browser recente sa
+ * ancora risolvere ma che in un file è un `fill` invalido — e un `fill`
+ * invalido, in SVG, è **nero**. Il disegno si apriva nero su nero in ogni
+ * programma che di `light-dark()` non sappia nulla, cioè in quasi tutti.
+ *
+ * Il fondo del documento invece è una proprietà vera: il suo valore calcolato è
+ * già un `rgb()`, che si scrive in un attributo ed è capito ovunque.
+ */
 export function coloreSfondo(): string {
-  return getComputedStyle(document.documentElement).getPropertyValue('--sfondo').trim() || '#ffffff';
+  const dipinto = getComputedStyle(document.body).backgroundColor;
+  // Un fondo trasparente non è un colore su cui posare dei glifi scuri.
+  return dipinto && dipinto !== 'rgba(0, 0, 0, 0)' ? dipinto : '#ffffff';
 }
 
 /**
@@ -54,9 +68,32 @@ export function svgAutosufficiente(svg: SVGSVGElement): SVGSVGElement {
   const originali = [svg, ...svg.querySelectorAll('*')];
   const copie = [copia, ...copia.querySelectorAll('*')];
 
+  /**
+   * I nodi che nel file non hanno ragione di esistere.
+   *
+   * Si tolgono alla fine e non durante il giro: i due elenchi si percorrono per
+   * indice, e rimuovere un nodo mentre si cammina sfalserebbe tutto ciò che
+   * viene dopo.
+   */
+  const daTogliere: Element[] = [];
+
   originali.forEach((nodo, i) => {
     const destinazione = copie[i];
     if (!(destinazione instanceof SVGElement)) return;
+
+    // I bersagli del tocco. Sono cerchi larghi, dipinti di `transparent`, che
+    // servono solo a dare al dito qualcosa di grande da colpire. Fissarli come
+    // gli altri li scriveva `fill="rgba(0, 0, 0, 0)"` — che i browser capiscono
+    // e i programmi di disegno no: valore invalido, ripiego a nero, e il file
+    // usciva con un disco nero sopra ogni pianeta. Tradurre meglio il colore
+    // non è il rimedio: in un file non c'è niente da toccare, e il modo di
+    // esportare un elemento che esiste solo per essere premuto è non
+    // esportarlo. Vale lo stesso ragionamento che poco più sotto toglie
+    // `role` e `tabindex`.
+    if (nodo.hasAttribute('data-bersaglio')) {
+      daTogliere.push(destinazione);
+      return;
+    }
 
     const calcolato = getComputedStyle(nodo);
     for (const proprieta of PROPRIETA) {
@@ -82,6 +119,8 @@ export function svgAutosufficiente(svg: SVGSVGElement): SVGSVGElement {
       }
     }
   });
+
+  for (const nodo of daTogliere) nodo.remove();
 
   copia.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   return copia;
