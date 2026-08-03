@@ -10,7 +10,8 @@ qui c'è solo ciò che serve sapere prima di toccare qualsiasi cosa.
 |---|---|
 | `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
-| `packages/mcp` | server MCP: sei tool, trasporto stdio |
+| `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG. Non dipende da `core` |
+| `packages/mcp` | server MCP: otto tool, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia + API REST, tutti gli endpoint in GET |
 
 Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
@@ -44,6 +45,15 @@ il motore usa Moshier invece delle effemeridi Swiss.
   errori di dominio sono `ChartError` con un `code` mappabile su HTTP.
 - Le tabelle Svelte prendono **i dati, non il tema**: legarle a `NatalChart`
   le rende inutilizzabili per i transiti.
+- **`packages/ruota` non importa da `core`, nemmeno i tipi**: li ridichiara in
+  `types.ts`, e `test/tipi.test.ts` verifica che combacino. Serve a rompere il
+  ciclo con la CLI, che vive in `core` e disegna. Il disegno riceve una carta
+  già calcolata e non deve poterne calcolare una.
+- **Il PNG sta in `@undicesimacasa/ruota/png`**, punto d'ingresso separato:
+  porta un modulo nativo, e nel browser non deve arrivare. Lato web si importa
+  solo da `lib/server`.
+- **Un disegno non sostituisce i dati**: non porta le avvertenze del calcolo.
+  Le superfici lo dicono a chi le usa, e le descrizioni MCP pure.
 
 ## Stile
 

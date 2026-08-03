@@ -22,10 +22,17 @@ undicesimacasa/
 ├── packages/
 │   ├── core/          motore di calcolo (nessuna dipendenza web)
 │   ├── geo/           ricerca località, dataset GeoNames locale
-│   └── mcp/           server MCP: luogo, tema natale, cielo, transiti, passaggi, elezione
+│   ├── ruota/         il disegno: geometria, glifi, colori, SVG e PNG
+│   └── mcp/           server MCP: luogo, tema natale, disegno, cielo, transiti, passaggi, elezione
 └── apps/
     └── web/           SvelteKit: interfaccia + API REST
 ```
+
+`ruota` è l'unico pacchetto che **non dipende da `core`**, nemmeno per i tipi:
+li ridichiara. Non è distrazione — è ciò che permette a `core`, dove vive la
+CLI, di dipendere da lui senza chiudere un ciclo, e dice il verso giusto delle
+cose: il disegno riceve una carta già calcolata e non ha modo di calcolarne
+una. Che le due dichiarazioni restino allineate lo verifica un test.
 
 Monorepo con **npm workspaces**. Node ≥ 22.
 
@@ -669,13 +676,23 @@ suoi parametri: l'URL è condivisibile e la risposta memorizzabile.
 GET /api/locations?q=napoli&limit=8&country=IT
 GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
 GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
+GET /api/chart/wheel?date=1968-03-12&time=14:30&locationId=3172394
+GET /api/chart/wheel?…&format=png&width=1200&theme=scuro
 GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
 GET /api/transits?…&transitDate=2026-08-15&transitTime=09:00&transitLocationId=1850147
+GET /api/transits/wheel?date=1968-03-12&time=14:30&locationId=3172394&format=png
 GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
 GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome
 GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&timezone=Europe/Rome
 GET /api/election?locationId=2523920&from=2029-08-24&to=2029-08-26
 ```
+
+I due `…/wheel` sono gli unici a non restituire JSON: danno l'immagine della
+ruota, `image/svg+xml` o `image/png`. Accettano i parametri di calcolo del
+rispettivo endpoint più `format`, `theme` (`chiaro`, default, o `scuro`) e
+`width`, che vale solo con `format=png` — un SVG si scala da sé, e chiederne
+la larghezza è quasi sempre il sintomo di un malinteso. Vedi
+[Il disegno servito](#il-disegno-servito).
 
 I transiti accettano **gli stessi parametri di nascita** del tema, più
 `transitDate`, `transitTime` e `transitTimezone`: un indirizzo che calcola un
@@ -791,6 +808,51 @@ in cima. Le spiegazioni del dominio restano — su carta servono quanto a scherm
 — mentre le istruzioni d'uso, marcate `.istruzione`, spariscono: «scegli un
 corpo per isolarne gli aspetti» su un foglio è una promessa che nessuno può
 mantenere.
+
+### Il disegno servito
+
+Quel che sopra esce dal browser, `packages/ruota` lo produce anche **senza un
+browser**: la stessa carta come SVG o come PNG, dalla CLI, dall'API e dal
+server MCP.
+
+```sh
+casa11 --date 1978-06-02 --time 15:15 --lat 38.1166 --lon 13.3636 --tz Europe/Rome \
+       --svg tema.svg --png tema.png --tema scuro
+```
+
+Il disegno **si aggiunge ai dati, non li sostituisce**: la tabella si stampa lo
+stesso. Un'immagine non porta le avvertenze del calcolo — un corpo non
+calcolabile, un'ora ambigua per il cambio d'ora — e mostrarla da sola
+significa mostrare una carta di cui non si sa se sia completa. Vale per la CLI
+come per l'agente, e la descrizione del tool MCP lo dice a chiare lettere.
+
+Sono due disegnatori per la stessa ruota — `ChartWheel.svelte`, interattivo, e
+`svg.ts`, statico — e non si possono accorpare: il sorvolo e la scelta di un
+corpo non sopravvivono alla serializzazione. Condividono però `wheel.ts`, la
+geometria: a divergere potranno essere i pesi e i colori, mai le posizioni.
+
+Due cose che nella pagina non esistono e qui vanno risolte a mano:
+
+- **I colori.** Nel documento sono `var(--elemento-fuoco)`, e `light-dark()` ne
+  tiene due per ciascuno. Fuori dal documento una `var()` non risolta non è un
+  colore sbagliato, è nessun colore: `palette.ts` ne fa due palette di
+  esadecimali, e i valori vanno tenuti allineati a quelli di `app.css`.
+- **I font.** I glifi sono caratteri Unicode, non tracciati, e la ruota conta
+  di trovarli in un font di sistema. In un'immagine `node:*-slim` di font non
+  ce n'è nessuno, e il PNG non esce con dei glifi sbagliati: esce **senza testo
+  affatto** — niente pianeti, niente numeri delle case, niente sigle degli
+  assi. Una ruota di sole linee, che sembra riuscita finché non la si legge, e
+  che nessun errore segnala. Servono due cose insieme, e nessuna delle due
+  basta da sola: il Dockerfile installa `fonts-dejavu-core` — DejaVu è l'unico
+  font diffuso che li porti tutti, `⊗` della Parte di Fortuna compreso — e
+  `png.ts` indica a resvg le cartelle in cui cercarli, perché `loadSystemFonts`
+  su Linux si appoggia a fontconfig, che in un'immagine `slim` non è installato.
+
+La rasterizzazione sta in un punto d'ingresso separato,
+`@undicesimacasa/ruota/png`, perché porta con sé un modulo nativo
+(`@resvg/resvg-js`, MPL-2.0): il bundle del browser non deve avere modo di
+incontrarlo, e importarlo solo da `lib/server` lo garantisce per costruzione
+invece che per attenzione.
 
 ### Privacy
 
@@ -909,12 +971,13 @@ Espone il calcolo agli agenti. Trasporto stdio:
 Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
 il percorso assoluto.
 
-Sette tool, con la ricerca del luogo deliberatamente separata dal calcolo:
+Otto tool, con la ricerca del luogo deliberatamente separata dal calcolo:
 
 | Tool | Cosa fa |
 |---|---|
 | `search_location` | nome → candidati con `location_id`, coordinate, fuso IANA |
 | `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
+| `draw_chart_wheel` | gli stessi dati → la ruota come **immagine** PNG; `with_transits` la fa diventare una bi-ruota |
 | `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema; `transit_location_id` aggiunge assi e case dell'istante |
 | `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
 | `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
@@ -943,6 +1006,17 @@ unico dovrebbe scegliere in silenzio fra le decine di "Roma" del mondo, e uno
 sbaglio lì produce un tema plausibile e sbagliato. Così la disambiguazione
 resta una decisione esplicita, e `location_id` evita che l'agente ricopi a mano
 tre valori numerici.
+
+`draw_chart_wheel` è l'unico tool che restituisca un'immagine, e restituisce
+**PNG anche se il progetto sa produrre SVG**: un modello non vede un SVG, lo
+legge come testo, e una ruota serializzata sono ventimila caratteri di
+coordinate che non assomigliano a niente. Va chiamato *dopo*
+`compute_natal_chart` e non al posto suo — un disegno non contiene le
+avvertenze del calcolo — e la sua descrizione lo dice. Ogni immagine viaggia
+con una riga che dichiara di quale carta sia: due ruote di due persone diverse
+si somigliano abbastanza da confondersi. Il lato predefinito è 900 punti, che
+non è il massimo possibile ma il punto in cui i glifi restano leggibili senza
+che l'immagine costi il quadruplo dei token.
 
 Il parametro `format` vale `compact` (default, tabella densa) o `json`.
 Le risorse `undicesimacasa://riferimento/aspetti` e `.../sistemi-case` contengono
