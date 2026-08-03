@@ -98,8 +98,30 @@ I campi di `chart` che ti servono:
 - `aspects[]` — `aspect` (nome italiano), `from` e `to` (id dei corpi), `angle`,
   `orb` (scarto dall'angolo esatto, in gradi), `applying` (`true` se l'aspetto
   si sta perfezionando).
+- `distribution` — quanti punti cadono in ciascun elemento e in ciascuna
+  modalità, in **tre gruppi separati**: `planets` (i dieci fra luminari e
+  pianeti), `points` (nodi, Lilith, Chirone, Parte di Fortuna) e `angles`
+  (Ascendente e Medio Cielo). Ogni gruppo ha `elements`
+  (`fuoco`/`terra`/`aria`/`acqua`), `modalities`
+  (`cardinale`/`fisso`/`mobile`) e `counted`, l'elenco di ciò che ha contato.
 - `ephemerisMode` — `swisseph` o `moshier`.
 - `warnings[]` — avvertenze sul calcolo. Leggile sempre.
+
+**Sulla distribuzione, tre avvertenze.**
+
+I gruppi sono separati perché non esiste un conteggio solo: c'è chi conta sette
+pianeti e chi dieci, chi aggiunge i nodi e chi l'Ascendente. Se una somma ti
+serve, falla **dicendo quale** hai fatto — «sei pianeti su dieci in segni
+d'acqua», non «sei in acqua».
+
+Non c'è nessun campo «dominante», e non è un'omissione: stabilire quale
+elemento domini richiede pesi che cambiano da autore ad autore. Se ne parli,
+attribuisci la convenzione a chi la sostiene invece di presentarla come un
+risultato del calcolo.
+
+Un conteggio non è un carattere. «Quattro pianeti in segni di fuoco» è un dato;
+«sei una persona focosa» è una lettura, e vale la regola generale — chi legge
+sei tu insieme a chi ti sta chiedendo, non questo strumento.
 
 ## 3. Transiti (solo se richiesti)
 
@@ -673,9 +695,18 @@ comincia all'alba, e l'Ascendente che riporta vale all'inizio dell'ora e non per
 tutta la sua durata. Non contiene raccomandazioni: sceglierne una è
 interpretazione tua, e da motivare.
 
+In fondo al tema e al cielo trovi una tabella **DISTRIBUZIONE**: quanti punti
+cadono in ciascun elemento e in ciascuna modalità, su tre righe — pianeti,
+punti, assi. Le righe sono separate perché non esiste un conteggio solo, e
+sommarle senza dirlo significa scegliere una scuola in silenzio: se una somma
+ti serve, dichiara quale hai fatto. Non c'è nessuna «dominante», perché
+stabilirla richiede pesi che cambiano da autore ad autore. E un conteggio non è
+un carattere: «quattro pianeti in segni di fuoco» è un dato, «una persona
+focosa» è una lettura.
+
 `compute_natal_chart` restituisce di default il formato `compact`: una tabella
-densa con corpi, assi, cuspidi, aspetti e avvertenze, che costa circa un ottavo
-dei token del JSON. Usa `format: "json"` solo se devi elaborare i valori
+densa con corpi, assi, cuspidi, aspetti, distribuzione e avvertenze, che costa
+circa un ottavo dei token del JSON. Usa `format: "json"` solo se devi elaborare i valori
 numerici. Le risorse `undicesimacasa://riferimento/aspetti` e
 `undicesimacasa://riferimento/sistemi-case` contengono il materiale di
 riferimento: leggile solo quando servono davvero.

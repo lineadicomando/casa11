@@ -98,6 +98,7 @@ chart.aspects;   // matrice degli aspetti con orbita e direzione
 chart.partOfFortune;  // ASC + Luna − Sole, invertita nei temi notturni
 chart.sect;           // 'diurna' | 'notturna'
 chart.siderealTime;   // tempo siderale locale, { hours, formatted }
+chart.distribution;   // elementi e modalità, a gruppi separati — vedi sotto
 chart.warnings;  // ora ambigua, effemeridi ripiegate, corpi mancanti
 
 formatChartCompact(chart);  // resa tabellare, ~1/8 dei token del JSON
@@ -521,6 +522,40 @@ Il file `alternateNames.zip` pesa 200 MB e decompresso supera i 700 MB: viene
 letto in streaming e filtrato alla sola lingua italiana, mai caricato in
 memoria. L'importazione completa richiede meno di un minuto.
 
+## Elementi e modalità
+
+Ogni tema e ogni cielo portano un campo `distribution`: quanti punti cadono in
+ciascun elemento — fuoco, terra, aria, acqua — e in ciascuna modalità —
+cardinale, fisso, mobile.
+
+```
+DISTRIBUZIONE
+Pianeti  fuoco 4  terra 2  aria 2  acqua 2      | cardinale 2  fisso 5  mobile 3
+Punti    fuoco 1  terra 1  aria 1  acqua 0      | cardinale 3  fisso 0  mobile 0
+Assi     fuoco 2  terra 0  aria 0  acqua 0      | cardinale 1  fisso 1  mobile 0
+```
+
+Contare non è interpretare, ma **decidere che cosa contare** è già una scelta di
+scuola: c'è chi conta i sette pianeti tradizionali e chi i dieci, chi aggiunge i
+nodi, chi l'Ascendente, chi pesa i luminari più del resto. Un totale unico
+sceglierebbe una convenzione in silenzio e ne presenterebbe il risultato come un
+fatto — che è esattamente ciò che rende inservibile il conteggio di parecchi
+programmi, dove il numero non si riesce a ricostruire.
+
+Perciò i gruppi restano tre e separati, e ciascuno porta in `counted` l'elenco
+di ciò che ha contato: chi segue una convenzione diversa rifà la somma invece di
+doverci credere. Non esiste nessun campo «dominante»: quella è lettura, e la
+lettura non è di chi fa i conti.
+
+Degli assi si contano l'Ascendente e il Medio Cielo, non i loro opposti:
+Discendente e Fondo Cielo sono determinati dai primi due e non aggiungono nulla
+che non sia già stato contato.
+
+Nell'interfaccia la tabella sta accanto ad *Assi e cuspidi*, i settori della
+ruota hanno finalmente la loro legenda, e nelle tabelle il glifo del segno porta
+il colore del proprio elemento — un rinforzo, non l'unica strada: l'elemento si
+ricava dal nome del segno, che è scritto lì accanto.
+
 ## Accuratezza
 
 Il motore è stato confrontato con un programma astrologico affermato su un
@@ -678,6 +713,8 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/server/{place,birth,moment,range}.ts` | lettura dei parametri, condivisa fra gli endpoint |
 | `lib/evidenza.svelte.ts` | il corpo isolato nella ruota e nelle tabelle: sorvolato col mouse o scelto con un clic, e il secondo vince sul primo |
 | `lib/house-systems.ts` | l'elenco dei sistemi di case e la domanda «è uno di questi?», che serve a chi legge un indirizzo |
+| `lib/components/DistributionTable.svelte` | il conteggio per elemento e modalità, a gruppi separati |
+| `lib/components/LegendaElementi.svelte` | che cosa vogliono dire i quattro colori della ruota |
 | `lib/components/Meta.svelte` | titolo, descrizione, canonico e Open Graph di ogni pagina |
 | `lib/esporta.ts` | la ruota portata via: fissa i valori calcolati dell'SVG, che altrimenti fuori dalla pagina non risolve né le `var()` né le classi |
 | `lib/components/ModuloPieghevole.svelte` | il riquadro dei campi che si ritira in una striscia appesa: lo stesso in tutte e quattro le sezioni |
