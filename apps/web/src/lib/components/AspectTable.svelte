@@ -2,7 +2,7 @@
   import type { Aspect } from '@undicesimacasa/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
-  import { ASPECT_GLYPH, ASPECT_MAJOR, BODY_GLYPH, BODY_LABEL } from '$lib/glyphs';
+  import { ASPECT_GLYPH, ASPECT_MAJOR, BODY_GLYPH, BODY_LABEL } from '@undicesimacasa/ruota';
 
   interface Props {
     aspects: Aspect[];

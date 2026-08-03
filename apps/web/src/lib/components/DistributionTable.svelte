@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import type { Distribution, DistributionGroup } from '@undicesimacasa/core';
-  import { ELEMENT_COLOR, ELEMENT_ORDER, MODALITY_ORDER } from '$lib/glyphs';
+  import { ELEMENT_COLOR, ELEMENT_ORDER, MODALITY_ORDER } from '@undicesimacasa/ruota';
 
   interface Props {
     distribution: Distribution;

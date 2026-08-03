@@ -37,7 +37,7 @@
   import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { formatDegrees } from '$lib/format';
-  import { BODY_LABEL, SIGN_LABEL } from '$lib/glyphs';
+  import { BODY_LABEL, SIGN_LABEL } from '@undicesimacasa/ruota';
   import { nowMoment, shiftDate, type MomentInput } from '$lib/moment';
 
   /** I sette dell'ordine caldeo: sono gli unici che reggano un'ora. */

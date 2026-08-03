@@ -8,7 +8,7 @@
     isNatalPointSigla,
     natalPointGlyph,
     natalPointLabel,
-  } from '$lib/glyphs';
+  } from '@undicesimacasa/ruota';
   import { byOrb, collapseNodalAxis } from '$lib/nodal-axis';
 
   /**

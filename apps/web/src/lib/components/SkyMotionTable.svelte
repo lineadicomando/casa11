@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { SignIngress, Station } from '@undicesimacasa/core';
-  import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '$lib/glyphs';
+  import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '@undicesimacasa/ruota';
   import { formatDegrees } from '$lib/format';
 
   /**

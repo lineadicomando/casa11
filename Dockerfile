@@ -17,6 +17,7 @@ COPY package.json package-lock.json ./
 COPY packages/core/package.json packages/core/
 COPY packages/geo/package.json packages/geo/
 COPY packages/mcp/package.json packages/mcp/
+COPY packages/ruota/package.json packages/ruota/
 COPY apps/web/package.json apps/web/
 
 # `--ignore-scripts` evita che `prepare` giri prima che i sorgenti esistano,
@@ -53,7 +54,7 @@ COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/ apps/
 
-RUN npm run build -w @undicesimacasa/core -w @undicesimacasa/geo \
+RUN npm run build -w @undicesimacasa/ruota -w @undicesimacasa/core -w @undicesimacasa/geo \
   && npm run build -w @undicesimacasa/mcp \
   && npm run build -w @undicesimacasa/web
 
@@ -74,6 +75,21 @@ FROM node:24-bookworm-slim AS runtime
 
 WORKDIR /app
 
+# I glifi della ruota sono caratteri Unicode, non tracciati: il disegno conta
+# di trovarli in un font di sistema, e in un'immagine `slim` di font non ce n'è
+# nessuno. Senza, il PNG non esce con dei glifi sbagliati — esce **senza testo
+# affatto**: niente pianeti, niente numeri delle case, niente sigle degli assi.
+# Una ruota di sole linee, che sembra riuscita finché non la si legge, e che
+# nessun errore segnala. DejaVu è l'unico font diffuso che li porti tutti, `⊗`
+# della Parte di Fortuna compreso; sono un paio di megabyte.
+#
+# Il pacchetto da solo non basta: resvg li cerca via fontconfig, che qui non
+# c'è, e va indirizzato alle cartelle — vedi `CARTELLE_DI_SISTEMA` in
+# `packages/ruota/src/png.ts`.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends fonts-dejavu-core \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production \
     PORT=3000 \
     SE_EPHE_PATH=/app/packages/core/ephe \
@@ -90,6 +106,8 @@ COPY --from=build /app/packages/geo/scripts packages/geo/scripts/
 COPY --from=build /app/packages/geo/package.json packages/geo/
 COPY --from=build /app/packages/mcp/dist  packages/mcp/dist/
 COPY --from=build /app/packages/mcp/package.json packages/mcp/
+COPY --from=build /app/packages/ruota/dist packages/ruota/dist/
+COPY --from=build /app/packages/ruota/package.json packages/ruota/
 COPY --from=build /app/apps/web/build     apps/web/build/
 COPY --from=build /app/apps/web/package.json apps/web/
 

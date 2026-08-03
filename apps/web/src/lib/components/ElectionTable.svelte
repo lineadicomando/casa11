@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { BodyId, PlanetaryHour, VoidOfCourse } from '@undicesimacasa/core';
   import { formatDegrees } from '$lib/format';
-  import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '$lib/glyphs';
+  import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '@undicesimacasa/ruota';
 
   /**
    * Le ore planetarie di un luogo, raggruppate per giorno.

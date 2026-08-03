@@ -3,15 +3,13 @@
   import type { Evidenza } from '$lib/evidenza.svelte';
   import {
     ASPECT_COLOR,
+    CENTER,
     ELEMENT_COLOR,
+    PADDING,
     SIGN_ELEMENT,
     SIGN_GLYPH,
-    ZODIAC_ORDER,
-  } from '$lib/glyphs';
-  import {
-    CENTER,
-    PADDING,
     SIZE,
+    ZODIAC_ORDER,
     arcPath,
     natalPointLongitude,
     natalWheelPoints,
@@ -20,7 +18,7 @@
     spread,
     transitWheelPoints,
     type WheelChart,
-  } from '$lib/wheel';
+  } from '@undicesimacasa/ruota';
 
   interface Props {
     chart: WheelChart;
@@ -424,7 +422,7 @@
     max-width: 44rem;
     font-family: system-ui, sans-serif;
     /* Ereditata da tutti i glifi: raddoppia il selettore U+FE0E che le mappe
-       già portano, per i font che quello lo ignorano. Vedi `lib/glyphs.ts`. */
+       già portano, per i font che quello lo ignorano. Vedi `@undicesimacasa/ruota`. */
     font-variant-emoji: text;
   }
 

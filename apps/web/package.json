@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@undicesimacasa/core": "*",
-    "@undicesimacasa/geo": "*"
+    "@undicesimacasa/geo": "*",
+    "@undicesimacasa/ruota": "*"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",

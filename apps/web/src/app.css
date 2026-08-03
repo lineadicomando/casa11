@@ -32,7 +32,7 @@
 
   /* I colori del disegno.
 
-     Stanno qui e non in `lib/glyphs.ts` perché sono i soli valori della ruota
+     Stanno qui e non in `@undicesimacasa/ruota` perché sono i soli valori della ruota
      che devono cambiare con l'aspetto della pagina. Esadecimali fissi, gli
      stessi nei due aspetti, lasciavano i glifi dell'aria a 2,3:1 sul fondo
      chiaro e i trigoni a 3,1:1 su quello scuro — sotto il minimo di 3:1 che
@@ -367,7 +367,7 @@ tbody tr.evidenziato {
    soltanto, senza che il font offra una vera variante.
 
    `font-variant-emoji` raddoppia il selettore U+FE0E che i glifi già portano
-   (vedi `lib/glyphs.ts`): dove è supportato copre anche i font che ignorano
+   (vedi `@undicesimacasa/ruota`): dove è supportato copre anche i font che ignorano
    il selettore, altrove non fa nulla. */
 .glifo,
 .glifo-piccolo {

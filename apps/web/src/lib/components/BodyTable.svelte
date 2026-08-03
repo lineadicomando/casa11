@@ -10,7 +10,7 @@
     SIGN_GLYPH,
     SIGN_LABEL,
     SIGN_MODALITY,
-  } from '$lib/glyphs';
+  } from '@undicesimacasa/ruota';
 
   /**
    * Prende i corpi, non il tema.

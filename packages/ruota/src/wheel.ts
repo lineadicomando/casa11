@@ -1,14 +1,17 @@
 /**
  * La geometria della ruota.
  *
- * Sta fuori dal componente per due ragioni. È la parte che si sbaglia in
+ * Sta fuori dal componente per tre ragioni. È la parte che si sbaglia in
  * silenzio — un glifo qualche grado fuori posto non fa fallire nulla, si vede
- * soltanto — e quindi va messa alla prova; ed è la stessa per la ruota
- * semplice del tema e per la bi-ruota dei transiti, che cambiano solo nei
- * raggi degli anelli.
+ * soltanto — e quindi va messa alla prova; è la stessa per la ruota semplice
+ * del tema e per la bi-ruota dei transiti, che cambiano solo nei raggi degli
+ * anelli; ed è la sola cosa che il disegno della pagina e quello di `svg.ts`
+ * abbiano in comune. Quei due non si possono accorpare, perché uno è
+ * interattivo e l'altro è un file: condividere qui vuol dire che a divergere
+ * possano essere i colori e i pesi, mai le posizioni.
  *
- * Del motore di calcolo si importano i soli **tipi**: un import di valore ne
- * trascinerebbe l'intero grafo nel bundle del browser.
+ * Del motore di calcolo non si importa **niente**, nemmeno i tipi: vedi
+ * `types.ts`, che dice perché e come le due dichiarazioni restano allineate.
  */
 
 import type {
@@ -19,8 +22,8 @@ import type {
   House,
   NatalPointId,
   TransitChart,
-} from '@undicesimacasa/core';
-import { BODY_GLYPH, POINT_GLYPH } from './glyphs';
+} from './types.js';
+import { BODY_GLYPH, POINT_GLYPH } from './glyphs.js';
 
 /**
  * Quel che alla ruota serve di una carta.

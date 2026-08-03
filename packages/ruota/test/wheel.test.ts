@@ -10,7 +10,7 @@ import {
   spread,
   transitWheelPoints,
   type WheelPoint,
-} from './wheel';
+} from '../src/wheel.js';
 
 function body(id: string, longitude: number, extra: Partial<CelestialBody> = {}): CelestialBody {
   return {

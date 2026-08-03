@@ -10,7 +10,7 @@
   rinforzo e non l'unico portatore dell'informazione.
 -->
 <script lang="ts">
-  import { ELEMENT_COLOR, ELEMENT_ORDER } from '$lib/glyphs';
+  import { ELEMENT_COLOR, ELEMENT_ORDER } from '@undicesimacasa/ruota';
 </script>
 
 <ul class="legenda">

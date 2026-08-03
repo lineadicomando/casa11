@@ -5,14 +5,16 @@ import type {
   Modality,
   NatalPointId,
   ZodiacSign,
-} from '@undicesimacasa/core';
+} from './types.js';
 
 /**
- * Ordine dei segni, ridichiarato qui invece di importarlo da `@undicesimacasa/core`.
+ * Ordine dei segni, ridichiarato invece di venire dal motore di calcolo.
  *
- * Non è duplicazione gratuita: importare un *valore* dal motore di calcolo
- * ne trascinerebbe l'intero grafo nel bundle del browser — effemeridi e
- * modulo nativo compresi. Il client conosce solo i tipi.
+ * Non è duplicazione gratuita, ed è la stessa ragione per cui questo pacchetto
+ * non importa affatto da `@undicesimacasa/core`: importarne un *valore* ne
+ * trascinerebbe l'intero grafo nel bundle del browser — effemeridi e modulo
+ * nativo compresi — e importarne un *tipo* creerebbe il ciclo di compilazione
+ * spiegato in `types.ts`.
  */
 export const ZODIAC_ORDER: readonly ZodiacSign[] = [
   'ariete',

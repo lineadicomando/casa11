@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Angles, House } from '@undicesimacasa/core';
   import { formatDegrees } from '$lib/format';
-  import { SIGN_GLYPH, SIGN_LABEL, signOfLongitude } from '$lib/glyphs';
+  import { SIGN_GLYPH, SIGN_LABEL, signOfLongitude } from '@undicesimacasa/ruota';
 
   interface Props {
     angles: Angles;
