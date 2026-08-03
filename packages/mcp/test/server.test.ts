@@ -78,18 +78,36 @@ function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
     .join('\n');
 }
 
+/** Il primo blocco immagine del risultato, se c'è. */
+function imageOf(
+  result: Awaited<ReturnType<Client['callTool']>>,
+): { data: string; mimeType: string } | undefined {
+  const content = result.content as { type: string; data?: string; mimeType?: string }[] | undefined;
+  const blocco = (content ?? []).find((block) => block.type === 'image');
+  return blocco ? { data: blocco.data ?? '', mimeType: blocco.mimeType ?? '' } : undefined;
+}
+
 describe('superficie MCP', () => {
-  it('espone i sei tool con descrizione e schema', async () => {
+  it('espone gli otto tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
     expect(names).toContain('search_location');
     expect(names).toContain('compute_natal_chart');
+    expect(names).toContain('draw_chart_wheel');
     expect(names).toContain('compute_sky');
     expect(names).toContain('compute_transits');
     expect(names).toContain('find_transit_passages');
     expect(names).toContain('find_sky_events');
     expect(names).toContain('find_election_hours');
+
+    const wheelTool = tools.find((tool) => tool.name === 'draw_chart_wheel');
+    // La descrizione deve dire che il disegno non sostituisce i dati: una
+    // ruota non porta le avvertenze del calcolo, e mostrarla da sola
+    // significa mostrare una carta di cui non si sa se sia completa.
+    expect(wheelTool?.description).toMatch(/compute_natal_chart/);
+    expect(wheelTool?.description).toMatch(/avvertenze/i);
+    expect(wheelTool?.inputSchema.required).toEqual(['date']);
 
     const electionTool = tools.find((tool) => tool.name === 'find_election_hours');
     // Il luogo è l'unico dato senza cui il tool non ha senso, e la descrizione
@@ -304,6 +322,80 @@ describe('compute_natal_chart', () => {
     });
 
     expect(textOf(result)).toMatch(/ambigua/);
+  });
+});
+
+describe('draw_chart_wheel', () => {
+  it('restituisce un PNG vero, non un SVG travestito', async () => {
+    const result = await client.callTool({
+      name: 'draw_chart_wheel',
+      arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID },
+    });
+
+    const immagine = imageOf(result);
+    expect(immagine?.mimeType).toBe('image/png');
+
+    // La firma del formato, non solo il tipo dichiarato: un modello che riceve
+    // un mimeType sbagliato non vede l'immagine e non sa perché.
+    const byte = Buffer.from(immagine?.data ?? '', 'base64');
+    expect([...byte.subarray(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);
+    expect(byte.byteLength).toBeGreaterThan(1000);
+  });
+
+  it('dice di quale carta è il disegno', async () => {
+    // Due ruote di due persone diverse si somigliano abbastanza da
+    // confondersi: l'immagine da sola non basta.
+    const result = await client.callTool({
+      name: 'draw_chart_wheel',
+      arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID },
+    });
+
+    expect(textOf(result)).toContain('1968-03-12');
+    expect(textOf(result)).toContain('14:30');
+    expect(textOf(result)).toContain('Roma');
+  });
+
+  it('avvisa che senza ora la ruota non ha case né assi', async () => {
+    const result = await client.callTool({
+      name: 'draw_chart_wheel',
+      arguments: { date: '1968-03-12', location_id: ROMA_ID },
+    });
+
+    expect(textOf(result)).toMatch(/ora di nascita ignota/i);
+    expect(textOf(result)).toMatch(/non ha case/i);
+    expect(imageOf(result)?.mimeType).toBe('image/png');
+  });
+
+  it('disegna la bi-ruota quando si chiedono i transiti', async () => {
+    const semplice = await client.callTool({
+      name: 'draw_chart_wheel',
+      arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID, width: 400 },
+    });
+    const doppia = await client.callTool({
+      name: 'draw_chart_wheel',
+      arguments: {
+        date: '1968-03-12',
+        time: '14:30',
+        location_id: ROMA_ID,
+        with_transits: true,
+        transit_date: '2026-08-15',
+        width: 400,
+      },
+    });
+
+    expect(textOf(doppia)).toMatch(/transiti al 2026-08-15/i);
+    // Un anello di corpi in più non può produrre lo stesso identico file.
+    expect(imageOf(doppia)?.data).not.toBe(imageOf(semplice)?.data);
+  });
+
+  it('spiega come rimediare se manca il luogo', async () => {
+    const result = await client.callTool({
+      name: 'draw_chart_wheel',
+      arguments: { date: '1968-03-12', time: '14:30' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/search_location|location_id/);
   });
 });
 

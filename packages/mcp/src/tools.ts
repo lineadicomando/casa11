@@ -31,12 +31,34 @@ import {
   type TransitOptions,
 } from '@undicesimacasa/core';
 import { GeoError, getLocation, searchLocations, type Location } from '@undicesimacasa/geo';
+import { paletteDi, type OpzioniDisegno, type WheelChart } from '@undicesimacasa/ruota';
+import { ruotaPng } from '@undicesimacasa/ruota/png';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
 function ok(text: string): CallToolResult {
   return { content: [{ type: 'text', text }] };
+}
+
+/**
+ * Il disegno come immagine, accompagnato da una riga di testo.
+ *
+ * PNG e non SVG: un modello non *vede* un SVG, lo legge come testo, e una
+ * ruota serializzata sono ventimila caratteri di coordinate che non
+ * assomigliano a niente. Il raster invece si guarda.
+ *
+ * La riga di testo che l'accompagna non è cortesia: dice su quali dati il
+ * disegno è stato fatto, e serve a impedire che un'immagine venga presentata
+ * per il tema di qualcun altro.
+ */
+function immagine(png: Buffer, didascalia: string): CallToolResult {
+  return {
+    content: [
+      { type: 'text', text: didascalia },
+      { type: 'image', data: png.toString('base64'), mimeType: 'image/png' },
+    ],
+  };
 }
 
 /**
@@ -835,6 +857,193 @@ export function registerFindElectionHours(server: McpServer, context: ToolContex
       }
     },
   );
+}
+
+/**
+ * Larghezza predefinita del disegno, in punti.
+ *
+ * Non la più grande possibile: un'immagine viaggia verso il modello come
+ * token, e raddoppiare il lato ne quadruplica il costo senza aggiungere nulla
+ * a un disegno di linee e glifi. A 900 punti la ruota resta leggibile —
+ * pianeti, gradi e numeri delle case — e costa poco.
+ */
+const LARGHEZZA_MCP = 900;
+
+export function registerDrawChartWheel(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'draw_chart_wheel',
+    {
+      title: 'Disegna la ruota di un tema natale',
+      description:
+        'Restituisce il tema come IMMAGINE: la ruota con i segni, le case, i corpi e le linee ' +
+        'degli aspetti. Serve a mostrare la carta a chi la sta leggendo, non a calcolarla — i ' +
+        'numeri stanno in compute_natal_chart, e un disegno non contiene le avvertenze del ' +
+        'calcolo. Chiama prima quello: presentare una ruota senza aver letto i dati significa ' +
+        'mostrare una carta di cui non sai se un corpo non è stato calcolato o se l\'ora era ' +
+        'ambigua. ' +
+        'Prende gli stessi parametri di nascita di compute_natal_chart, con le stesse regole: ' +
+        "il luogo da search_location, l'ora come è segnata sul documento, e se è ignota si " +
+        'omette — la ruota uscirà senza case né assi, che è il disegno corretto in quel caso. ' +
+        'Con with_transits diventa una bi-ruota: il tema al centro e i corpi in transito ' +
+        "nell'anello esterno.",
+      inputSchema: {
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .describe('Data di nascita locale, formato YYYY-MM-DD.'),
+        time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe(
+            "Ora di nascita locale, formato HH:mm. Ometti se ignota — non tirare a indovinare: " +
+              'la ruota verrà disegnata senza case né assi.',
+          ),
+        location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe('Identificatore GeoNames restituito da search_location.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord.'),
+        longitude: z
+          .number()
+          .min(-180)
+          .max(180)
+          .optional()
+          .describe('Longitudine, positiva a Est.'),
+        timezone: z
+          .string()
+          .optional()
+          .describe('Fuso orario IANA, es. "Europe/Rome". Obbligatorio se non usi location_id.'),
+        house_system: z
+          .enum(HOUSE_SYSTEMS)
+          .optional()
+          .describe('Sistema di domificazione. Default: placidus.'),
+        minor_aspects: z
+          .boolean()
+          .optional()
+          .describe(
+            'Disegna anche semisestile, quinconce, semiquadrato e sesquiquadrato. Default: false. ' +
+              'Non è solo una questione di calcolo: nove specie di linea sullo stesso cerchio ' +
+              'smettono di essere una trama leggibile.',
+          ),
+        with_transits: z
+          .boolean()
+          .optional()
+          .describe(
+            'Disegna una bi-ruota con i corpi in transito in un anello esterno. Default: false. ' +
+              'Le linee al centro diventano gli aspetti dei transiti al tema, non quelli interni ' +
+              'al tema.',
+          ),
+        transit_date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe(
+            'Giorno del transito, con with_transits. OMETTILO per adesso, invece di scrivere ' +
+              'una data che credi corrente.',
+          ),
+        transit_time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe('Ora del transito. Se la ometti vale mezzogiorno.'),
+        transit_timezone: z
+          .string()
+          .optional()
+          .describe('Fuso IANA in cui leggere transit_date e transit_time. Default: quello di nascita.'),
+        theme: z
+          .enum(['chiaro', 'scuro'])
+          .optional()
+          .describe(
+            'Colori del disegno. Default: chiaro, che è il fondo su cui una carta finisce ' +
+              'quasi sempre — stampata, o incollata in un documento.',
+          ),
+        width: z
+          .number()
+          .int()
+          .min(400)
+          .max(2000)
+          .optional()
+          .describe(
+            `Larghezza in punti. Default ${LARGHEZZA_MCP}. Alzala solo se chi guarda dice di ` +
+              "non riuscire a leggere i glifi: un'immagine più grande costa token e non " +
+              'aggiunge dettaglio a un disegno di linee.',
+          ),
+      },
+    },
+    async (args) => {
+      try {
+        const place = resolvePlace(args, context);
+        if ('error' in place) return fail(place.error);
+
+        const birth: BirthData = {
+          date: args.date,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          timezone: place.timezone,
+        };
+        if (args.time !== undefined) birth.time = args.time;
+
+        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
+        if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
+        if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+
+        const chart = computeNatalChart(birth, options);
+
+        const disegno: OpzioniDisegno = {
+          palette: paletteDi(args.theme ?? 'chiaro'),
+          aspettiMinori: args.minor_aspects ?? false,
+        };
+
+        let didascalia = descriviDisegno(chart, args.time, place.label);
+
+        if (args.with_transits) {
+          const moment = transitMoment(args, place.timezone);
+          const transitOptions: TransitOptions = { minorAspects: args.minor_aspects ?? false };
+          if (args.house_system) transitOptions.houseSystem = args.house_system as HouseSystem;
+          if (context.ephemerisPath) transitOptions.ephemerisPath = context.ephemerisPath;
+
+          const transits = computeTransits(chart, moment, transitOptions);
+          disegno.transits = transits;
+          disegno.label = 'Ruota con il tema natale, i corpi in transito e i loro aspetti';
+          didascalia += `\nTransiti al ${transits.time.utc.slice(0, 16).replace('T', ' ')} UT.`;
+        }
+
+        const png = ruotaPng(chart as WheelChart, {
+          ...disegno,
+          larghezza: args.width ?? LARGHEZZA_MCP,
+        });
+
+        return immagine(png, didascalia);
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
+
+/**
+ * La riga che accompagna il disegno.
+ *
+ * Dice di quale carta si tratta, perché un'immagine da sola non lo dice e due
+ * ruote di due persone diverse si somigliano abbastanza da confondersi. E dice
+ * quando mancano le case, che nel disegno si vedrebbe solo sapendo dove
+ * guardare.
+ */
+function descriviDisegno(
+  chart: ReturnType<typeof computeNatalChart>,
+  ora: string | undefined,
+  luogo: string | undefined,
+): string {
+  const dove = luogo ? ` — ${luogo}` : '';
+  const quando = ora ? ` ${ora}` : '';
+  const senzaCase =
+    chart.houses.length === 0
+      ? "\nOra di nascita ignota: la ruota non ha case né assi, ed è ruotata su 0° Ariete invece che sull'Ascendente."
+      : '';
+
+  return `Ruota del tema natale — ${chart.input.date}${quando}${dove}.${senzaCase}`;
 }
 
 export function registerFindTransitPassages(server: McpServer, context: ToolContext = {}): void {

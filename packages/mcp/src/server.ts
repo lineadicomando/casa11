@@ -4,6 +4,7 @@ import {
   registerComputeNatalChart,
   registerComputeSky,
   registerComputeTransits,
+  registerDrawChartWheel,
   registerFindElectionHours,
   registerFindSkyEvents,
   registerFindTransitPassages,
@@ -37,12 +38,16 @@ export function createServer(context: ToolContext = {}): McpServer {
         "che sorge, Luna vuota di corso — c'è find_election_hours, che vuole il luogo e " +
         'nessuna nascita. ' +
         'Per il presente ometti sempre la data: la data corrente la mette il server. ' +
+        'Per MOSTRARE la carta invece che leggerla c\'è draw_chart_wheel, che ne restituisce ' +
+        "l'immagine: si chiama dopo compute_natal_chart e non al posto suo, perché un disegno " +
+        'non contiene le avvertenze del calcolo. ' +
         "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
     },
   );
 
   registerSearchLocation(server, context);
   registerComputeNatalChart(server, context);
+  registerDrawChartWheel(server, context);
   registerComputeSky(server, context);
   registerComputeTransits(server, context);
   registerFindTransitPassages(server, context);
