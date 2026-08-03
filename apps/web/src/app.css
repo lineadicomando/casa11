@@ -47,10 +47,32 @@
   --elemento-aria: light-dark(#8a6a12, #d4ae3a);
   --elemento-acqua: light-dark(#39658a, #7aa8cc);
 
-  --aspetto-tensione: light-dark(#b8492a, #e08160);
+  /* Le linee degli aspetti non si vedono mai piene: l'orbita si legge dalla
+     trasparenza, e quella al pavimento — 0,7, vedi `ChartWheel` — è la misura
+     su cui questi quattro vanno scelti. Il colore pieno serve solo all'orbita
+     zero. Sul fondo chiaro il rosso di tensione a 0,7 restava a 2,95:1, e i due
+     colori neutri, nati come grigi di sfondo, non arrivavano a 3:1 nemmeno
+     pieni: qui sono scuriti quanto basta perché anche la linea più sfumata
+     resti un oggetto grafico leggibile. Il fondo scuro passava già. */
+  --aspetto-tensione: light-dark(#b34728, #e08160);
   --aspetto-fluidita: light-dark(#39658a, #7aa8cc);
-  --aspetto-neutro: light-dark(#7d7260, #a49a88);
-  --aspetto-minore: light-dark(#8c8069, #9b917e);
+  --aspetto-neutro: light-dark(#5f5748, #a49a88);
+  --aspetto-minore: light-dark(#6c6351, #9b917e);
+
+  /* Il disegno del quadrante: cerchi, tacche di grado, trattini di longitudine,
+     cuspidi.
+
+     Prendevano `--linea` e `--linea-forte`, che sono i bordi dell'interfaccia —
+     1,27:1 e 1,78:1 sul fondo chiaro. Un bordo di campo può permetterselo,
+     perché il campo si vede lo stesso; una tacca di quadrante no, perché la
+     tacca *è* il dato. Il trattino di longitudine in particolare è la sola cosa
+     che dica dove un pianeta sta davvero, quando `spread` ha spostato il glifo
+     per non farlo accavallare.
+
+     Due pesi perché i compiti sono due: `--quadrante` è l'impalcatura — si deve
+     vedere, non leggere — e `--quadrante-forte` porta un'informazione. */
+  --quadrante: light-dark(#a39e97, #5a5955);
+  --quadrante-forte: light-dark(#8b8478, #736f68);
 
   /* La doratura del monogramma nel marchio.
 

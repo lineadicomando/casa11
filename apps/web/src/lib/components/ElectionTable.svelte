@@ -205,8 +205,13 @@
 </section>
 
 <style>
+  /* Il numero accanto al nome della sezione. Prendeva `--linea-forte`, che è
+     il colore di un bordo: 1,89:1 sulla superficie chiara, illeggibile. Sta già
+     dentro un titolo tenue, quindi non c'è un colore più debole da dargli — la
+     subordinazione la fa il peso, che il titolo ha a 600 e lui no. */
   .conteggio {
-    color: var(--linea-forte);
+    color: var(--testo-tenue);
+    font-weight: 400;
   }
 
   .giorno {

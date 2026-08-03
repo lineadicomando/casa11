@@ -16,7 +16,9 @@
 <ul class="legenda">
   {#each ELEMENT_ORDER as elemento (elemento)}
     <li>
-      <span class="tacca" style:background={ELEMENT_COLOR[elemento]} aria-hidden="true"></span>
+      <svg class="tacca" viewBox="0 0 10 10" aria-hidden="true">
+        <rect width="10" height="10" rx="2" style:fill={ELEMENT_COLOR[elemento]} />
+      </svg>
       {elemento}
     </li>
   {/each}
@@ -41,13 +43,23 @@
   }
 
   /* Un quadratino e non un cerchio: nella ruota gli elementi sono settori, e
-     una tacca piena richiama una superficie colorata meglio di un punto. */
+     una tacca piena richiama una superficie colorata meglio di un punto.
+
+     Un `<svg>` e non uno `<span>` colorato di sfondo. Uno sfondo CSS i browser
+     non lo stampano, se non si spunta «grafica di sfondo» — che di norma è
+     spenta: su carta restavano quattro parole e quattro buchi, e la legenda è
+     la chiave dei colori. Un `fill` invece è contenuto, e si stampa: è la
+     ragione per cui i settori della ruota, che sono `fill`, finivano sul foglio
+     mentre la loro legenda no. */
   .tacca {
     width: 0.7rem;
     height: 0.7rem;
-    border-radius: 0.15rem;
-    /* La stessa trasparenza dei settori, o la legenda prometterebbe un colore
-       molto più acceso di quello che si vede nel disegno. */
-    opacity: 0.55;
+    /* Il colore pieno, dove prima stava a 0,55.
+       La trasparenza voleva pareggiare i settori del disegno, ma i settori sono
+       dipinti a 0,12 e non a 0,55 — non pareggiava niente, e lasciava il
+       campione fra 2,2:1 e 2,4:1 sul fondo chiaro. Quello che la legenda deve
+       richiamare è il colore *pieno*, che nella ruota c'è: è quello dei glifi
+       dei segni, ed è il solo dei due che si possa identificare. */
+    flex: none;
   }
 </style>

@@ -104,13 +104,19 @@
   /* Quanti punti sono stati contati in quella riga: è la somma della riga
      stessa, e serve a verificarla in un'occhiata. */
   .quanti {
-    color: var(--linea-forte);
+    color: var(--testo-tenue);
     font-variant-numeric: tabular-nums;
   }
 
   /* Uno zero non è un valore da leggere, è l'assenza di valori: attenuandolo,
-     i numeri che contano emergono da soli. */
+     i numeri che contano emergono da soli.
+
+     Attenuato però resta un numero, e un numero va letto: prendeva
+     `--linea-forte`, che è il colore di un bordo — 1,89:1 sulla superficie
+     chiara, dove a un testo ne servono 4,5. `--testo-tenue` fa la stessa cosa
+     al terzo di intensità giusto, ed è il colore che in tutto il resto del
+     sito significa «secondario». */
   .zero {
-    color: var(--linea-forte);
+    color: var(--testo-tenue);
   }
 </style>

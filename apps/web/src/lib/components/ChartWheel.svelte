@@ -79,6 +79,20 @@
   /** Ampiezza minima dell'arco di una congiunzione, in gradi. */
   const CONJUNCTION_MIN_SPAN = 5;
 
+  /**
+   * Quanto resta acceso un corpo che non è quello scelto.
+   *
+   * Era 0,3, ed era troppo poco: sul fondo chiaro un glifo attenuato scendeva a
+   * 1,8:1 e un transitante a 1,5:1 — scegliere un pianeta non metteva gli altri
+   * in secondo piano, li cancellava, e un corpo cancellato non si può più
+   * scegliere. A 0,7 tutti restano sopra 3:1.
+   *
+   * La gerarchia non la fa questo numero: la fanno il colore d'accento, il peso
+   * e il cerchio pieno che il corpo scelto si prende, e le linee degli aspetti
+   * che non lo toccano — quelle non sono attenuate, non vengono disegnate.
+   */
+  const ATTENUATO = 0.7;
+
   const R = $derived(radiiFor(transits !== null));
 
   /**
@@ -157,8 +171,8 @@
          A {R.zodiacInner} {R.zodiacInner} 0 0 1 {corners[0].x} {corners[0].y} Z"
       style:fill={ELEMENT_COLOR[SIGN_ELEMENT[sign]]}
       fill-opacity="0.12"
-      stroke="var(--linea)"
-      stroke-width="1"
+      stroke="var(--quadrante)"
+      stroke-width="1.25"
     />
     <text
       x={mid.x}
@@ -170,7 +184,13 @@
     >
   {/each}
 
-  <!-- Tacche di grado: ogni 5°, più marcate ogni 10° -->
+  <!-- Tacche di grado: ogni 5°, più marcate ogni 10°.
+
+       Lo spessore è 1,25 e non 1 perché il riquadro di vista è largo 852 unità
+       e il disegno si posa su cinquecento pixel scarsi: a spessore 1 la tacca
+       esce sotto il pixel, e l'antialiasing le toglie il poco contrasto che le
+       resta. È la stessa ragione per cui le tacche vogliono `--quadrante` e non
+       `--linea`: il colore da solo non bastava. -->
   {#each Array.from({ length: 72 }, (_, i) => i * 5) as degree (degree)}
     {@const outer = toXY(degree, R.zodiacInner)}
     {@const inner = toXY(degree, R.zodiacInner - (degree % 10 === 0 ? 12 : 6))}
@@ -179,18 +199,39 @@
       y1={outer.y}
       x2={inner.x}
       y2={inner.y}
-      stroke="var(--linea)"
-      stroke-width="1"
+      stroke="var(--quadrante)"
+      stroke-width="1.25"
     />
   {/each}
 
   <!-- Chiusura dell'anello dei transiti, che lo separa dalle case -->
   {#if R.outerBodies !== undefined}
-    <circle cx={CENTER} cy={CENTER} r={R.houseSpanOuter} fill="none" stroke="var(--linea)" />
+    <circle
+      cx={CENTER}
+      cy={CENTER}
+      r={R.houseSpanOuter}
+      fill="none"
+      stroke="var(--quadrante)"
+      stroke-width="1.25"
+    />
   {/if}
 
-  <circle cx={CENTER} cy={CENTER} r={R.houses} fill="none" stroke="var(--linea)" />
-  <circle cx={CENTER} cy={CENTER} r={R.aspects} fill="none" stroke="var(--linea)" />
+  <circle
+    cx={CENTER}
+    cy={CENTER}
+    r={R.houses}
+    fill="none"
+    stroke="var(--quadrante)"
+    stroke-width="1.25"
+  />
+  <circle
+    cx={CENTER}
+    cy={CENTER}
+    r={R.aspects}
+    fill="none"
+    stroke="var(--quadrante)"
+    stroke-width="1.25"
+  />
 
   {#if hasHouses}
     <!-- Cuspidi delle case -->
@@ -207,8 +248,8 @@
         y1={outer.y}
         x2={inner.x}
         y2={inner.y}
-        stroke={isAngular ? 'var(--accento)' : 'var(--linea-forte)'}
-        stroke-width={isAngular ? 2.5 : 1}
+        stroke={isAngular ? 'var(--accento)' : 'var(--quadrante-forte)'}
+        stroke-width={isAngular ? 2.5 : 1.5}
       />
       <text
         x={label.x}
@@ -237,10 +278,15 @@
     {#each lines as line, index (index)}
       {@const spessore = line.orb < 2 ? 1.8 : 1}
       <!-- L'orbita si legge dalla trasparenza: stretta è netta, larga è
-           sfumata. Il fondo scala però resta 0,4 e la cima è piena — sotto,
-           una linea già sottile perdeva il poco contrasto che il suo colore
-           le dava, e nessuna arrivava mai a mostrarlo tutto. -->
-      {@const opacita = Math.max(0.4, 1 - line.orb / 14)}
+           sfumata. Il pavimento è 0,7 e la cima è piena.
+
+           A 0,4 la gradazione c'era ma le linee larghe non si vedevano: sul
+           fondo chiaro stavano fra 1,57:1 e 1,81:1, dove a un oggetto grafico
+           ne servono 3. Il pavimento non si può abbassare tornando a scurire i
+           colori, perché è il pavimento a decidere quanto colore arriva a
+           terra: i due valori vanno scelti insieme, e stanno scritti insieme —
+           qui il numero, in `app.css` i colori che a questo numero reggono. -->
+      {@const opacita = Math.max(0.7, 1 - line.orb / 14)}
       {#if line.aspect === 'congiunzione'}
         <!-- Una corda fra due longitudini quasi uguali è invisibile: l'arco
              la rende visibile e ne mostra l'ampiezza. -->
@@ -278,7 +324,7 @@
       <g
         class="corpo transito"
         class:scelto={evidenza.fissato === point.id}
-        opacity={dimmed ? 0.3 : 1}
+        opacity={dimmed ? ATTENUATO : 1}
         role="button"
         tabindex="0"
         aria-pressed={evidenza.fissato === point.id}
@@ -328,7 +374,7 @@
       class="corpo"
       class:attenuato={dimmed}
       class:scelto={evidenza.fissato === point.id}
-      opacity={dimmed ? 0.3 : 1}
+      opacity={dimmed ? ATTENUATO : 1}
       role="button"
       tabindex="0"
       aria-pressed={evidenza.fissato === point.id}
@@ -340,14 +386,15 @@
     >
       <!-- Il bersaglio del dito: vedi il gemello nell'anello dei transiti. -->
       <circle cx={glyph.x} cy={glyph.y} r="26" fill="transparent" data-bersaglio />
-      <!-- Trattino alla longitudine reale: il glifo può essere stato spostato -->
+      <!-- Trattino alla longitudine reale: il glifo può essere stato spostato.
+           È l'unica cosa che dica dov'è davvero il corpo, e va vista. -->
       <line
         x1={tickOuter.x}
         y1={tickOuter.y}
         x2={tickInner.x}
         y2={tickInner.y}
-        stroke="var(--linea-forte)"
-        stroke-width="1"
+        stroke="var(--quadrante-forte)"
+        stroke-width="1.5"
       />
       <!-- Il ℞ è un apice del glifo e non un segno a sé.
 
