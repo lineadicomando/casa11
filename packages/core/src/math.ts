@@ -58,8 +58,14 @@ export function formatDegrees(degrees: number, withSeconds = false): string {
     // L'arrotondamento dei minuti può produrre 60': normalizza.
     return min === 60 ? `${deg + 1}°00'` : `${deg}°${String(min).padStart(2, '0')}'`;
   }
+  // L'arrotondamento dei secondi può produrre 60": si riporta sui minuti,
+  // e da lì eventualmente sui gradi.
   const sec = Math.round((minutesFloat - min) * 60);
-  return `${deg}°${String(min).padStart(2, '0')}'${String(sec).padStart(2, '0')}"`;
+  const carriedMin = sec === 60 ? min + 1 : min;
+  const finalDeg = carriedMin === 60 ? deg + 1 : deg;
+  const finalMin = carriedMin === 60 ? 0 : carriedMin;
+  const finalSec = sec === 60 ? 0 : sec;
+  return `${finalDeg}°${String(finalMin).padStart(2, '0')}'${String(finalSec).padStart(2, '0')}"`;
 }
 
 /** Formatta una longitudine eclittica come `12°34' Ari`. */

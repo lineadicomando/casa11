@@ -542,9 +542,11 @@ function passageRange(
   return { from, to, timezone };
 }
 
+/** Un anno dopo, alla stessa data: il 29 febbraio diventa il 1° marzo. */
 function addYear(date: string): string {
-  const [year, rest] = [date.slice(0, 4), date.slice(4)];
-  return `${Number(year) + 1}${rest}`;
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCFullYear(next.getUTCFullYear() + 1);
+  return next.toISOString().slice(0, 10);
 }
 
 /**

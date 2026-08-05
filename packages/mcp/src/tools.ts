@@ -1204,7 +1204,7 @@ function resolvePlace(
       return {
         error:
           `Nessuna località con identificatore ${args.location_id}. ` +
-          'Rieseguì search_location e usa un location_id fra quelli restituiti.',
+          'Riesegui search_location e usa un location_id fra quelli restituiti.',
       };
     }
     return {
