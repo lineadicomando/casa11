@@ -29,9 +29,11 @@ function richiedi(percorso) {
 const webBuild = join(repoRoot, 'apps', 'web', 'build');
 const corePkg = join(repoRoot, 'packages', 'core');
 const geoPkg = join(repoRoot, 'packages', 'geo');
+const ruotaPkg = join(repoRoot, 'packages', 'ruota');
 richiedi(webBuild);
 richiedi(join(corePkg, 'dist'));
 richiedi(join(geoPkg, 'dist'));
+richiedi(join(ruotaPkg, 'dist'));
 
 rmSync(bundle, { recursive: true, force: true });
 
@@ -63,9 +65,18 @@ cpSync(join(geoPkg, 'schema.sql'), join(geo, 'schema.sql'));
 // Lo script di importazione: l'app lo lancia al primo avvio.
 cpSync(join(geoPkg, 'scripts'), join(geo, 'scripts'), { recursive: true });
 
+const ruota = join(moduli, '@undicesimacasa', 'ruota');
+cpSync(join(ruotaPkg, 'package.json'), join(ruota, 'package.json'));
+cpSync(join(ruotaPkg, 'dist'), join(ruota, 'dist'), { recursive: true });
+
 for (const nome of ['luxon', 'node-gyp-build']) {
   cpSync(join(repoRoot, 'node_modules', nome), join(moduli, nome), { recursive: true });
 }
+
+// La rasterizzazione PNG: il wrapper più il pacchetto di piattaforma che npm
+// ha installato per questa macchina — è così che ogni piattaforma di build
+// imbarca il proprio binario.
+cpSync(join(repoRoot, 'node_modules', '@resvg'), join(moduli, '@resvg'), { recursive: true });
 const sweph = join(moduli, 'sweph');
 mkdirSync(sweph, { recursive: true });
 for (const file of ['package.json', 'index.js', 'index.mjs', 'constants.js']) {
