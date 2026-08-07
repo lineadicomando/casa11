@@ -15,9 +15,12 @@ files:
   - dist/**
   - preload.cjs
   - splash.html
+# Di bundle/ arriva così solo server/: le cartelle node_modules le scarta
+# un'esclusione interna che nessun filtro scavalca. Le copia after-pack.cjs.
 extraResources:
   - from: bundle
     to: bundle
+afterPack: scripts/after-pack.cjs
 
 # Le dipendenze di runtime le mette `stage.mjs`, non npm: niente da ricompilare.
 npmRebuild: false
