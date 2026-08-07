@@ -13,6 +13,7 @@ qui c'è solo ciò che serve sapere prima di toccare qualsiasi cosa.
 | `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG. Non dipende da `core` |
 | `packages/mcp` | server MCP: otto tool, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia + API REST, tutti gli endpoint in GET |
+| `apps/desktop` | Electron: la web app in una finestra. Avvia il server di `web` compilato, non duplica superfici |
 
 Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 
@@ -25,6 +26,7 @@ npm run typecheck                          # ricompila core e geo, poi controlla
 npm run build
 npm run dev -w @undicesimacasa/web         # http://localhost:5173 (Vite)
 npm start -w @undicesimacasa/web           # http://localhost:3000, dopo build
+npm run dist -w @undicesimacasa/desktop    # AppImage in apps/desktop/release, dopo build
 ```
 
 `npm run geo:import -w @undicesimacasa/geo` scarica **~205 MB**: serve solo se

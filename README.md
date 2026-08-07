@@ -25,7 +25,8 @@ undicesimacasa/
 │   ├── ruota/         il disegno: geometria, glifi, colori, SVG e PNG
 │   └── mcp/           server MCP: luogo, tema natale, disegno, cielo, transiti, passaggi, elezione
 └── apps/
-    └── web/           SvelteKit: interfaccia + API REST
+    ├── web/           SvelteKit: interfaccia + API REST
+    └── desktop/       Electron: la web app in una finestra, per Linux e Windows
 ```
 
 `ruota` è l'unico pacchetto che **non dipende da `core`**, nemmeno per i tipi:
@@ -887,6 +888,44 @@ Prima della pubblicazione va inoltre valorizzato `REPOSITORY_URL` in
 sorgente a chi usa il programma attraverso la rete, ed è lo stesso indirizzo
 indicato come recapito nell'informativa. Finché è vuoto l'interfaccia scrive il
 testo senza collegamento, invece di produrne uno rotto.
+
+## Applicazione desktop
+
+La stessa applicazione web, dentro una finestra. `apps/desktop` non duplica
+niente: il processo principale di Electron avvia il server SvelteKit già
+compilato come processo di utilità, su una porta libera del loopback, e la
+finestra vi punta. La superficie resta una — ciò che funziona sul web funziona
+identico qui, API comprese — e ogni correzione all'interfaccia arriva al
+desktop senza lavoro aggiuntivo.
+
+```sh
+npm run build                              # prima: compila tutto il monorepo
+npm start -w @undicesimacasa/desktop       # avvio in sviluppo
+npm run dist -w @undicesimacasa/desktop    # AppImage per Linux, in apps/desktop/release/
+npm run dist:win -w @undicesimacasa/desktop  # installer Windows (richiede Wine o una macchina Windows)
+```
+
+L'impacchettamento passa da `scripts/stage.mjs`, che raccoglie in `bundle/` il
+server compilato, i pacchetti del monorepo disposti come in un `node_modules`
+e le sole dipendenze caricate a runtime (`sweph` coi suoi binari precompilati,
+`luxon`); electron-builder copia il tutto in `resources/`, fuori dall'asar,
+perché un modulo nativo dentro un archivio non si carica. I file di effemeridi
+`.se1`, se scaricati, viaggiano dentro il pacchetto: l'app installata calcola
+in modalità `swisseph` senza configurare nulla. In sviluppo l'app usa l'albero
+del repo così com'è, dataset delle località compreso.
+
+Il database delle località invece **non viaggia** nell'installer, per lo
+stesso motivo per cui non è versionato: è un artefatto rigenerabile di ~90 MB.
+Al primo avvio, se assente, l'app propone di scaricarlo — riusa lo script di
+importazione di `packages/geo`, mostrandone l'avanzamento — e lo salva nella
+cartella dati dell'utente (`~/.config/undicesimacasa` su Linux). Si può anche
+rifiutare: tutto il resto funziona, e le località si inseriscono per
+coordinate.
+
+I pacchetti prodotti non sono firmati: su Windows SmartScreen avviserà, e la
+firma (così come una build macOS, tecnicamente già alla portata di
+`sweph`, che ha il binario per Apple Silicon) è un passo successivo che
+richiede certificati, non codice.
 
 ## Docker
 
