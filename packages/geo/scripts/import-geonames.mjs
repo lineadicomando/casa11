@@ -32,7 +32,9 @@ const LANG = 'it';
 
 const packageRoot = dirname(fileURLToPath(new URL('../package.json', import.meta.url)));
 const dataDir = join(packageRoot, 'data');
-const cacheDir = join(dataDir, 'cache');
+// La cache può stare altrove dal pacchetto (GEONAMES_CACHE_DIR): l'app
+// desktop lancia questo script da risorse in sola lettura.
+const cacheDir = process.env.GEONAMES_CACHE_DIR ?? join(dataDir, 'cache');
 const databasePath = process.env.GEONAMES_DB_PATH ?? join(dataDir, 'geonames.db');
 
 /** Indici delle colonne di cities500.txt, secondo il tracciato GeoNames. */
