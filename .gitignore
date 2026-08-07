@@ -25,3 +25,9 @@ apps/web/static/apple-touch-icon.png
 .DS_Store
 .svelte-kit/
 build/
+
+# Artefatti dell'app desktop: bundle di staging, pacchetti, icona rasterizzata.
+# Vedi apps/desktop/scripts/stage.mjs
+apps/desktop/bundle/
+apps/desktop/release/
+apps/desktop/buildResources/

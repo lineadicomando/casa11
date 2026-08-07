@@ -1,0 +1,22 @@
+{
+  "name": "@undicesimacasa/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Applicazione desktop di undicesimacasa: la web app dentro Electron",
+  "license": "AGPL-3.0-or-later",
+  "author": "Alessandro Gagliano",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "npm run build && electron .",
+    "stage": "node scripts/stage.mjs",
+    "dist": "npm run build && npm run stage && electron-builder --linux",
+    "dist:win": "npm run build && npm run stage && electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "38.8.6",
+    "electron-builder": "^26.0.12"
+  }
+}

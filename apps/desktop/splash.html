@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+    />
+    <title>Importazione delle località</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        box-sizing: border-box;
+      }
+      h1 {
+        font-size: 1.1rem;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        margin: 0 0 1rem;
+        opacity: 0.8;
+      }
+      pre {
+        flex: 1;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Importazione delle località</h1>
+    <p>
+      Scarico i dati GeoNames e costruisco il database locale. Serve una volta
+      sola; chiudere questa finestra interrompe l'operazione.
+    </p>
+    <pre id="log"></pre>
+    <script>
+      const log = document.getElementById('log');
+      window.importazione.suRiga((riga) => {
+        log.textContent += riga + '\n';
+        log.scrollTop = log.scrollHeight;
+      });
+    </script>
+  </body>
+</html>

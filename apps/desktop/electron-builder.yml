@@ -1,0 +1,38 @@
+# Impacchettamento dell'app desktop. Presuppone `npm run build` alla radice
+# e `npm run stage` qui: electron-builder non costruisce nulla, copia.
+appId: it.undicesimacasa.desktop
+productName: undicesimacasa
+# Senza, deriverebbe dal nome scoped del pacchetto, illegale in un percorso.
+executableName: undicesimacasa
+directories:
+  output: release
+  buildResources: buildResources
+
+# L'app dentro l'asar è solo il processo principale: il server e i pacchetti
+# stanno in `bundle/`, copiato in `resources/` così com'è (il modulo nativo
+# e il database non possono vivere dentro un archivio).
+files:
+  - dist/**
+  - preload.cjs
+  - splash.html
+extraResources:
+  - from: bundle
+    to: bundle
+
+# Le dipendenze di runtime le mette `stage.mjs`, non npm: niente da ricompilare.
+npmRebuild: false
+
+linux:
+  target:
+    - AppImage
+  category: Education
+  synopsis: Calcolo di temi natali
+  icon: buildResources/icon.png
+  # Allinea il nome del file .desktop al WM_CLASS della finestra, così
+  # l'ambiente grafico associa la finestra alla voce di menu.
+  syncDesktopName: true
+
+win:
+  target:
+    - nsis
+  icon: buildResources/icon.png
