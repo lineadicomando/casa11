@@ -96,13 +96,14 @@
 </section>
 
 <style>
-  /* Sta sotto la ruota e non deve competere con lei: è un'offerta, non il
-     motivo per cui si è arrivati qui. La riga sopra la separa dai comandi del
-     disegno, che sono un'altra cosa — quelli portano via la carta, questo il
-     testo da cui farsi leggere. */
+  /* Apre la colonna dei dati, e per questo si tiene bassa di voce: è
+     un'offerta, non il motivo per cui si è arrivati qui, e sotto ha le tabelle
+     che sono la sostanza. La riga sotto la stacca dalla prima di loro — a
+     distanziarle basterebbe lo spazio della colonna, ma senza un segno il
+     blocco si legge come l'intestazione dei corpi. */
   .lettura {
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--linea);
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--linea);
   }
 
   h3 {

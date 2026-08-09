@@ -203,13 +203,7 @@
     avvertenze={chart.warnings}
   >
     <div class="griglia">
-      <!-- Il blocco del prompt sta **dentro** la colonna appesa, non dopo di
-           lei. Un fratello che segua un elemento `sticky` non lo spinge: quello
-           resta inchiodato in alto e il fratello gli scorre sotto, cioè il testo
-           finisce sopra il disegno. Facendone un figlio i due si muovono
-           insieme, al prezzo di una colonna più alta — da cui il limite qui
-           sotto, che sugli schermi bassi la stacca del tutto. -->
-      <div class="ruota con-prompt">
+      <div class="ruota">
         <ChartWheel {chart} {evidenza} bind:elemento={disegno} />
         <LegendaElementi />
         <StrumentiRuota
@@ -224,11 +218,15 @@
             scelto finché non lo si sceglie di nuovo.
           </p>
         {/if}
-
-        <StrumentiLettura parametri={() => chartParameters(birth, { houseSystem, minorAspects })} />
       </div>
 
       <div class="tabelle">
+        <!-- In cima alla colonna dei dati, non in fondo alla pagina: dopo gli
+             aspetti lo troverebbe solo chi ha scorso tutto. Qui e non sotto la
+             ruota perché quella è appesa, e un elemento appeso non viene spinto
+             da ciò che lo segue — se lo porta sotto, sovrapponendocisi. -->
+        <StrumentiLettura parametri={() => chartParameters(birth, { houseSystem, minorAspects })} />
+
         <BodyTable bodies={chart.bodies} partOfFortune={chart.partOfFortune} {evidenza} />
 
         {#if chart.angles}
@@ -249,23 +247,3 @@
     </div>
   </Risultato>
 {/if}
-
-<style>
-  /* Qui la ruota non è appesa, e non è una dimenticanza.
-
-     Appesa, la colonna resta inchiodata sotto la testata: alta com'è con il
-     prompt in fondo — quasi novecento punti — il suo piede finisce oltre il
-     bordo dello schermo e non ci rientra scorrendo, perché scorrendo la colonna
-     non si muove. Il pulsante diventerebbe irraggiungibile su qualunque
-     finestra normale. Appenderla solo dove ci sta vorrebbe dire una soglia
-     attorno ai 59rem, cioè quasi mai, e con un margine così sottile che il
-     nome di una località più lungo basterebbe a tagliare via il pulsante senza
-     che nulla lo dica.
-
-     Il prezzo è che scendendo a leggere gli aspetti la ruota si perde di vista,
-     che è quello che la regola globale evitava. Sui transiti resta appesa: là
-     questo blocco non c'è. */
-  .ruota.con-prompt {
-    position: static;
-  }
-</style>
