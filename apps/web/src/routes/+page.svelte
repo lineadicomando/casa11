@@ -19,6 +19,7 @@
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
+  import StrumentiLettura from '$lib/components/StrumentiLettura.svelte';
   import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
 
   // La nascita non è di questa pagina: chi la scrive qui la ritrova nei
@@ -238,5 +239,9 @@
         <AspectTable aspects={chart.aspects} {evidenza} />
       </div>
     </div>
+
+    <!-- Sotto le tabelle e fuori dalla griglia: viene dopo aver visto i dati,
+         perché è di quei dati che propone di fare qualcosa. -->
+    <StrumentiLettura parametri={() => chartParameters(birth, { houseSystem, minorAspects })} />
   </Risultato>
 {/if}

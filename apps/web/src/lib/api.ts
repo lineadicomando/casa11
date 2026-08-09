@@ -100,6 +100,33 @@ export async function fetchChart(parameters: URLSearchParams): Promise<ChartResp
   return request<ChartResponse>(`/api/chart?${parameters}`, 'Calcolo non riuscito');
 }
 
+/**
+ * Il tema come tabella di testo, per chi deve portarselo via.
+ *
+ * Non si compone dal `NatalChart` che la pagina ha già in mano: la resa
+ * compatta vive in `core`, e il client di `apps/web` da `core` importa solo
+ * tipi. Riscriverla qui significherebbe due formattatori che divergono, e a
+ * divergere sarebbe proprio il testo che qualcun altro legge.
+ */
+export async function fetchChartCompact(parameters: URLSearchParams): Promise<string> {
+  const compatti = new URLSearchParams(parameters);
+  compatti.set('format', 'compact');
+
+  let response: Response;
+  try {
+    response = await fetch(`/api/chart?${compatti}`);
+  } catch {
+    throw new RequestError('Tema non riletto: server non raggiungibile.');
+  }
+
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    throw new RequestError(messageOf(body) ?? `Tema non riletto (errore ${response.status}).`);
+  }
+
+  return response.text();
+}
+
 export interface SkyResponse {
   sky: SkyChart;
   place?: { label: string; refined: boolean };
