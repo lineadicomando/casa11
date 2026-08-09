@@ -37,6 +37,20 @@ una. Che le due dichiarazioni restino allineate lo verifica un test.
 
 Monorepo con **npm workspaces**. Node ≥ 22.
 
+### I riferimenti
+
+Questo README racconta **perché** le cose sono come sono. I parametri, i valori
+e i difetti di ogni superficie stanno in [`docs/`](docs/README.md), per chi il
+progetto lo ha già capito e deve solo chiamarlo:
+
+| | |
+|---|---|
+| [`docs/api.md`](docs/api.md) | i nove endpoint HTTP, con i prompt brevi per un agente |
+| [`docs/mcp.md`](docs/mcp.md) | gli otto tool MCP e le due risorse di riferimento |
+| [`docs/cli.md`](docs/cli.md) | la riga di comando `casa11` |
+| [`docs/prompt-lettura.md`](docs/prompt-lettura.md) | il prompt di sistema per un agente che legge il tema |
+| [`docs/proxy-e-log.md`](docs/proxy-e-log.md) | reverse proxy e log: ciò che rende vera l'informativa su `/privacy` |
+
 ## Avvio rapido
 
 ```sh
@@ -67,6 +81,7 @@ Luna        22°53' Leo    casa  1
 
 Aggiungi `--json` per l'oggetto completo, `--help` per tutte le opzioni.
 Con `--transits` si calcolano i transiti sullo stesso tema — vedi *Transiti*.
+L'elenco completo dei flag sta in [`docs/cli.md`](docs/cli.md).
 
 ## Le due modalità di effemeridi
 
@@ -670,42 +685,18 @@ npm start -w @undicesimacasa/web        # http://localhost:3000
 npm run dev -w @undicesimacasa/web      # sviluppo
 ```
 
-Tutti gli endpoint sono in GET perché un tema natale è una funzione pura dei
-suoi parametri: l'URL è condivisibile e la risposta memorizzabile.
+Nove endpoint, **tutti in GET** perché un tema natale è una funzione pura dei
+suoi parametri: l'URL è condivisibile e la risposta memorizzabile. I parametri
+di ciascuno, con i codici d'errore e la loro resa in HTTP, stanno in
+[`docs/api.md`](docs/api.md).
 
-```
-GET /api/locations?q=napoli&limit=8&country=IT
-GET /api/chart?date=1968-03-12&time=14:30&locationId=3172394
-GET /api/chart?date=1968-03-12&latitude=40.85&longitude=14.27&timezone=Europe/Rome
-GET /api/chart/wheel?date=1968-03-12&time=14:30&locationId=3172394
-GET /api/chart/wheel?…&format=png&width=1200&theme=scuro
-GET /api/transits?date=1968-03-12&time=14:30&locationId=3172394&transitDate=2026-08-15
-GET /api/transits?…&transitDate=2026-08-15&transitTime=09:00&transitLocationId=1850147
-GET /api/transits/wheel?date=1968-03-12&time=14:30&locationId=3172394&format=png
-GET /api/transits/passages?date=1968-03-12&time=14:30&locationId=3172394&from=2026-01-01
-GET /api/sky?date=2026-08-01&time=18:30&timezone=Europe/Rome
-GET /api/sky/calendar?from=2026-01-01&to=2026-12-31&timezone=Europe/Rome
-GET /api/election?locationId=2523920&from=2029-08-24&to=2029-08-26
-```
-
-I due `…/wheel` sono gli unici a non restituire JSON: danno l'immagine della
-ruota, `image/svg+xml` o `image/png`. Accettano i parametri di calcolo del
-rispettivo endpoint più `format`, `theme` (`chiaro`, default, o `scuro`) e
-`width`, che vale solo con `format=png` — un SVG si scala da sé, e chiederne
-la larghezza è quasi sempre il sintomo di un malinteso. Vedi
-[Il disegno servito](#il-disegno-servito).
-
-I transiti accettano **gli stessi parametri di nascita** del tema, più
-`transitDate`, `transitTime` e `transitTimezone`: un indirizzo che calcola un
-tema ne calcola i transiti cambiando solo il percorso. Senza `transitDate`
-valgono l'istante e il giorno correnti. Il luogo da cui si guarda è facoltativo
-e ha nomi propri — `transitLocationId`, oppure `transitLatitude` e
-`transitLongitude` — perché quelli senza prefisso sono già del luogo di
-nascita; indicandolo, il fuso predefinito dell'istante diventa il suo.
-
-Gli errori riportano il `code` del dominio (`FUSO_ORARIO_NON_VALIDO`,
-`LUOGO_MANCANTE`, …) con lo status appropriato: 400 per l'input, 404 per una
-località inesistente, 503 se il database delle località non è stato importato.
+Due cose che l'elenco dei parametri non spiega da sé. I due `…/wheel` sono gli
+unici a non restituire JSON: danno l'immagine della ruota, `image/svg+xml` o
+`image/png`, e `width` vale solo con `format=png` — un SVG si scala da sé, e
+chiederne la larghezza è quasi sempre il sintomo di un malinteso. Vedi
+[Il disegno servito](#il-disegno-servito). E i transiti accettano **gli stessi
+parametri di nascita** del tema: un indirizzo che calcola un tema ne calcola i
+transiti cambiando solo il percorso.
 
 **Il bundle del browser non contiene il motore di calcolo.** Il codice client
 importa da `@undicesimacasa/core` solo *tipi*, mai valori: un singolo import di
@@ -725,7 +716,8 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/moment.ts` | lo stato del modulo dell'istante, con il fuso di chi guarda |
 | `lib/clock.ts` | l'ora da parete in un fuso: la stessa risposta al server e al browser |
 | `lib/api.ts` | chiamata all'API e distinzione fra errore di dominio e guasto di rete |
-| `lib/wheel.ts` | la geometria della ruota, senza SVG e quindi verificabile |
+| `lib/coordinates.ts` | coordinate scritte a mano: decimali con punto o virgola, sessagesimali, e la distanza dal centroide |
+| `lib/format.ts` | gradi, primi e segni a schermo: la usano tutte le tabelle |
 | `lib/navigation.ts` | l'elenco delle sezioni: aggiungerne una è una riga |
 | `lib/color-scheme.ts` | l'aspetto chiaro o scuro scelto dal pulsante, con la chiave dichiarata nell'informativa |
 | `lib/server/{place,birth,moment,range}.ts` | lettura dei parametri, condivisa fra gli endpoint |
@@ -738,6 +730,8 @@ stanno perciò in `$lib` e non nella pagina:
 | `lib/components/ModuloPieghevole.svelte` | il riquadro dei campi che si ritira in una striscia appesa: lo stesso in tutte e quattro le sezioni |
 | `lib/components/Risultato.svelte` | titolo, riga delle condizioni, avvertenze: l'intestazione di ciò che è stato calcolato |
 | `lib/components/BirthForm.svelte` | data, ora, luogo, correzione delle coordinate; accetta uno snippet per le opzioni della sezione |
+| `lib/components/LocationSearch.svelte` | la ricerca della località, con l'etichetta della sezione: nel cielo non è una nascita ma il punto da cui si guarda |
+| `lib/components/CampiMancanti.svelte` | perché il pulsante d'invio è spento: da solo, spento restava muto |
 | `lib/components/MomentFields.svelte` | giorno, ora, «adesso» e il passo avanti o indietro: l'istante che i transiti e il cielo chiedono allo stesso modo |
 | `lib/components/ChartSettings.svelte` | sistema di case e aspetti minori; nella striscia del modulo chiuso ricalcola da sé |
 | `lib/components/ChartWheel.svelte` | la ruota, con anello esterno opzionale per i transiti |
@@ -829,8 +823,10 @@ come per l'agente, e la descrizione del tool MCP lo dice a chiare lettere.
 
 Sono due disegnatori per la stessa ruota — `ChartWheel.svelte`, interattivo, e
 `svg.ts`, statico — e non si possono accorpare: il sorvolo e la scelta di un
-corpo non sopravvivono alla serializzazione. Condividono però `wheel.ts`, la
-geometria: a divergere potranno essere i pesi e i colori, mai le posizioni.
+corpo non sopravvivono alla serializzazione. Condividono però `wheel.ts` di
+`packages/ruota`, la geometria — anche l'interfaccia la importa da lì invece di
+tenerne una sua: a divergere potranno essere i pesi e i colori, mai le
+posizioni.
 
 Due cose che nella pagina non esistono e qui vanno risolte a mano:
 
@@ -994,74 +990,45 @@ persino per leggere, e da un mount in sola lettura non può.
 
 ## Server MCP
 
-Espone il calcolo agli agenti. Trasporto stdio:
+Espone il calcolo agli agenti: otto tool su trasporto stdio. La configurazione
+del client, i parametri di ogni tool e le due risorse di riferimento stanno in
+[`docs/mcp.md`](docs/mcp.md); qui c'è il perché delle scelte che quei parametri
+riflettono.
 
-```json
-{
-  "mcpServers": {
-    "undicesimacasa": {
-      "command": "node",
-      "args": ["/percorso/undicesimacasa/packages/mcp/dist/stdio.js"]
-    }
-  }
-}
-```
+**La ricerca del luogo è separata dal calcolo.** `compute_natal_chart` non fa
+geocoding. Un tool unico dovrebbe scegliere in silenzio fra le decine di "Roma"
+del mondo, e uno sbaglio lì produce un tema plausibile e sbagliato — che è il
+modo peggiore di sbagliare, perché nessuno se ne accorge. Così la
+disambiguazione resta una decisione esplicita, e `location_id` evita che
+l'agente ricopi a mano tre valori numerici.
 
-Una volta pubblicato su npm, il binario `undicesimacasa-mcp` renderà superfluo
-il percorso assoluto.
+**Il cielo non è un tema senza nascita.** `compute_sky` e `find_sky_events` non
+hanno nessun parametro obbligatorio, e le loro descrizioni insistono sulla
+differenza che un modello tenderebbe a perdere: senza una nascita non esistono
+transiti, esiste solo il cielo; con una nascita il cielo da solo non basta.
+Serve a evitare che un agente inventi una data di nascita per poter chiamare
+`compute_transits`, o che chiami questi quando la domanda riguarda una persona.
 
-Otto tool, con la ricerca del luogo deliberatamente separata dal calcolo:
-
-| Tool | Cosa fa |
-|---|---|
-| `search_location` | nome → candidati con `location_id`, coordinate, fuso IANA |
-| `compute_natal_chart` | `location_id` (o coordinate) + data/ora locale → tema |
-| `draw_chart_wheel` | gli stessi dati → la ruota come **immagine** PNG; `with_transits` la fa diventare una bi-ruota |
-| `compute_transits` | gli stessi dati più il momento → posizioni e aspetti al tema; `transit_location_id` aggiunge assi e case dell'istante |
-| `find_transit_passages` | gli stessi dati più un arco → gli istanti in cui gli aspetti si perfezionano |
-| `compute_sky` | niente, o poco: il cielo di un istante, senza nascita e senza luogo |
-| `find_sky_events` | un arco → incontri, ingressi nei segni e stazioni, sempre senza nascita |
-| `find_election_hours` | un luogo e un arco → ore planetarie, Ascendente, Luna vuota di corso; `rulers` per restringere |
-
-**`compute_sky` e `find_sky_events` non hanno nessun parametro obbligatorio**, e
-le loro descrizioni insistono sulla differenza che un modello tenderebbe a
-perdere: senza una nascita non esistono transiti, esiste solo il cielo; con una
-nascita il cielo da solo non basta. Serve a evitare che un agente inventi una
-data di nascita per poter chiamare `compute_transits`, o che chiami questi
-quando la domanda riguarda invece una persona. `find_sky_events` accetta
-`include` per chiedere una sola delle tre cose, che accorcia la risposta quando
-la domanda è precisa. `find_election_hours` è l'eccezione che conferma la
-regola del luogo: è l'unico tool a pretenderlo senza alternative, perché senza
-alba e tramonto non ci sono ore planetarie da dividere.
-
-La data di adesso **va sempre omessa** — `transit_date`, `from`, `date` —
+**La data di adesso va sempre omessa** — `transit_date`, `from`, `date` —
 perché la mette il server, che è la sola fonte a saperla. È la stessa ragione
 per cui i tool non convertono l'ora e non inventano le coordinate: le
 descrizioni dicono all'agente che cosa non deve fare da sé, perché è lì che un
 modello produce un risultato plausibile e sbagliato.
 
-La separazione è il punto: `compute_natal_chart` non fa geocoding. Un tool
-unico dovrebbe scegliere in silenzio fra le decine di "Roma" del mondo, e uno
-sbaglio lì produce un tema plausibile e sbagliato. Così la disambiguazione
-resta una decisione esplicita, e `location_id` evita che l'agente ricopi a mano
-tre valori numerici.
-
-`draw_chart_wheel` è l'unico tool che restituisca un'immagine, e restituisce
-**PNG anche se il progetto sa produrre SVG**: un modello non vede un SVG, lo
-legge come testo, e una ruota serializzata sono ventimila caratteri di
-coordinate che non assomigliano a niente. Va chiamato *dopo*
-`compute_natal_chart` e non al posto suo — un disegno non contiene le
+**`draw_chart_wheel` restituisce PNG anche se il progetto sa produrre SVG**: un
+modello non vede un SVG, lo legge come testo, e una ruota serializzata sono
+ventimila caratteri di coordinate che non assomigliano a niente. Va chiamato
+*dopo* `compute_natal_chart` e non al posto suo — un disegno non contiene le
 avvertenze del calcolo — e la sua descrizione lo dice. Ogni immagine viaggia
 con una riga che dichiara di quale carta sia: due ruote di due persone diverse
 si somigliano abbastanza da confondersi. Il lato predefinito è 900 punti, che
 non è il massimo possibile ma il punto in cui i glifi restano leggibili senza
 che l'immagine costi il quadruplo dei token.
 
-Il parametro `format` vale `compact` (default, tabella densa) o `json`.
-Le risorse `undicesimacasa://riferimento/aspetti` e `.../sistemi-case` contengono
-il materiale di riferimento, caricato solo quando serve.
-
-Variabili d'ambiente: `GEONAMES_DB_PATH`, `SE_EPHE_PATH`.
+**Un errore torna come risultato, non come eccezione.** Un tool che lancia dice
+all'agente solo «è andata male»; uno che restituisce un messaggio con il rimedio
+gli permette di correggersi alla chiamata successiva. Da qui l'insistenza dei
+messaggi sul suggerire l'azione.
 
 ## Sviluppo
 

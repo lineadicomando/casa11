@@ -1,14 +1,14 @@
 ---
 name: nuova-funzione
-description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di undicesimacasa che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README, prompt-lettura) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
+description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di undicesimacasa che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README, docs/) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
 ---
 
 # Aggiungere una funzione a undicesimacasa
 
 Il progetto ha un motore solo e **cinque superfici** che lo raccontano. Una
-funzione che si ferma a metà lascia il README che descrive sei endpoint quando
-ne esistono sette, o un tool MCP che nessun prompt sa di poter chiamare. Il
-lavoro non è finito finché tutte le superfici pertinenti sono allineate.
+funzione che si ferma a metà lascia `docs/api.md` che descrive otto endpoint
+quando ne esistono nove, o un tool MCP che nessun prompt sa di poter chiamare.
+Il lavoro non è finito finché tutte le superfici pertinenti sono allineate.
 
 ## Le superfici
 
@@ -33,9 +33,15 @@ packages/mcp/
   ├── src/server.ts                 la registrazione
   └── test/server.test.ts           obbligatorio
 
-README.md                           la sezione descrittiva + l'elenco endpoint + la tabella dei tool
+README.md                           la sezione descrittiva: perché la funzione è così
+docs/api.md                         il nuovo endpoint fra i suoi parametri
+docs/mcp.md                         il nuovo tool fra i suoi parametri
+docs/cli.md                         le nuove opzioni di casa11
 docs/prompt-lettura.md              il contratto che gli agenti leggono davvero
 ```
+
+**README e `docs/` non si ripetono**: il README dice il perché e non elenca i
+parametri, `docs/` elenca i parametri e rimanda al README per il perché.
 
 ## Procedura
 
@@ -48,10 +54,10 @@ docs/prompt-lettura.md              il contratto che gli agenti leggono davvero
 3. **Le superfici**, insieme: endpoint, interfaccia, tool MCP. Riusa
    `lib/server/*` per leggere i parametri invece di riscriverne la validazione,
    e fa' che le tabelle prendano i dati, non il tema.
-4. **La documentazione**, per ultima e mai omessa: README (sezione, elenco
-   endpoint di «Applicazione web», tabella dei tool di «Server MCP») e
-   `docs/prompt-lettura.md` (numero dello strumento, parametri, errori, e la
-   variante MCP in fondo).
+4. **La documentazione**, per ultima e mai omessa: la sezione descrittiva del
+   README, il riferimento in `docs/api.md`, `docs/mcp.md` o `docs/cli.md`
+   secondo la superficie toccata, e `docs/prompt-lettura.md` (numero dello
+   strumento, parametri, errori, e la variante MCP in fondo).
 5. `npm test && npm run typecheck`.
 
 ## I commit

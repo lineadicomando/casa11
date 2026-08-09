@@ -1,8 +1,10 @@
 # undicesimacasa
 
 Calcolo di temi natali: un **motore puro** (`packages/core`) e **adattatori** che
-lo espongono su superfici diverse. Il `README.md` è la documentazione completa —
-qui c'è solo ciò che serve sapere prima di toccare qualsiasi cosa.
+lo espongono su superfici diverse. Il `README.md` racconta perché le cose sono
+come sono e `docs/` ne è il riferimento (`api.md`, `mcp.md`, `cli.md`,
+`prompt-lettura.md`, `proxy-e-log.md`); qui c'è solo ciò che serve sapere prima
+di toccare qualsiasi cosa.
 
 ## Mappa
 
