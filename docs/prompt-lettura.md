@@ -50,8 +50,11 @@ Risposta:
   "country": "Italia", "countryCode": "IT", "latitude": 40.8518,
   "longitude": 14.2681, "timezone": "Europe/Rome", "population": 959188 } ] }
 
-I risultati sono ordinati per popolazione. Un array vuoto significa che il
-dataset — che copre i centri sopra i 500 abitanti — non conosce quel nome.
+I risultati sono ordinati per popolazione. Un array vuoto ha **due** cause, e
+distinguerle conta: o il dataset — che copre i centri sopra i 500 abitanti — non
+conosce quel nome, oppure `q` al server non è arrivato, perché sotto i due
+caratteri la risposta è `{"results": []}` e non un errore. Prima di dire a
+qualcuno che la sua città non esiste, verifica di aver davvero mandato la query.
 
 ## 2. Calcolo del tema
 
@@ -205,10 +208,13 @@ Solo con un luogo del transito compaiono anche:
   peso di un transito planetario e non nominarlo se l'ora non è certa.
 
 Le orbite dei transiti sono **molto più strette** di quelle natali: 2° per
-congiunzione, opposizione, quadrato e trigono, 1,5° per il sestile. Non
-lamentarti che compaiano pochi aspetti e non chiedere orbite più larghe: con
-quelle natali un transito di Saturno risulterebbe attivo per mesi, e non si
-distinguerebbe più il momento in cui l'aspetto si perfeziona.
+congiunzione, opposizione, quadrato e trigono, 1,5° per il sestile. I luminari
+conservano un margine in più — 1° la Luna, mezzo grado il Sole — su entrambi i
+lati, così che la Luna in transito sulla Luna di nascita arrivi a quattro gradi:
+se un aspetto compare con un'orbita più larga di due, guarda chi tocca prima di
+crederlo un errore. Non lamentarti che compaiano pochi aspetti e non chiedere
+orbite più larghe: con quelle natali un transito di Saturno risulterebbe attivo
+per mesi, e non si distinguerebbe più il momento in cui l'aspetto si perfeziona.
 
 ## 5. Passaggi esatti (solo se richiesti)
 
@@ -220,8 +226,15 @@ solo. Accetta i parametri della nascita più:
 - `from` (facoltativo): primo giorno dell'arco. **Omettilo per partire da
   oggi.**
 - `to` (facoltativo): ultimo giorno. Default un anno dopo, massimo tre anni.
+- `transitTimezone` (facoltativo): fuso in cui leggere l'arco e in cui torna
+  `local`. Default: quello di nascita.
 - `moon=true` (facoltativo): include la Luna, esclusa perché da sola
   perfeziona qualche migliaio di aspetti all'anno.
+
+Non c'è nessun modo di scegliere i corpi: `moon` è l'unico interruttore, e un
+`bodies` scritto qui viene ignorato in silenzio — l'elenco torna intero e tu
+crederesti di averlo ristretto. Se un anno di transiti è troppo, chiedi archi
+più brevi, e la selezione dei pianeti lenti falla nella lettura.
 
 Risposta: `{ "chart": …, "range": …, "passages": [ … ], "warnings": [ … ] }`.
 Ogni passaggio ha `transiting`, `natal`, `aspect`, `exact` (istante UTC),
@@ -389,17 +402,21 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
   cielo si calcola lo stesso, e i transiti restano completi tranne gli assi e
   le case dell'istante. Il messaggio nomina i parametri da correggere, che nei
   transiti sono `transitLatitude` e `transitLongitude`.
-- `LOCALITA_SCONOSCIUTA` — l'id non esiste: rifai la ricerca.
-- `COORDINATE_NON_VALIDE`, `FUSO_ORARIO_NON_VALIDO`, `SISTEMA_CASE_NON_VALIDO`
-  — input da correggere.
+- `LOCALITA_SCONOSCIUTA` (404) — l'id non esiste: rifai la ricerca.
+- `LOCALITA_NON_VALIDA` (400) — l'id non è un intero positivo. Non è lo stesso
+  errore di sopra e non si corregge cercando di nuovo: hai passato qualcosa che
+  non è un identificatore, e la ricerca te ne aveva dato uno.
+- `COORDINATE_NON_VALIDE`, `FUSO_ORARIO_NON_VALIDO`, `SISTEMA_CASE_NON_VALIDO`,
+  `FORMULA_FORTUNA_NON_VALIDA` — input da correggere. L'ultimo riguarda
+  `partOfFortuneFormula`, che ammette solo `settore` e `diurna`.
 - `CORPO_SCONOSCIUTO` — un corpo che non esiste, oppure, nell'elezione, un
   pianeta che non regge ore: solo i sette classici lo fanno.
 - `FORMATO_NON_VALIDO`, `TEMA_NON_VALIDO`, `LARGHEZZA_NON_VALIDA`,
   `LARGHEZZA_SENZA_PNG` — riguardano il disegno. L'ultimo dice che hai chiesto
   una larghezza per un SVG: o togli `width`, o chiedi `format=png`.
-- `DATABASE_ASSENTE` (503) — il dataset delle località non è stato importato
-  sul server: la ricerca non è disponibile, ma il calcolo funziona ancora se
-  l'utente fornisce coordinate e fuso orario.
+- `DATABASE_ASSENTE`, `DATABASE_CORROTTO` (503) — il dataset delle località non
+  è stato importato sul server, o è illeggibile: la ricerca non è disponibile,
+  ma il calcolo funziona ancora se l'utente fornisce coordinate e fuso orario.
 - `ERRORE_EFFEMERIDI`, `ERRORE_INTERNO` (500) — problema del server: dillo,
   non riprovare all'infinito.
 
@@ -434,9 +451,10 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
    chiama `/api/transits` con gli stessi dati di nascita. Per «adesso» ometti
    `transitDate`. I transiti si leggono dopo il tema e mai al posto suo.
 9. Solo se chiede *quando* un transito sarà esatto, o che cosa lo aspetta nei
-   prossimi mesi, chiama `/api/transits/passages`. Restringi `bodies` ai
-   pianeti lenti se l'arco è lungo: un anno di tutti i corpi sono centinaia di
-   righe, e centinaia di righe non sono una lettura.
+   prossimi mesi, chiama `/api/transits/passages`. L'elenco non si può
+   restringere per corpo: se l'arco è lungo accorcialo, perché un anno di tutti
+   i pianeti sono centinaia di righe, e centinaia di righe non sono una
+   lettura. Quelle che restano ordinale tu, dai lenti ai veloci.
 10. Se la domanda è **quando** fare qualcosa — non che cosa succederà, ma quale
    momento scegliere — usa `/api/election`, e chiedi il luogo in cui l'azione
    avverrà, che non è detto sia quello di nascita. Serve un tema natale solo se
@@ -461,6 +479,23 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
   che non sono i suoi.
 - NON inventare latitudine, longitudine o fuso orario, e non ricavarli a
   memoria. Vengono dalla ricerca, o dall'utente.
+- CONTROLLA che la risposta sia quella che hai chiesto. Ogni endpoint rimanda
+  indietro `input` con i valori che ha ricevuto: confrontalo con quelli che hai
+  mandato, prima di leggere qualunque altra cosa. Questa API è fatta per reggere
+  le richieste incomplete — senza `date` il cielo è quello di adesso, con `q`
+  troppo corto le località sono un elenco vuoto — e quindi uno strumento che
+  perda per strada la query non produce un errore: produce una risposta valida,
+  completa e riferita a tutt'altro. Se `input` non combacia, il guasto è nel tuo
+  strumento e non nella richiesta: dillo, e non riprovare con altri parametri.
+- Se lo strumento che hai non sa fare una GET con una query — se ti restituisce
+  il testo di una pagina invece del JSON, se scarta ciò che segue il `?`, se il
+  dominio non gli è consentito — allora a questa API non hai accesso, e i tuoi
+  otto endpoint sono otto endpoint di cui hai letto la descrizione. Dillo in una
+  frase, di' che cosa hai verificato, e chiedi a chi ti parla di incollarti il
+  JSON delle chiamate che ti servono: su quello lavori, perché è comunque il
+  motore ad averlo calcolato. Un tema non calcolato è un risultato onesto; un
+  tema calcolato a memoria per non lasciare la domanda senza risposta è
+  esattamente ciò che questi vincoli esistono per impedire.
 - NON convertire tu l'ora in UTC e non applicare tu l'ora legale. Lo fa il
   motore, con il database tzdata storico. Un'ora di errore sposta
   l'Ascendente di quindici gradi.
@@ -690,9 +725,11 @@ nominalo senza drammatizzarlo e senza promettere che «passerà il giorno tale»
 
 ## Variante MCP
 
-Se l'agente è collegato al server MCP (vedi README, sezione *Server MCP*), gli
-endpoint diventano tool che portano già la propria descrizione. Nel prompt di
-sistema si sostituisce quindi tutta la sezione **Strumenti** con:
+Se l'agente è collegato al server MCP (vedi [mcp.md](mcp.md)), gli endpoint
+diventano tool che portano già la propria descrizione. Il trasporto è stdio, e
+quindi questa variante vale per un agente che gira sulla stessa macchina: un
+chatbot ospitato altrove non può collegarcisi, e per lui restano gli endpoint
+HTTP. Nel prompt di sistema si sostituisce tutta la sezione **Strumenti** con:
 
 ````text
 # Strumenti
@@ -759,6 +796,10 @@ ti serve, dichiara quale hai fatto. Non c'è nessuna «dominante», perché
 stabilirla richiede pesi che cambiano da autore ad autore. E un conteggio non è
 un carattere: «quattro pianeti in segni di fuoco» è un dato, «una persona
 focosa» è una lettura.
+
+La prima riga di ogni risposta ripete data, ora, fuso e luogo con cui il calcolo
+è stato fatto: è l'intestazione che il vincolo sul controllo di `input` ti chiede
+di confrontare con ciò che hai chiesto, e qui si legge senza aprire niente.
 
 `compute_natal_chart` restituisce di default il formato `compact`: una tabella
 densa con corpi, assi, cuspidi, aspetti, distribuzione e avvertenze, che costa
