@@ -18,7 +18,7 @@ describe('letturaDaIncollare', () => {
 
   it('vieta il calcolo a memoria e i pronostici', () => {
     const testo = letturaDaIncollare(TEMA);
-    expect(testo).toContain('Non ricalcolarli');
+    expect(testo).toContain('ricalcolarlo e non correggerlo');
     expect(testo).toContain('numeri fortunati');
     expect(testo).toContain('ora ignota');
   });
@@ -29,6 +29,23 @@ describe('letturaDaIncollare', () => {
     const testo = letturaDaIncollare(TEMA);
     expect(testo).toContain("l'ordine in cui GUARDI");
     expect(testo).toContain('Scrivi da un centro');
+  });
+
+  it('chiede una lettura leggibile, non un muro di prosa', () => {
+    // La tesi da sola produce un testo che si legge tutto o niente: i titoli
+    // danno la scansione, e la glossa non dà per scontato un vocabolario che
+    // chi legge non ha.
+    const testo = letturaDaIncollare(TEMA);
+    expect(testo).toContain('Dividi in sezioni brevi');
+    expect(testo).toContain('che cosa governa');
+  });
+
+  it('tiene i vincoli fuori dalla lettura', () => {
+    // Un modello che ha appena letto una lista di divieti tende ad aprire
+    // riassumendola: chi legge si trova davanti le istruzioni che non ha
+    // scritto invece del tema che ha chiesto.
+    const testo = letturaDaIncollare(TEMA);
+    expect(testo).toContain('non entrano nella lettura');
   });
 
   it('nomina i temi di cui la lettura deve occuparsi', () => {
