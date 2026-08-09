@@ -203,7 +203,13 @@
     avvertenze={chart.warnings}
   >
     <div class="griglia">
-      <div class="ruota">
+      <!-- Il blocco del prompt sta **dentro** la colonna appesa, non dopo di
+           lei. Un fratello che segua un elemento `sticky` non lo spinge: quello
+           resta inchiodato in alto e il fratello gli scorre sotto, cioè il testo
+           finisce sopra il disegno. Facendone un figlio i due si muovono
+           insieme, al prezzo di una colonna più alta — da cui il limite qui
+           sotto, che sugli schermi bassi la stacca del tutto. -->
+      <div class="ruota con-prompt">
         <ChartWheel {chart} {evidenza} bind:elemento={disegno} />
         <LegendaElementi />
         <StrumentiRuota
@@ -218,6 +224,8 @@
             scelto finché non lo si sceglie di nuovo.
           </p>
         {/if}
+
+        <StrumentiLettura parametri={() => chartParameters(birth, { houseSystem, minorAspects })} />
       </div>
 
       <div class="tabelle">
@@ -239,9 +247,25 @@
         <AspectTable aspects={chart.aspects} {evidenza} />
       </div>
     </div>
-
-    <!-- Sotto le tabelle e fuori dalla griglia: viene dopo aver visto i dati,
-         perché è di quei dati che propone di fare qualcosa. -->
-    <StrumentiLettura parametri={() => chartParameters(birth, { houseSystem, minorAspects })} />
   </Risultato>
 {/if}
+
+<style>
+  /* Qui la ruota non è appesa, e non è una dimenticanza.
+
+     Appesa, la colonna resta inchiodata sotto la testata: alta com'è con il
+     prompt in fondo — quasi novecento punti — il suo piede finisce oltre il
+     bordo dello schermo e non ci rientra scorrendo, perché scorrendo la colonna
+     non si muove. Il pulsante diventerebbe irraggiungibile su qualunque
+     finestra normale. Appenderla solo dove ci sta vorrebbe dire una soglia
+     attorno ai 59rem, cioè quasi mai, e con un margine così sottile che il
+     nome di una località più lungo basterebbe a tagliare via il pulsante senza
+     che nulla lo dica.
+
+     Il prezzo è che scendendo a leggere gli aspetti la ruota si perde di vista,
+     che è quello che la regola globale evitava. Sui transiti resta appesa: là
+     questo blocco non c'è. */
+  .ruota.con-prompt {
+    position: static;
+  }
+</style>

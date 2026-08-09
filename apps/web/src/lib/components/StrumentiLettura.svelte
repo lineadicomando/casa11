@@ -66,19 +66,19 @@
 </script>
 
 <section class="lettura">
-  <h3>Farne una lettura</h3>
+  <h3>Prompt per un'AI</h3>
 
   <p>
-    Il motore calcola e non interpreta: quello che vedi qui sopra sono dati, e il
-    significato è di chi legge. Il pulsante copia questo tema insieme alle
-    istruzioni per interpretarlo, in un testo da incollare nel chatbot che
-    preferisci — le posizioni restano quelle calcolate qui, l'interpretazione la
-    fa lui. Niente esce da questa pagina finché non lo incolli tu.
+    Copia un <strong>prompt già pronto</strong> — questo tema più le istruzioni
+    per interpretarlo — da incollare in ChatGPT, Claude o un altro assistente:
+    la lettura la scrive lui, sulle posizioni calcolate qui. Questa pagina non
+    parla con nessuna AI: il prompt finisce negli appunti, e dove vada poi lo
+    decidi tu.
   </p>
 
   <div class="strumenti">
     <button type="button" class="strumento" onclick={copia} disabled={inCorso} aria-live="polite">
-      {#if inCorso}Preparo…{:else if copiato}Copiato{:else}Copia per un chatbot{/if}
+      {#if inCorso}Preparo…{:else if copiato}Copiato{:else}Copia il prompt{/if}
     </button>
   </div>
 
@@ -96,10 +96,11 @@
 </section>
 
 <style>
-  /* Sta sotto le tabelle e non deve competere con loro: è un'offerta, non il
-     motivo per cui si è arrivati qui. */
+  /* Sta sotto la ruota e non deve competere con lei: è un'offerta, non il
+     motivo per cui si è arrivati qui. La riga sopra la separa dai comandi del
+     disegno, che sono un'altra cosa — quelli portano via la carta, questo il
+     testo da cui farsi leggere. */
   .lettura {
-    margin-top: 2rem;
     padding-top: 1.25rem;
     border-top: 1px solid var(--linea);
   }
@@ -116,6 +117,10 @@
     color: var(--testo-tenue);
     font-size: 0.85rem;
     line-height: 1.55;
+  }
+
+  p + p {
+    margin-top: 0.6rem;
   }
 
   .strumenti {

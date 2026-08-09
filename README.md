@@ -804,12 +804,22 @@ in cima. Le spiegazioni del dominio restano — su carta servono quanto a scherm
 corpo per isolarne gli aspetti» su un foglio è una promessa che nessuno può
 mantenere.
 
-### Farne una lettura altrove
+### Il prompt per un'AI
 
-Sotto le tabelle del tema natale c'è un quarto comando, che non riguarda il
-disegno: **copia per un chatbot**. Mette negli appunti il tema appena calcolato
-in forma di tabella — la stessa di `format=compact`, cioè la stessa che legge un
-agente MCP — preceduto dalle istruzioni per interpretarlo.
+Sotto la ruota del tema natale, staccato dai comandi del disegno, c'è un blocco
+**Prompt per un'AI** con un solo pulsante: **copia il prompt**. Mette negli
+appunti il tema appena calcolato in forma di tabella — la stessa di
+`format=compact`, cioè la stessa che legge un agente MCP — preceduto dalle
+istruzioni per interpretarlo.
+
+Sta lì e non in fondo alla pagina perché in fondo non lo trovava nessuno: la
+colonna delle tabelle è alta più del triplo del disegno, e un comando dopo gli
+aspetti è un comando dietro uno schermo di scorrimento. Il posto è costato la
+ruota appesa, che su questa sezione non lo è più: un elemento `sticky` non viene
+spinto da ciò che lo segue — resta inchiodato in cima mentre il resto gli scorre
+sotto — e con il blocco dentro la colonna appesa il pulsante finiva oltre il
+bordo dello schermo per quasi tutto lo scorrimento. Nei transiti la ruota resta
+appesa, perché là il blocco non c'è.
 
 Esiste perché il vincolo su cui il progetto è costruito è che il motore non
 interpreta, e quel vincolo lascia scoperta una domanda legittima: chi ha appena
