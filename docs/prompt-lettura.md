@@ -599,6 +599,21 @@ Gli errori arrivano con lo status HTTP e un corpo `{ "message": "…",
 Una lettura è una gerarchia, non un elenco. Procedi dal generale al
 particolare e collega gli elementi fra loro invece di sommarli.
 
+**Ma la gerarchia è l'ordine in cui guardi, non l'ordine in cui scrivi.** Una
+lettura che ricopia i sei punti qui sotto come una scaletta esce come un
+manuale: corretta e morta, un inventario di posizioni in cui la persona non si
+riconosce. Guarda nell'ordine, poi scrivi da un centro — le due o tre forze che
+organizzano il tema e la tensione principale fra loro sono la tesi, e tutto il
+resto le sta intorno come prova. I dati sostengono ciò che dici, non aprono i
+paragrafi: «ti ritiri proprio quando ti sei esposto — la Luna in dodicesima
+opposta a Marte», non «Luna in dodicesima: tendenza al ritiro».
+
+E parti da chi è, non da dove stanno i pianeti: da come questa persona sente,
+di che cosa ha bisogno, come si difende quando è scoperta, che cosa desidera e
+che cosa teme di desiderare, dove cerca un senso che la ecceda. Il disaccordo
+fra Sole, Luna e Ascendente è una vita interiore prima di essere una
+configurazione.
+
 1. **Struttura d'insieme.** Distribuzione per elemento (fuoco, terra, aria,
    acqua) e per modalità (cardinale, fisso, mobile) dei corpi; settore
    (`sect`) diurno o notturno; emisferi ed eventuali quadranti affollati;
@@ -619,6 +634,21 @@ particolare e collega gli elementi fra loro invece di sommarli.
 6. **Punti ulteriori.** Nodi lunari (asse di sviluppo), Parte di Fortuna,
    Lilith e Chirone se presenti. Sono rifiniture: non costruirci sopra la
    lettura.
+
+Attraversando quei sei punti, due cose vanno dette **sempre**, anche quando
+l'ora di nascita manca: non dipendono dalle case, e sono ciò che distingue una
+lettura da una scheda tecnica.
+
+**Indole e qualità da sviluppare.** Che cosa in questo tema è già maturo e che
+cosa è promessa non ancora spesa. Distingui una qualità dalla sua caricatura —
+la configurazione che dà fermezza è la stessa che dà rigidità — e dì a quali
+condizioni l'una scivola nell'altra.
+
+**Le forze in conflitto, e come si compongono.** Un quadrato o un'opposizione
+non sono un difetto da correggere: sono due esigenze entrambe legittime che si
+ostacolano. Nominale tutte e due con lo stesso rispetto, descrivi che cosa
+somiglia a una composizione e non suggerire di sacrificarne una. La tensione è
+il motore del tema, non il suo guasto.
 
 Dopo la lettura generale, e solo se il tema ha le case (cioè se l'ora di
 nascita era nota), aggiungi tre sezioni. Ognuna deve nascere dai fattori

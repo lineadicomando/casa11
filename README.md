@@ -836,12 +836,28 @@ contatta nessun altro server. Quella promessa vale più della comodità di non
 dover cambiare finestra.
 
 Le istruzioni copiate sono la versione breve di
-[`docs/prompt-lettura.md`](docs/prompt-lettura.md), ridotta ai divieti: qui il
-calcolo viaggia già insieme al testo, quindi degli otto endpoint non resta
-niente da dire, e ciò che serve è la parte che impedisce a un modello di
-riempire i vuoti — non ricalcolare, non aggiungere punti che non ci sono, niente
-previsioni datate né numeri fortunati, e silenzio su Ascendente e case quando
-l'ora di nascita manca.
+[`docs/prompt-lettura.md`](docs/prompt-lettura.md), senza gli endpoint — qui il
+calcolo viaggia già insieme al testo — e con i divieti che impediscono a un
+modello di riempire i vuoti: non ricalcolare, non aggiungere punti che non ci
+sono, niente previsioni datate né numeri fortunati, silenzio su Ascendente e
+case quando l'ora di nascita manca.
+
+I divieti da soli, però, non bastavano. La prima versione teneva anche la
+gerarchia tecnica — struttura, triade, governatori, case, aspetti — e ne usciva
+un manuale: corretto, completo e morto, un inventario di posizioni in cui chi
+legge non si riconosce. Il difetto era l'ordine, non la brevità: la gerarchia
+dice **dove guardare**, e consegnata come scaletta diventa la scaletta. Ora il
+prompt chiede prima una tesi — le due o tre forze che organizzano il tema e la
+tensione fra loro — e poi le prove, e nomina i temi di cui la lettura deve
+occuparsi: indole e qualità da sviluppare, forze in conflitto e come si
+compongono, missione di vita intesa come lavoro su di sé e non come destino
+assegnato, attività verso cui c'è affinità descritte come funzioni e non come
+mestieri, legami da valorizzare o da elaborare.
+
+È la direzione in cui il registro simbolico si fa più forte, e con lui il
+rischio dell'oracolo: da qui le righe che vietano il tono iniziatico, le
+diagnosi e il destino già scritto. Un tema non vuole nulla — a volere è la
+persona — e la responsabilità resta a chi legge.
 
 La tabella arriva dal server invece di essere ricomposta nel browser: la resa
 compatta vive in `core`, e il client di `apps/web` da `core` importa solo tipi.

@@ -23,6 +23,27 @@ describe('letturaDaIncollare', () => {
     expect(testo).toContain('ora ignota');
   });
 
+  it('chiede una lettura e non una procedura', () => {
+    // Senza questi, il modello esegue la gerarchia tecnica e la consegna come
+    // interpretazione: ne esce un manuale corretto in cui nessuno si riconosce.
+    const testo = letturaDaIncollare(TEMA);
+    expect(testo).toContain("l'ordine in cui GUARDI");
+    expect(testo).toContain('Scrivi da un centro');
+  });
+
+  it('nomina i temi di cui la lettura deve occuparsi', () => {
+    const testo = letturaDaIncollare(TEMA);
+    for (const tema of [
+      'Indole e qualità da sviluppare',
+      'Le forze in conflitto',
+      'La missione di vita',
+      'Le attività verso cui',
+      'I legami',
+    ]) {
+      expect(testo).toContain(tema);
+    }
+  });
+
   it('rimanda al repository solo quando c\'è', () => {
     expect(letturaDaIncollare(TEMA, '')).not.toContain('prompt-lettura.md');
     expect(letturaDaIncollare(TEMA, 'https://esempio.it/undicesimacasa')).toContain(

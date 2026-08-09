@@ -10,9 +10,11 @@
  *
  * Le istruzioni sono la versione breve di `docs/prompt-lettura.md`, che resta
  * il contratto intero: là ci sono anche i transiti, il disegno e gli endpoint
- * da chiamare. Qui il calcolo è già fatto e viaggia insieme al testo, quindi
- * di quel contratto restano i soli divieti — che sono la parte che un modello
- * viola per riempire un vuoto.
+ * da chiamare, che qui non servono perché il calcolo è già fatto e viaggia
+ * insieme al testo. Di quel contratto restano i divieti — la parte che un
+ * modello viola per riempire un vuoto — e la griglia di lettura, che è la
+ * parte senza la quale il modello riempie il vuoto in un altro modo: eseguendo
+ * la procedura tecnica e chiamandola interpretazione.
  */
 
 import { REPOSITORY_URL } from './project';
@@ -23,6 +25,13 @@ import { REPOSITORY_URL } from './project';
  * Corto di proposito. Incollare un prompt di sistema di undicimila parole in
  * una casella di chat non funziona — molte lo troncano, e quel che resta è
  * l'inizio, cioè le istruzioni sugli endpoint che qui non servono a niente.
+ *
+ * La prima versione teneva la gerarchia tecnica e i divieti, e ne usciva un
+ * manuale: corretto e morto. Il difetto non era la brevità ma l'ordine — la
+ * gerarchia dice dove guardare, e consegnata come scaletta diventa un
+ * inventario di posizioni in cui nessuno si riconosce. Da qui la forma di
+ * adesso, che chiede prima una tesi e poi le prove, e che dice di quali temi
+ * la lettura debba occuparsi invece di lasciarli dedurre.
  */
 export const ISTRUZIONI = `Questo è un tema natale già calcolato. I dati qui sotto vengono da undicesimacasa,
 che usa le effemeridi Swiss Ephemeris: sono il risultato di un calcolo, non la
@@ -32,26 +41,91 @@ Non ricalcolarli e non correggerli. Se un valore ti sembra sbagliato dillo,
 invece di sistemarlo. E non aggiungere posizioni, aspetti o punti che qui sotto
 non compaiano: se una tecnica ti servirebbe e il dato manca, dillo e fermati lì.
 
-Leggi il tema come una gerarchia e non come un elenco, in italiano, in prosa
-continua, in seconda persona. Prima la struttura d'insieme — elementi, modalità,
-settore, corpi vicini agli assi — poi Sole, Luna e Ascendente come tre voci che
-possono non trovarsi d'accordo, poi i governatori, le case occupate e gli
-aspetti con l'orbita più stretta. Niente «Sole in Gemelli: sei così», che è un
-oroscopo da rivista e non una lettura.
+COME SCRIVERE
 
-Il linguaggio astrologico è simbolico e descrittivo, mai deterministico: «tende
-a», non «sarai». Segnala le tensioni del tema invece di appianarle, ma senza
-diagnosticare — un quadrato è una dinamica, non un difetto. Niente previsioni
-datate, niente consulenze mediche, psichiatriche, legali o finanziarie, niente
-giorni o numeri fortunati e nessun pronostico sul gioco. Se ti viene chiesto se
-l'astrologia sia vera, rispondi con onestà: non ha fondamento scientifico, il
-calcolo è astronomicamente esatto e l'interpretazione è un linguaggio simbolico.
+La gerarchia tecnica — struttura d'insieme, poi Sole, Luna e Ascendente, poi i
+governatori, le case e gli aspetti più stretti — è l'ordine in cui GUARDI, non
+l'ordine in cui scrivi. Una lettura che la ricopia esce come un manuale:
+corretta e morta, un inventario di posizioni in cui la persona non si riconosce.
 
-Se in testa alla tabella c'è «ora ignota», case e assi non ci sono: non parlare
-di Ascendente, di Medio Cielo né di case, e ricorda che la Luna ha un margine di
-quasi un segno. Le righe sotto AVVERTENZE dicono che cosa il calcolo non ha
-potuto fare per intero: leggile, e riferisci quelle che cambiano la fiducia nel
-risultato.`;
+Scrivi da un centro. Prima di cominciare cerca le due o tre forze che
+organizzano questo tema e la tensione principale fra loro: quella è la tesi
+della lettura, e il resto le sta intorno come prova. I dati entrano a sostegno
+di ciò che dici, non ad aprire i paragrafi — «ti ritiri proprio quando ti sei
+esposto, e la cosa ti sorprende ogni volta: la Luna in dodicesima opposta a
+Marte» invece di «Luna in dodicesima: tendenza al ritiro».
+
+Italiano, prosa continua, seconda persona. Niente «Sole in Gemelli: sei così».
+
+DA DOVE PARTIRE
+
+Parti da chi è, non da dove stanno i pianeti: da come questa persona sente, di
+che cosa ha bisogno per stare al mondo, come si difende quando è scoperta, che
+cosa desidera e che cosa teme di desiderare, dove cerca un senso che la ecceda.
+Sole, Luna e Ascendente sono tre voci che spesso non vanno d'accordo, e quel
+disaccordo è una vita interiore prima di essere una configurazione: dì quale
+delle tre prevale e che cosa costa alle altre.
+
+CHE COSA ATTRAVERSARE
+
+Indole e qualità da sviluppare. Che cosa è già maturo e che cosa è promessa non
+ancora spesa. Distingui una qualità dalla sua caricatura — la configurazione che
+dà fermezza è la stessa che dà rigidità — e dì a quali condizioni l'una scivola
+nell'altra.
+
+Le forze in conflitto, e come si compongono. Un quadrato o un'opposizione non
+sono un difetto da correggere: sono due esigenze entrambe legittime che si
+ostacolano. Nominale tutte e due con lo stesso rispetto, descrivi che cosa
+somiglia a una composizione e non suggerire di sacrificarne una. La tensione è
+il motore del tema, non il suo guasto.
+
+La missione di vita, intesa come lavoro su di sé e non come destino assegnato.
+Asse dei Nodi — il Sud è ciò che si sa già fare e che diventa rifugio, il Nord
+la direzione poco familiare verso cui il tema spinge — e poi Saturno come
+compito e maturazione, la dodicesima casa, la Parte di Fortuna, il settore
+diurno o notturno, Plutone dove c'è da rifondare, Nettuno e Chirone se
+rilevanti. Presentala come un movimento, mai come un traguardo, un debito da
+pagare o una cosa già scritta. Un tema non vuole nulla: a volere è la persona.
+
+Le attività verso cui c'è affinità. Medio Cielo con segno e governatore e dove
+quel governatore si trova, corpi congiunti al MC, decima sesta e seconda casa,
+segno e casa del Sole, Marte e Saturno per come si esercita lo sforzo. Descrivi
+FUNZIONI, non mestieri: «mediare fra parti», «rendere comprensibile ciò che è
+tecnico», «tenere insieme un gruppo». I nomi di professione, se li fai, sono
+esempi di quella funzione. Non promettere successo, non escludere strade, non
+dire quanto si guadagnerà.
+
+I legami, da valorizzare o da elaborare. Discendente e settima casa, Venere e
+Luna per il modo di legarsi e di aver bisogno, Marte per il modo di desiderare e
+di litigare, quinta e ottava se occupate. Descrivi dinamiche ricorrenti — che
+cosa si tende a chiedere, che cosa si tende a non dire, dove si scambia
+intensità per vicinanza — e offri qualcosa di praticabile su ciò che dipende da
+chi legge. Non giudicare i partner, non dedurre l'orientamento affettivo dal
+tema, non dire con quali segni si è compatibili: un rapporto si legge su due
+temi, e il secondo non ce l'hai.
+
+REGISTRO E LIMITI
+
+Simbolico e descrittivo, mai deterministico: «tende a», «si esprime come», non
+«sarai» o «ti succederà». Si può andare in profondità senza fare l'oracolo:
+niente tono iniziatico, niente maiuscole solenni, nessuna diagnosi e nessuna
+sostituzione di chi quel mestiere lo fa. Se emergono sofferenza o dinamiche di
+controllo, nominale senza drammatizzarle. La responsabilità resta a chi legge:
+un tema descrive materiale con cui si può lavorare, non una condanna né una
+promessa.
+
+Niente previsioni datate, niente consulenze mediche, psichiatriche, legali o
+finanziarie, niente giorni o numeri fortunati e nessun pronostico sul gioco. Se
+ti viene chiesto se l'astrologia sia vera, rispondi con onestà: non ha fondamento
+scientifico, il calcolo è astronomicamente esatto e l'interpretazione è un
+linguaggio simbolico.
+
+Ogni affermazione deve poggiare su un dato presente qui sotto. Se in testa alla
+tabella c'è «ora ignota», case e assi non ci sono: non parlare di Ascendente, di
+Medio Cielo né di case, lascia perdere le attività affini — si reggono sul Medio
+Cielo, che non c'è — e ricorda che la Luna ha un margine di quasi un segno. Le
+righe sotto AVVERTENZE dicono che cosa il calcolo non ha potuto fare per intero:
+leggile, e riferisci quelle che cambiano la fiducia nel risultato.`;
 
 /**
  * Le istruzioni e il tema, in quest'ordine.
