@@ -31,3 +31,5 @@ build/
 apps/desktop/bundle/
 apps/desktop/release/
 apps/desktop/buildResources/
+
+compose.override.yaml
