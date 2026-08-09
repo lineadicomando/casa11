@@ -42,7 +42,7 @@ Monorepo con **npm workspaces**. Node ≥ 22.
 ```sh
 npm install
 npm run ephe:download -w @undicesimacasa/core   # opzionale, ~2 MB
-npm run geo:import   -w @undicesimacasa/geo     # necessario per la ricerca località, ~205 MB
+npm run geo:import   -w @undicesimacasa/geo     # necessario per la ricerca località, ~215 MB
 npm test
 ```
 

@@ -29,7 +29,7 @@ npm start -w @undicesimacasa/web           # http://localhost:3000, dopo build
 npm run dist -w @undicesimacasa/desktop    # AppImage in apps/desktop/release, dopo build
 ```
 
-`npm run geo:import -w @undicesimacasa/geo` scarica **~205 MB**: serve solo se
+`npm run geo:import -w @undicesimacasa/geo` scarica **~215 MB**: serve solo se
 la ricerca delle località non funziona, non va lanciato per abitudine.
 `npm run ephe:download -w @undicesimacasa/core` (~2 MB) è opzionale — senza,
 il motore usa Moshier invece delle effemeridi Swiss.
