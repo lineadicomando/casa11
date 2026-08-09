@@ -1,14 +1,14 @@
 ---
 name: nuova-funzione
-description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di undicesimacasa che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README, docs/) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
+description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di undicesimacasa che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
 ---
 
 # Aggiungere una funzione a undicesimacasa
 
 Il progetto ha un motore solo e **cinque superfici** che lo raccontano. Una
-funzione che si ferma a metà lascia `docs/api.md` che descrive otto endpoint
-quando ne esistono nove, o un tool MCP che nessun prompt sa di poter chiamare.
-Il lavoro non è finito finché tutte le superfici pertinenti sono allineate.
+funzione che si ferma a metà lascia un endpoint che nessuna interfaccia chiama,
+o un tool MCP che nessun prompt sa di poter usare. Il lavoro non è finito finché
+tutte le superfici pertinenti sono allineate.
 
 ## Le superfici
 
@@ -33,15 +33,14 @@ packages/mcp/
   ├── src/server.ts                 la registrazione
   └── test/server.test.ts           obbligatorio
 
-README.md                           la sezione descrittiva: perché la funzione è così
-docs/api.md                         il nuovo endpoint fra i suoi parametri
-docs/mcp.md                         il nuovo tool fra i suoi parametri
-docs/cli.md                         le nuove opzioni di casa11
-docs/prompt-lettura.md              il contratto che gli agenti leggono davvero
+README.md                           solo se cambiano i comandi o le superfici
+apps/web/src/lib/lettura.ts         il prompt di lettura, se la funzione lo tocca
 ```
 
-**README e `docs/` non si ripetono**: il README dice il perché e non elenca i
-parametri, `docs/` elenca i parametri e rimanda al README per il perché.
+**Il progetto non ha una documentazione estesa, e non è una dimenticanza.** I
+parametri si documentano dove vivono: il commento in testa alla rotta, la
+descrizione del tool MCP, `--help` della CLI. Un elenco separato è una copia
+che diverge. Il README tiene descrizione, licenza e comandi, e basta.
 
 ## Procedura
 
@@ -54,10 +53,9 @@ parametri, `docs/` elenca i parametri e rimanda al README per il perché.
 3. **Le superfici**, insieme: endpoint, interfaccia, tool MCP. Riusa
    `lib/server/*` per leggere i parametri invece di riscriverne la validazione,
    e fa' che le tabelle prendano i dati, non il tema.
-4. **La documentazione**, per ultima e mai omessa: la sezione descrittiva del
-   README, il riferimento in `docs/api.md`, `docs/mcp.md` o `docs/cli.md`
-   secondo la superficie toccata, e `docs/prompt-lettura.md` (numero dello
-   strumento, parametri, errori, e la variante MCP in fondo).
+4. **Il commento in testa alla rotta e la descrizione del tool**, che sono la
+   documentazione: dicono i parametri, i valori ammessi e che cosa non fare.
+   Il README solo se cambiano i comandi.
 5. `npm test && npm run typecheck`.
 
 ## I commit
@@ -65,9 +63,8 @@ parametri, `docs/` elenca i parametri e rimanda al README per il perché.
 Uno per fase, nell'ordine in cui il repo li ha sempre avuti:
 
 ```
-Trova gli ingressi nei segni e le stazioni          → core + cli + test
+Trova gli ingressi nei segni e le stazioni                   → core + cli + test
 Mostra il calendario del cielo nell'interfaccia e agli agenti → web + mcp
-Documenta il calendario del cielo e ne apre i corpi via HTTP  → README + docs
 ```
 
 Italiano, indicativo presente terza persona, nessun prefisso convenzionale.

@@ -10,7 +10,13 @@
    */
   const AGGIORNAMENTO = '2 agosto 2026';
 
-  /** Giorni di conservazione dei log del server. Vedi `docs/proxy-e-log.md`. */
+  /**
+   * Giorni di conservazione dei log del server.
+   *
+   * È una dichiarazione, non una configurazione: va resa vera con la rotazione
+   * dei log sul server che sta davanti all'applicazione. Vedi «Prima di mettere
+   * in rete» nel README.
+   */
   const RITENZIONE_LOG = 7;
 </script>
 

@@ -44,8 +44,8 @@ describe('letturaDaIncollare', () => {
     }
   });
 
-  it('rimanda al repository solo quando c\'è', () => {
-    expect(letturaDaIncollare(TEMA, '')).not.toContain('prompt-lettura.md');
+  it('dichiara la provenienza solo quando c\'è un indirizzo', () => {
+    expect(letturaDaIncollare(TEMA, '')).not.toContain('Tema calcolato da');
     expect(letturaDaIncollare(TEMA, 'https://esempio.it/undicesimacasa')).toContain(
       'https://esempio.it/undicesimacasa',
     );

@@ -8,13 +8,15 @@
  * sito non parla con nessun modello: il testo finisce negli appunti, e dove
  * vada poi lo decide chi lo incolla.
  *
- * Le istruzioni sono la versione breve di `docs/prompt-lettura.md`, che resta
- * il contratto intero: là ci sono anche i transiti, il disegno e gli endpoint
- * da chiamare, che qui non servono perché il calcolo è già fatto e viaggia
- * insieme al testo. Di quel contratto restano i divieti — la parte che un
- * modello viola per riempire un vuoto — e la griglia di lettura, che è la
- * parte senza la quale il modello riempie il vuoto in un altro modo: eseguendo
- * la procedura tecnica e chiamandola interpretazione.
+ * **Queste istruzioni sono il riferimento unico per la lettura**: non esiste
+ * un contratto più lungo altrove di cui questo sia il riassunto. Chi le cambia
+ * cambia il modo in cui il progetto viene interpretato, ed è l'unico posto in
+ * cui farlo.
+ *
+ * Portano due cose che non si tolgono senza conseguenze. I divieti, che sono
+ * la parte che un modello viola per riempire un vuoto. E la griglia di lettura,
+ * senza la quale il vuoto lo riempie in un altro modo: eseguendo la procedura
+ * tecnica e chiamandola interpretazione.
  */
 
 import { REPOSITORY_URL } from './project';
@@ -134,15 +136,15 @@ leggile, e riferisci quelle che cambiano la fiducia nel risultato.`;
  * dati, e un modello che trovasse la tabella per prima comincerebbe a
  * interpretarla mentre ancora non sa che cosa non deve fare.
  *
- * Il rimando al repository compare solo se c'è. `REPOSITORY_URL` è vuoto
- * finché non lo si valorizza, e una frase che prometta un documento senza
- * dire dove sia è peggio dell'assenza della frase.
+ * In fondo, la provenienza. Questo testo è fatto per essere incollato altrove,
+ * e altrove nessuno sa da dove vengano i numeri: la riga dice quale programma
+ * li ha calcolati. Compare solo se `REPOSITORY_URL` è valorizzato — un
+ * indirizzo promesso e non dato è peggio del silenzio.
  */
 export function letturaDaIncollare(tema: string, repository: string = REPOSITORY_URL): string {
-  const rimando = repository
-    ? `\n\nIl contratto completo per un agente — transiti compresi, e gli endpoint da\n` +
-      `cui prenderli — sta in docs/prompt-lettura.md, qui: ${repository}`
+  const provenienza = repository
+    ? `\n\nTema calcolato da undicesimacasa, con le effemeridi Swiss Ephemeris: ${repository}`
     : '';
 
-  return `${ISTRUZIONI}${rimando}\n\n${tema}\n`;
+  return `${ISTRUZIONI}${provenienza}\n\n${tema}\n`;
 }
