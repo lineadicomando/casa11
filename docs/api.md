@@ -114,6 +114,10 @@ chiama.
 - `time` — `HH:mm` o `HH:mm:ss`. **Se ignota, va omessa**: la risposta esce
   senza `houses`, `angles`, `partOfFortune` e `sect`, con un'avvertenza. Non è
   un errore, è una carta senza case.
+- `format` — `json` (default) oppure `compact`, che restituisce
+  `text/plain`: la stessa tabella che il server MCP dà ai suoi agenti, circa un
+  ottavo dei token, con il nome del luogo in testa. Un valore diverso è
+  `FORMATO_NON_VALIDO`, non un ripiego silenzioso sul JSON.
 - più il luogo e le opzioni del tema.
 
 ```json

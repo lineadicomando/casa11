@@ -79,6 +79,11 @@ Parametri:
   si inverte nei temi notturni) oppure `diurna` (sempre ASC + Luna − Sole).
   Serve solo a riprodurre il risultato di un programma che ignora il settore:
   non usarla di tua iniziativa.
+- `format` (facoltativo): `json` (default) oppure `compact`, che restituisce una
+  tabella di testo invece del JSON — corpi, assi, cuspidi, aspetti,
+  distribuzione e avvertenze, con il luogo in testa, a un ottavo dei token.
+  **Chiedila se il tema devi solo leggerlo**, che è quasi sempre il caso: il
+  JSON serve quando ti occorrono i valori numerici per farci un conto.
 
 Risposta: `{ "chart": { ... }, "place": { "label": "…", "refined": false } }`.
 

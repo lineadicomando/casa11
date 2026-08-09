@@ -804,6 +804,40 @@ in cima. Le spiegazioni del dominio restano — su carta servono quanto a scherm
 corpo per isolarne gli aspetti» su un foglio è una promessa che nessuno può
 mantenere.
 
+### Farne una lettura altrove
+
+Sotto le tabelle del tema natale c'è un quarto comando, che non riguarda il
+disegno: **copia per un chatbot**. Mette negli appunti il tema appena calcolato
+in forma di tabella — la stessa di `format=compact`, cioè la stessa che legge un
+agente MCP — preceduto dalle istruzioni per interpretarlo.
+
+Esiste perché il vincolo su cui il progetto è costruito è che il motore non
+interpreta, e quel vincolo lascia scoperta una domanda legittima: chi ha appena
+calcolato il proprio tema vuole sapere che cosa significhi. La risposta non è
+aggiungere l'interpretazione al calcolo, ed è consegnare i dati a chi
+interpreta. Il sito non parla con nessun modello, non ha una chiave da spendere
+e non manda niente da nessuna parte: il testo finisce negli appunti, e dove vada
+poi lo decide chi lo incolla.
+
+È anche la ragione per cui **una chat qui dentro non c'è**. Una casella di testo
+su questa pagina significherebbe mandare data, ora e luogo di nascita a un
+fornitore terzo, e l'informativa promette che aprendo il sito il browser non
+contatta nessun altro server. Quella promessa vale più della comodità di non
+dover cambiare finestra.
+
+Le istruzioni copiate sono la versione breve di
+[`docs/prompt-lettura.md`](docs/prompt-lettura.md), ridotta ai divieti: qui il
+calcolo viaggia già insieme al testo, quindi degli otto endpoint non resta
+niente da dire, e ciò che serve è la parte che impedisce a un modello di
+riempire i vuoti — non ricalcolare, non aggiungere punti che non ci sono, niente
+previsioni datate né numeri fortunati, e silenzio su Ascendente e case quando
+l'ora di nascita manca.
+
+La tabella arriva dal server invece di essere ricomposta nel browser: la resa
+compatta vive in `core`, e il client di `apps/web` da `core` importa solo tipi.
+Riscriverla lì significherebbe due formattatori destinati a divergere, e a
+divergere sarebbe proprio il testo che qualcun altro legge.
+
 ### Il disegno servito
 
 Quel che sopra esce dal browser, `packages/ruota` lo produce anche **senza un
