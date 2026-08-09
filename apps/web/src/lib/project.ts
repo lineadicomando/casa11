@@ -8,6 +8,9 @@
  * nell'informativa privacy.
  *
  * Finché è vuoto, l'interfaccia scrive il testo senza collegamento invece di
- * produrne uno rotto. **Va valorizzato prima di mettere il sito in rete.**
+ * produrne uno rotto. **Chi mette in rete una propria copia deve cambiarlo con
+ * l'indirizzo della sua**: l'obbligo riguarda il sorgente di ciò che sta
+ * girando, e l'informativa dichiara titolare del trattamento chi gestisce
+ * l'istanza, non chi ha scritto il programma.
  */
-export const REPOSITORY_URL = '';
+export const REPOSITORY_URL = 'https://github.com/lineadicomando/casa11';

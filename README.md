@@ -111,22 +111,6 @@ npm run typecheck
 npm run build
 ```
 
-## Prima di mettere in rete
-
-Tre cose che non dipendono dal codice ma dalla messa in opera, e senza le quali
-l'informativa pubblicata su `/privacy` dice il falso:
-
-- **Valorizzare `REPOSITORY_URL`** in `apps/web/src/lib/project.ts`. L'AGPL,
-  articolo 13, obbliga a offrire il sorgente a chi usa il programma via rete, ed
-  è lo stesso indirizzo indicato come recapito nell'informativa.
-- **Togliere la query string dai log.** I parametri di nascita viaggiano
-  nell'indirizzo: il formato `combined` di nginx li registra accanto all'IP.
-  Serve un formato che usi `$uri` al posto di `$request` — con Caddy, il filtro
-  `query` sui campi `date`, `time`, `latitude`, `longitude`, `locationId`.
-- **Rendere vera la ritenzione dichiarata.** Sette giorni, da `RITENZIONE_LOG`
-  in `apps/web/src/routes/(informativa)/privacy/+page.svelte`: va reso vero con
-  la rotazione, e i due numeri vanno cambiati insieme.
-
 ## L'interpretazione
 
 Il motore non interpreta, ed è un vincolo, non una funzione mancante. Sotto il
