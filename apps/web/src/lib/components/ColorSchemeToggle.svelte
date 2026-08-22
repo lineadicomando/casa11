@@ -1,11 +1,24 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import type { Cielo } from '$lib/cielo.svelte';
   import {
     applyColorScheme,
     nextColorScheme,
     readColorScheme,
     type ColorScheme,
   } from '$lib/color-scheme';
+
+  interface Props {
+    /**
+     * Il cielo dietro la pagina, che questo pulsante non sa disegnare: gli
+     * conta solo i clic sopra. Il conteggio sta qui e non altrove perché il
+     * gesto è questo — un giro intero del ciclo, che riporta la pagina
+     * esattamente com'era.
+     */
+    cielo: Cielo;
+  }
+
+  let { cielo }: Props = $props();
 
   const NOMI: Record<ColorScheme, string> = {
     auto: 'automatico',
@@ -32,6 +45,9 @@
   function cambia() {
     scheme = nextColorScheme(scheme);
     applyColorScheme(scheme);
+    // Dopo, e non prima: il pulsante fa il suo mestiere comunque, e quel che
+    // gli corre accanto non deve poterglielo impedire.
+    cielo.scatta();
   }
 </script>
 

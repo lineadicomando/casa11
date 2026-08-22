@@ -1,5 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { cielo } from '$lib/cielo.svelte';
+  import CieloStellato from '$lib/components/CieloStellato.svelte';
   import ColorSchemeToggle from '$lib/components/ColorSchemeToggle.svelte';
   import Marchio from '$lib/components/Marchio.svelte';
   import { isActive, SECTIONS } from '$lib/navigation';
@@ -9,7 +11,9 @@
   let { children } = $props();
 </script>
 
-<div class="guscio">
+<CieloStellato {cielo} />
+
+<div class="guscio" class:velato={cielo.acceso}>
   <header>
     <a class="marchio" href="/"><Marchio /></a>
 
@@ -31,7 +35,7 @@
         </ul>
       </nav>
 
-      <ColorSchemeToggle />
+      <ColorSchemeToggle {cielo} />
     </div>
   </header>
 
@@ -61,6 +65,55 @@
     max-width: 72rem;
     margin: 0 auto;
     padding: 1.0rem 1.25rem 4rem;
+    /* Sopra il cielo, che sta a `z-index: 0`: senza un livello dichiarato il
+       guscio non ne avrebbe uno, e un elemento fisso disegnato dopo di lui gli
+       finirebbe davanti. */
+    position: relative;
+    z-index: 1;
+  }
+
+  /*
+   * Il velo che tiene il cielo al suo posto: dietro.
+   *
+   * Il fondo della pagina invece di sparire diventa quasi opaco, e quel poco
+   * di cielo che passa basta a vedere che c'è. I margini oltre il guscio
+   * restano scoperti, ed è là che l'effetto si guarda: è la ragione per cui il
+   * velo può permettersi di essere fitto.
+   *
+   * Più fitto sul chiaro che sullo scuro, e non per simmetria mancata. Sul
+   * fondo scuro il cielo è più buio della pagina, quindi il testo chiaro sopra
+   * ci guadagna e il velo serve solo a non far scintillare le stelle dietro una
+   * tabella. Sul fondo chiaro il cielo è inchiostro su carta e va nella stessa
+   * direzione del testo: là il velo è l'unica cosa che tiene le due cose
+   * distinte, e i cinque punti in più li spende per il caso peggiore — una
+   * stella esattamente dietro una riga in `--testo-tenue`, che è il testo con
+   * meno margine di tutta la pagina.
+   *
+   * Nessun `backdrop-filter`, per quanto sfocare lo sfondo sarebbe la cosa
+   * ovvia da fare qui: un filtro sullo sfondo rende l'elemento il blocco
+   * contenitore dei suoi discendenti fissi, e il sigillo nel margine —
+   * `position: fixed` sopra i 90rem — smetterebbe di stare fermo mentre la
+   * pagina gli scorre sotto, che è tutto quello che il sigillo fa.
+   *
+   * Il contrasto del testo regge in tutti e due gli aspetti, ed è per
+   * costruzione e non per fortuna: le due tavolozze in `lib/cielo.ts` partono
+   * dal fondo della pagina e vanno *verso lo scuro* in tutti e due i casi —
+   * notte sul fondo scuro, carta più calda su quello chiaro — e quel che
+   * traspare può solo scurire un fondo su cui il testo è già misurato. Il caso
+   * peggiore è `--testo-tenue` sul fondo chiaro, esattamente sopra la stella
+   * più luminosa che il cielo metta sotto il guscio: da 5,07:1 scende a 4,57:1,
+   * che resta sopra il minimo di 4,5. È il numero più stretto della pagina, e
+   * il velo al 91% è quello che glielo tiene: abbassarlo lo porta sotto.
+   */
+  .guscio.velato {
+    background: light-dark(
+      color-mix(in srgb, var(--sfondo) 91%, transparent),
+      color-mix(in srgb, var(--sfondo) 86%, transparent)
+    );
+    /* Un foglio arriva in fondo. Senza, il velo finisce dove finisce il piè di
+       pagina e lascia una riga netta in mezzo allo schermo: non sembra un
+       foglio posato sulla notte, ma un riquadro rimasto aperto. */
+    min-height: 100dvh;
   }
 
   header {
