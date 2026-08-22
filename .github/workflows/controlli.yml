@@ -1,0 +1,55 @@
+# I due comandi che questo progetto lancia a mano prima di ogni commit, lanciati
+# da qualcun altro. Non c'è un passo di `build`: `typecheck` compila già ruota,
+# core e geo per davvero — se non compilano, fallisce lì.
+
+name: Controlli
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un push sopra l'altro annulla il controllo di quello prima: quello che conta è
+# lo stato dell'ultimo, e due esiti in coda sulla stessa riga sono uno sprecato.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  controlli:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # La versione che `engines` chiede come minima. Non `latest`: un
+          # controllo che si rompe da solo il giorno in cui esce Node 25 non
+          # sta dicendo niente sul codice.
+          node-version: 22
+          cache: npm
+
+      # Le effemeridi non sono versionate e non cambiano mai: due megabyte di
+      # dati binari con dentro le posizioni dei pianeti dal 1800 al 2399. La
+      # chiave è lo script che le scarica, perché è lì che è scritto quali file
+      # siano — cambiarlo è l'unico motivo per cui la cache debba decadere.
+      - uses: actions/cache@v4
+        with:
+          path: packages/core/ephe
+          key: ephe-${{ hashFiles('packages/core/scripts/download-ephe.mjs') }}
+
+      - run: npm ci
+        env:
+          # Electron serve a `apps/desktop`, che qui viene solo controllato dai
+          # tipi: quelli stanno nel pacchetto npm, il binario da cento megabyte
+          # no. Scaricarlo a ogni giro per non eseguirlo mai è tempo buttato.
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+
+      # Senza, il motore ripiega su Moshier e aggiunge un'avvertenza che tre
+      # test contano una a una. Vedi packages/core/test/sky.test.ts.
+      - run: npm run ephe:download -w @undicesimacasa/core
+
+      - run: npm test
+
+      - run: npm run typecheck
