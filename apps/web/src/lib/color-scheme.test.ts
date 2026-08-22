@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextColorScheme, parseColorScheme } from './color-scheme';
+import { nextColorScheme, parseColorScheme, resolveColorScheme } from './color-scheme';
 
 describe('nextColorScheme', () => {
   it('gira in tondo partendo da automatico', () => {
@@ -26,5 +26,17 @@ describe('parseColorScheme', () => {
     expect(parseColorScheme('Dark')).toBe('auto');
     expect(parseColorScheme('notte')).toBe('auto');
     expect(parseColorScheme('')).toBe('auto');
+  });
+});
+
+describe('resolveColorScheme', () => {
+  it('lascia stare una scelta esplicita', () => {
+    expect(resolveColorScheme('light', true)).toBe('light');
+    expect(resolveColorScheme('dark', false)).toBe('dark');
+  });
+
+  it('su `auto` guarda il sistema', () => {
+    expect(resolveColorScheme('auto', true)).toBe('dark');
+    expect(resolveColorScheme('auto', false)).toBe('light');
   });
 });

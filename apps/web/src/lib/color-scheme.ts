@@ -38,6 +38,24 @@ export function parseColorScheme(value: string | null | undefined): ColorScheme 
   return value === 'light' || value === 'dark' ? value : 'auto';
 }
 
+/**
+ * Quale delle due luci è accesa adesso: `auto` diventa quella che dice il
+ * sistema.
+ *
+ * Il CSS questa domanda non la fa mai — `light-dark()` e `prefers-color-scheme`
+ * gli rispondono da soli — ma chi dipinge su un `canvas` deve scegliere dei
+ * colori a mano, e `auto` non è un colore. Prende la preferenza di sistema come
+ * argomento invece di andarsela a leggere: è l'unica parte che non si potrebbe
+ * provare, e sta fuori.
+ */
+export function resolveColorScheme(
+  scheme: ColorScheme,
+  systemPrefersDark: boolean,
+): 'light' | 'dark' {
+  if (scheme !== 'auto') return scheme;
+  return systemPrefersDark ? 'dark' : 'light';
+}
+
 /** Fuori dal browser — durante il rendering sul server — vale `auto`. */
 export function readColorScheme(): ColorScheme {
   if (typeof document === 'undefined') return 'auto';
