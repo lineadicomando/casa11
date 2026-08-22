@@ -74,13 +74,16 @@
   --quadrante: light-dark(#a39e97, #5a5955);
   --quadrante-forte: light-dark(#8b8478, #736f68);
 
-  /* La doratura del monogramma nel marchio.
+  /* La doratura della stella nel marchio.
 
-     Era scritta solo dentro il disegno del marchio, dove nessun altro poteva
-     vederla: dichiararla qui la rende un colore del progetto invece di un
-     dettaglio di un file. Non cambia con l'aspetto — sta sopra il riquadro
-     scuro del monogramma in entrambi. */
-  --oro: #fab219;
+     Cambia con l'aspetto, e prima no: allora stava sopra il riquadro scuro del
+     monogramma, che era scuro in tutti e due i temi. La stella del sigillo il
+     riquadro non ce l'ha — sta sul fondo della pagina — e l'oro pieno su crema
+     vale 1,73:1, sotto il 3:1 che WCAG chiede a un oggetto grafico. La versione
+     chiara è lo stesso oro portato in ombra fino a 4,6:1 sul fondo chiaro.
+
+     Il favicon tiene l'oro pieno e il riquadro scuro: un'icona non ha temi. */
+  --oro: light-dark(#9a6608, #fab219);
 
   /* La voce delle intestazioni.
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import ColorSchemeToggle from '$lib/components/ColorSchemeToggle.svelte';
-  import Wordmark from '$lib/components/Wordmark.svelte';
+  import Marchio from '$lib/components/Marchio.svelte';
   import { isActive, SECTIONS } from '$lib/navigation';
   import { REPOSITORY_URL } from '$lib/project';
   import '../app.css';
@@ -11,23 +11,28 @@
 
 <div class="guscio">
   <header>
-    <div class="testata">
-      <a class="marchio" href="/"><Wordmark /></a>
+    <a class="marchio" href="/"><Marchio /></a>
+
+    <!-- Dove si può andare e com'è la luce, sulla stessa riga: il pulsante si
+         guadagna la fine di quella invece di prendersene una tutta sua, che
+         sopra i 90rem sarebbe una riga vuota con dentro un cerchio — là il
+         marchio se n'è andato nel margine e non gli fa più compagnia. -->
+    <div class="barra">
+      <nav aria-label="Sezioni">
+        <ul>
+          {#each SECTIONS as section (section.href)}
+            {@const attiva = isActive(section.href, page.url.pathname)}
+            <li>
+              <a href={section.href} aria-current={attiva ? 'page' : undefined} class:attiva>
+                {section.label}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </nav>
+
       <ColorSchemeToggle />
     </div>
-
-    <nav aria-label="Sezioni">
-      <ul>
-        {#each SECTIONS as section (section.href)}
-          {@const attiva = isActive(section.href, page.url.pathname)}
-          <li>
-            <a href={section.href} aria-current={attiva ? 'page' : undefined} class:attiva>
-              {section.label}
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </nav>
   </header>
 
   <main>
@@ -66,16 +71,18 @@
 
   /* Il marchio non è il titolo della pagina: con più sezioni il titolo scende
      nelle pagine, che così hanno ciascuna il proprio `h1`. */
-  .testata {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
   .marchio {
-    display: inline-block;
+    /* In mezzo alla pagina: il marchio ha una riga tutta sua, e in un blocco
+       centrato sopra una barra che va da un margine all'altro l'unica posizione
+       che non sembra scelta a caso è il centro. Sopra i 90rem se ne va nel
+       margine e questa regola non ha più niente da centrare. */
+    display: block;
+    width: fit-content;
+    margin-inline: auto;
+    /* Il nome dentro il marchio è disegno quanto il sigillo: sottolinearlo lo
+       renderebbe l'unico link della pagina che sottolinea una parte di
+       un'immagine. */
+    text-decoration: none;
     /* Il disegno è l'unico contenuto del link: senza questo la riga di testo
        che lo contiene gli lascia sotto qualche pixel di spazio. */
     line-height: 0;
@@ -85,11 +92,72 @@
     opacity: 0.75;
   }
 
+  /*
+   * Largo abbastanza da avere un margine, e il sigillo va a sedercisi dentro.
+   *
+   * Dove sta un sigillo: fuori dal campo che si legge, non dentro — e fermo
+   * mentre la pagina gli scorre sotto. La soglia è il guscio (72rem) più lo
+   * spazio per il marchio da tutt'e due i lati: sotto i 90rem non c'è margine
+   * in cui andare, e un elemento fisso finirebbe sopra il testo invece che
+   * accanto, quindi la testata se lo tiene in riga.
+   *
+   * Le misure del marchio non stanno qui dentro: gliele si passa con le
+   * proprietà che `Marchio.svelte` dichiara, perché una regola scritta qui non
+   * attraverserebbe il confine del componente.
+   */
+  @media (min-width: 90rem) {
+    .marchio {
+      position: fixed;
+      /* La stessa `padding-top` del guscio: il sigillo comincia dove comincia
+         la testata, invece di penzolarle sotto. */
+      top: 1rem;
+      /* 7rem di colonna, mezzo rem netto dal bordo del guscio. */
+      left: calc(50% - 36rem - 7.5rem);
+      width: 7rem;
+      margin-inline: 0;
+
+      --marchio-verso: column;
+      --marchio-aria: 0.7rem;
+      --marchio-sigillo: 5.5rem;
+      --marchio-numero: 1.7rem;
+      --marchio-casa: 0.68rem;
+    }
+  }
+
+  /* Un foglio non scorre, e un elemento fisso sopra ci finisce una volta sola,
+     su una pagina qualunque delle sue. */
+  @media print {
+    .marchio {
+      position: static;
+      width: fit-content;
+      margin-inline: auto;
+
+      --marchio-verso: row;
+      --marchio-aria: 0.55rem;
+      --marchio-sigillo: 2.5rem;
+      --marchio-numero: 1.35rem;
+      --marchio-casa: 0.62rem;
+    }
+  }
+
+  /* Le voci a sinistra, il pulsante a destra. Lo stacco dal marchio sta qui e
+     non sull'elenco: messo là, il margine uscirebbe dal `nav` per accollamento
+     e l'allineamento centrale lo troverebbe a metà strada, col pulsante più in
+     basso delle voci di quei 0,7rem. */
+  .barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.7rem;
+  }
+
   nav ul {
     display: flex;
     flex-wrap: wrap;
     gap: 1.25rem;
-    margin: 0.7rem 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
   }

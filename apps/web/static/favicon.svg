@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Il monogramma: il numero romano undici dentro il riquadro del marchio.
+  Il sigillo ridotto all'osso: la stella a dodici punte, e nient'altro.
 
-  È costruito, non disegnato: due diagonali e un'asta, tutte e tre larghe 5,6
-  su una griglia di 64, coi terminali tagliati netti. La larghezza vale 1,61
-  nelle unità del marchio, cioè quanto l'asta della «i» di Jost a 19,29 — il
-  segno pesa come le lettere che gli stanno accanto.
+  Il marchio ha tre giri — due cerchi, la fascia con le due luci e i decori,
+  la stella. A 16 punti, che è la misura in cui un favicon viene guardato
+  davvero, la fascia è una macchia grigia e i due cerchi sono un anello di un
+  pixel: restano nel disegno grande e qui se ne vanno. Quello che sopravvive è il
+  centro, che è anche la parte del marchio che dice la cosa più propria —
+  dodici, la divisione del cielo. Vedi `apps/web/src/lib/components/Marchio.svelte`.
 
-  La X e la I arrivano entrambe da 17,5 a 46,5. Le diagonali partono da 19,2 e
-  44,8 perché il taglio netto di un tratto obliquo sporge oltre il suo estremo:
-  è quello sporgere che le porta in pari con l'asta.
+  La stella è di tratto nel marchio e piena qui: non un'altra forma, la stessa.
+  Il raggio interno vale 0,518 dell'esterno, che è dove le corde del poligono
+  {12/5} si tagliano fra loro — riempirne la sagoma dà esattamente il contorno
+  del disegno grande, senza le corde interne che a questa misura si chiudono.
 
-  Il riquadro serve nel tema chiaro: l'oro sul fondo crema sta a 1,73:1, contro
-  il 3:1 che WCAG chiede a un oggetto grafico; sul riquadro scuro sta a 9,58:1.
-  Nel tema scuro il fondo della pagina fa già quel lavoro e il riquadro sparisce
-  — vedi `header_dark.svg`.
+  Il raggio esterno è 27 su 64: la stella riempie il riquadro invece di
+  starci comoda dentro. È la sola leva che restava. A 16 punti dodici punte non
+  si risolvono comunque — la circonferenza dà tre punti a punta, e due punte non
+  si distinguono in tre punti — e la scelta è fra un sole d'oro e un cerchio
+  d'oro. Da 32 in su, che è quello che una scheda disegna davvero su uno schermo
+  a doppia densità, le dodici punte ci sono tutte.
+
+  Il riquadro scuro serve nel tema chiaro: l'oro sul fondo crema sta a 1,73:1,
+  contro il 3:1 che WCAG chiede a un oggetto grafico; sul riquadro sta a 9,58:1.
+  Un favicon non ha temi — lo stesso file va su fondo chiaro e su fondo scuro —
+  quindi il riquadro c'è sempre, e si porta dietro l'angolo arrotondato.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="9.7" fill="#1a1917"/>
-  <g fill="none" stroke="#fab219" stroke-width="5.6">
-    <path d="M16.8 19.2 36.4 44.8M36.4 19.2 16.8 44.8"/>
-    <path d="M46.6 17.5V46.5"/>
-  </g>
+  <path fill="#fab219" d="M32 5L35.617 18.5L45.5 8.617L41.883 22.117L55.383 18.5L45.5 28.383L59 32L45.5 35.617L55.383 45.5L41.883 41.883L45.5 55.383L35.617 45.5L32 59L28.383 45.5L18.5 55.383L22.117 41.883L8.617 45.5L18.5 35.617L5 32L18.5 28.383L8.617 18.5L22.117 22.117L18.5 8.617L28.383 18.5Z"/>
 </svg>
