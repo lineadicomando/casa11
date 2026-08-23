@@ -182,6 +182,7 @@ export function computeVarga(chart: NatalChart, id: VargaId): VargaChart {
       id: body.id,
       name: grahaName(body.id, body.name),
       sign: vargaSignOf(body.longitude, id),
+      retrograde: body.retrograde,
     })),
   };
 

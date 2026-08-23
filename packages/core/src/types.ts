@@ -379,7 +379,23 @@ export interface VargaChart {
   divisions: number;
   /** La regola in una riga. */
   rule: string;
-  positions: { id: BodyId; name: string; sign: ZodiacSign }[];
+  positions: {
+    id: BodyId;
+    name: string;
+    sign: ZodiacSign;
+    /**
+     * Se il graha era retrogrado, cioè *vakri*.
+     *
+     * Si porta in ogni varga e non solo nella rashi, ed è lecito perché
+     * **la retrogradazione è del corpo e non del segno**: è il moto apparente
+     * a quell'istante, e il varga non lo tocca — sposta dove il corpo cade,
+     * non come si muove. Il grado invece resta fuori, e per la ragione
+     * opposta: dentro un segno di varga non è definito. Il trimsamsa divide
+     * il segno in cinque tratti disuguali, e là un «grado nel segno» non
+     * esiste in nessun senso che si possa ricalcolare.
+     */
+    retrograde: boolean;
+  }[];
   /** Il segno del lagna. Assente se il tema non ha un Ascendente. */
   ascendant?: ZodiacSign;
 }

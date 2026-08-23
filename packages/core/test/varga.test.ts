@@ -173,6 +173,24 @@ describe('computeVarga', () => {
     }
   });
 
+  it('porta la retrogradazione in ogni varga, che è del corpo e non del segno', () => {
+    // Il varga sposta dove un corpo cade, non come si muove: il moto
+    // apparente a quell'istante resta quello in tutte e sedici le divisioni.
+    // È la ragione per cui questo si può portare e il grado no — dentro un
+    // segno di trimsamsa un grado non è nemmeno definito.
+    const carta = tema();
+    const vakri = new Set(
+      carta.bodies.filter((body) => body.retrograde).map((body) => body.id),
+    );
+    expect(vakri.size).toBeGreaterThan(0);
+
+    for (const definizione of VARGAS) {
+      for (const position of computeVarga(carta, definizione.id).positions) {
+        expect(position.retrograde).toBe(vakri.has(position.id));
+      }
+    }
+  });
+
   it('non dà le case, che in un varga si contano dal lagna', () => {
     // Darle vorrebbe dire scegliere una domificazione dove il sistema non ne
     // prevede: dal segno del lagna e da quello del corpo la casa si ricava
