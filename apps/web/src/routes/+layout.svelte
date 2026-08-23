@@ -44,6 +44,17 @@
   </main>
 
   <footer>
+    <!-- Prima delle attribuzioni, e con più aria sotto: le altre due righe
+         dicono da dove vengono i dati e a quali condizioni, questa dice che
+         cosa il sito è. Non disclama il calcolo — che è esatto, ed è l'unica
+         cosa che il motore prometta — ma quello che se ne fa. È la stessa
+         distinzione che le istruzioni in `lib/lettura.ts` chiedono al modello,
+         detta qui a chi legge: due destinatari, due testi. -->
+    <p class="avvertenza">
+      Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio
+      simbolico, offerta come spunto di riflessione e intrattenimento. Non sostituisce
+      il parere di un professionista in materia medica, psicologica, legale o finanziaria.
+    </p>
     <p>
       Dati astronomici <a href="https://www.astro.com/swisseph/">Swiss Ephemeris</a> ·
       località <a href="https://www.geonames.org/">GeoNames</a> (CC BY 4.0)
@@ -250,5 +261,13 @@
 
   footer p + p {
     margin-top: 0.3rem;
+  }
+
+  /* Un blocco a sé, non la prima di tre righe uguali: le attribuzioni che
+     seguono sono un'altra cosa, e senza lo stacco l'avvertenza si legge come
+     la prima voce del loro elenco. */
+  .avvertenza {
+    max-width: 46rem;
+    margin-bottom: 0.9rem;
   }
 </style>

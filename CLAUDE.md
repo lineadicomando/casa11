@@ -41,8 +41,15 @@ il motore usa Moshier invece delle effemeridi Swiss.
 
 - **Licenza AGPL-3.0-or-later**, imposta da Swiss Ephemeris. Ogni nuova
   dipendenza deve esserle compatibile.
-- **Il motore non interpreta.** `core` produce dati verificabili; il significato
-  è responsabilità di chi consuma. Non aggiungere testi interpretativi al calcolo.
+- **Il motore non interpreta: emette predicati verificabili.** Un dato è
+  un'affermazione che chiunque può ricalcolare dagli stessi input seguendo la
+  convenzione che il motore dichiara — `Distribution` porta `counted` perché chi
+  conta diversamente rifaccia la somma, la Parte di Fortuna nomina la formula, il
+  tema porta il sistema di case. Che cosa significhi non lo dice mai: la riga sta
+  per esteso nel commento a `VoidOfCourse` in `types.ts`. Il confine è il
+  significato, non l'ampiezza — un conteggio su tutto il tema si può fare,
+  «Saturno in settima ritarda il matrimonio» no. Dove le scuole divergono si
+  espongono i componenti e si nomina la scuola, mai un totale solo.
 - **Il client non importa valori da `@undicesimacasa/core`, solo tipi.** Un
   import di valore trascina effemeridi e modulo nativo nel bundle del browser.
 - **Il fallimento è parziale**: un corpo non calcolabile produce un avviso, non

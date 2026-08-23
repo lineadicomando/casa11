@@ -113,11 +113,23 @@ npm run build
 
 ## L'interpretazione
 
-Il motore non interpreta, ed è un vincolo, non una funzione mancante. Sotto il
-tema calcolato, l'interfaccia offre un pulsante che copia negli appunti un
-**prompt già pronto** — il tema in forma di tabella più le istruzioni per
+Il motore non interpreta, ed è un vincolo, non una funzione mancante. Quello che
+produce sono **predicati verificabili**: affermazioni che chiunque può
+ricalcolare dagli stessi dati di partenza, seguendo la convenzione che il motore
+dichiara accanto al risultato. Dove le scuole divergono — la formula della Parte
+di Fortuna, che cosa entri in un conteggio — espone i componenti e nomina la
+convenzione, invece di sceglierne una in silenzio e presentarne l'esito come un
+fatto. Che cosa significhino, quei dati, non lo dice mai.
+
+Sotto il tema calcolato, l'interfaccia offre un pulsante che copia negli appunti
+un **prompt già pronto** — il tema in forma di tabella più le istruzioni per
 leggerlo — da incollare nell'assistente che si preferisce. Il sito non parla con
 nessun modello e non manda niente a nessuno.
 
 Quel prompt è il riferimento unico per la lettura, e vive in
 `apps/web/src/lib/lettura.ts`.
+
+Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio
+simbolico, offerta come spunto di riflessione e intrattenimento. Non sostituisce
+il parere di un professionista in materia medica, psicologica, legale o
+finanziaria.
