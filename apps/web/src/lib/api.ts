@@ -10,8 +10,11 @@
 import type {
   AyanamsaId,
   BodyId,
+  DashaYear,
   HouseSystem,
+  JyotishaChart,
   NatalChart,
+  NodeDrishti,
   PassageRange,
   PlanetaryHour,
   SignIngress,
@@ -19,6 +22,7 @@ import type {
   SkyPassage,
   Station,
   TransitChart,
+  VargaId,
   TransitPassage,
   VoidOfCourse,
   Zodiac,
@@ -149,6 +153,90 @@ export async function fetchChartCompact(parameters: URLSearchParams): Promise<st
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
     throw new RequestError(messageOf(body) ?? `Tema non riletto (errore ${response.status}).`);
+  }
+
+  return response.text();
+}
+
+export interface JyotishaResponse {
+  jyotisha: JyotishaChart;
+  place?: { label: string; refined: boolean };
+}
+
+/**
+ * Le scelte che questa sezione lascia fare.
+ *
+ * Zodiaco e case non ci sono: siderale e segni interi sono ciò che rende
+ * vedico un tema, non un predefinito da cambiare. Restano le divergenze vere,
+ * quelle su cui le scuole non concordano.
+ */
+export interface JyotishaOptionsInput {
+  ayanamsa: AyanamsaId;
+  /** 1, 2 o 3 ordini di dasha. */
+  dashaLevels: 1 | 2 | 3;
+  dashaYear: DashaYear;
+  vargas: VargaId[];
+  drishtiNodes: NodeDrishti;
+}
+
+/**
+ * Compone i parametri di `/api/jyotish`.
+ *
+ * Non riusa `chartParameters` e non è una dimenticanza: quello scrive sistema
+ * di case, aspetti minori e zodiaco, che qui o non si scelgono o non esistono.
+ * Le due funzioni condividono la nascita, non le opzioni.
+ */
+export function jyotishaParameters(
+  birth: BirthInput,
+  options: JyotishaOptionsInput,
+): URLSearchParams {
+  if (!birth.location) throw new RequestError('Luogo di nascita non scelto.');
+
+  const parameters = new URLSearchParams({
+    date: birth.date,
+    locationId: String(birth.location.id),
+    ayanamsa: options.ayanamsa,
+    dashaLevels: String(options.dashaLevels),
+    dashaYear: options.dashaYear,
+    vargas: options.vargas.join(','),
+    drishtiNodes: options.drishtiNodes,
+  });
+
+  if (!birth.timeUnknown && birth.time) parameters.set('time', birth.time);
+
+  const refined = refinedCoordinates(birth);
+  if (refined) {
+    parameters.set('latitude', String(refined.latitude));
+    parameters.set('longitude', String(refined.longitude));
+  }
+
+  return parameters;
+}
+
+export async function fetchJyotisha(parameters: URLSearchParams): Promise<JyotishaResponse> {
+  return request<JyotishaResponse>(
+    `/api/jyotish?${parameters}`,
+    'Calcolo del tema vedico non riuscito',
+  );
+}
+
+/** Lo stesso tema in forma compatta, per il prompt di lettura. */
+export async function fetchJyotishaCompact(parameters: URLSearchParams): Promise<string> {
+  const compatti = new URLSearchParams(parameters);
+  compatti.set('format', 'compact');
+
+  let response: Response;
+  try {
+    response = await fetch(`/api/jyotish?${compatti}`);
+  } catch {
+    throw new RequestError('Tema vedico non riletto: server non raggiungibile.');
+  }
+
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    throw new RequestError(
+      messageOf(body) ?? `Tema vedico non riletto (errore ${response.status}).`,
+    );
   }
 
   return response.text();

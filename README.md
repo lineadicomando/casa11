@@ -54,8 +54,8 @@ npx casa11 --date 1968-03-12 --time 14:30 \
 npx casa11 --help        # tutte le opzioni
 ```
 
-**Applicazione web.** Dieci endpoint, tutti in GET perché un tema è una funzione
-pura dei suoi parametri:
+**Applicazione web.** Cinque sezioni e dieci endpoint, tutti in GET perché un
+tema è una funzione pura dei suoi parametri:
 
 ```sh
 npm run dev -w @undicesimacasa/web      # http://localhost:5173

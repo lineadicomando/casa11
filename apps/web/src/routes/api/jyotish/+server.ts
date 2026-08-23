@@ -8,7 +8,7 @@ import {
   type VimshottariOptions,
 } from '@undicesimacasa/core';
 import { error, json } from '@sveltejs/kit';
-import { placeLabel, readBirth, readZodiacOptions } from '$lib/server/birth';
+import { placeLabel, readAyanamsa, readBirth } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError } from '$lib/server/place';
 import type { RequestHandler } from './$types';
@@ -56,11 +56,15 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     const parameters = url.searchParams;
     const { birth, place } = readBirth(parameters);
 
-    const zodiaco = readZodiacOptions(parameters);
-    if (zodiaco.zodiac === 'tropicale') {
+    // Lo zodiaco qui non si legge con `readZodiacOptions`: quella pretende
+    // `zodiac=siderale` accanto all'ayanamsa, ed è giusto dove lo zodiaco è
+    // una scelta. Qui non lo è, e farlo scrivere a ogni richiesta vorrebbe
+    // dire chiedere un parametro che non può avere un altro valore.
+    const zodiac = parameters.get('zodiac');
+    if (zodiac && zodiac !== 'siderale') {
       throw error(400, {
         message:
-          'Il Jyotisha è siderale per definizione: "zodiac=tropicale" non si applica. ' +
+          `Il Jyotisha è siderale per definizione: "zodiac=${zodiac}" non si applica. ` +
           'Per un tema tropicale usa /api/chart.',
         code: 'ZODIACO_NON_SIDERALE',
       });
@@ -69,7 +73,8 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     // Siderale e a segni interi non sono predefiniti sostituibili: sono ciò
     // che rende vedico questo tema. Chi vuole altro ha /api/chart.
     const chartOptions: ChartOptions = { zodiac: 'siderale', houseSystem: 'segni-interi' };
-    if (zodiaco.ayanamsa) chartOptions.ayanamsa = zodiaco.ayanamsa;
+    const ayanamsa = readAyanamsa(parameters);
+    if (ayanamsa) chartOptions.ayanamsa = ayanamsa;
 
     const jyotisha = computeJyotisha(
       computeNatalChart(birth, chartOptions),

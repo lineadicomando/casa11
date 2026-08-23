@@ -2,7 +2,13 @@
   import type { AyanamsaId, HouseSystem, NatalChart, Zodiac } from '@undicesimacasa/core';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { chartParameters, fetchChart, fetchLocation, RequestError } from '$lib/api';
+  import {
+    chartParameters,
+    fetchChart,
+    fetchChartCompact,
+    fetchLocation,
+    RequestError,
+  } from '$lib/api';
   import { birthFromParameters, isComplete, missingBirthFields } from '$lib/birth';
   import { Evidenza } from '$lib/evidenza.svelte';
   import { houseSystemOrDefault } from '$lib/house-systems';
@@ -248,7 +254,7 @@
              aspetti lo troverebbe solo chi ha scorso tutto. Qui e non sotto la
              ruota perché quella è appesa, e un elemento appeso non viene spinto
              da ciò che lo segue — se lo porta sotto, sovrapponendocisi. -->
-        <StrumentiLettura parametri={() => chartParameters(birth, opzioniTema)} />
+        <StrumentiLettura tavola={() => fetchChartCompact(chartParameters(birth, opzioniTema))} />
 
         <BodyTable bodies={chart.bodies} partOfFortune={chart.partOfFortune} {evidenza} />
 

@@ -13,16 +13,29 @@
   contatta nessun altro server.
 -->
 <script lang="ts">
-  import { letturaDaIncollare } from '@undicesimacasa/lettura';
-  import { fetchChartCompact, RequestError } from '$lib/api';
+  import { letturaDaIncollare, type Sistema } from '@undicesimacasa/lettura';
+  import { RequestError } from '$lib/api';
   import { REPOSITORY_URL } from '$lib/project';
 
   interface Props {
-    /** I parametri con cui rileggere questo stesso tema in forma compatta. */
-    parametri: () => URLSearchParams;
+    /**
+     * Come rileggere questo stesso tema in forma compatta.
+     *
+     * Una funzione che restituisce il testo, e non i parametri con cui
+     * chiederlo: da quale rotta arrivi la tabella non è affare di questo
+     * pulsante, che sa solo metterle davanti le istruzioni giuste.
+     */
+    tavola: () => Promise<string>;
+    /**
+     * Quale documento di istruzioni.
+     *
+     * Va insieme alla tavola e non si sceglie a parte: le istruzioni tropicali
+     * su un tema vedico non danno un errore, danno un ibrido plausibile.
+     */
+    sistema?: Sistema;
   }
 
-  let { parametri }: Props = $props();
+  let { tavola, sistema = 'tropicale' }: Props = $props();
 
   /** Quanto resta scritto «copiato», prima che il pulsante torni a offrirsi. */
   const CONFERMA = 2500;
@@ -51,7 +64,8 @@
       // L'indirizzo va passato: il pacchetto non ha modo di sapere da dove sia
       // servita la copia che sta girando, ed è quella che l'AGPL obbliga a
       // offrire.
-      const testo = letturaDaIncollare(await fetchChartCompact(parametri()), {
+      const testo = letturaDaIncollare(await tavola(), {
+        sistema,
         repository: REPOSITORY_URL,
       });
 

@@ -91,15 +91,8 @@ export function readZodiacOptions(parameters: URLSearchParams): ZodiacOptions {
     options.zodiac = zodiac;
   }
 
-  const ayanamsa = parameters.get('ayanamsa');
+  const ayanamsa = readAyanamsa(parameters);
   if (ayanamsa) {
-    if (!AYANAMSAS.has(ayanamsa)) {
-      throw error(400, {
-        message:
-          `Ayanamsa "${ayanamsa}" non riconosciuto. Ammessi: ${[...AYANAMSAS].join(', ')}.`,
-        code: 'AYANAMSA_NON_VALIDO',
-      });
-    }
     if (options.zodiac !== 'siderale') {
       // Accettarlo sullo zodiaco tropicale vuol dire restituire un tema in cui
       // l'ayanamsa chiesto non compare da nessuna parte, e nessuno se ne
@@ -109,10 +102,32 @@ export function readZodiacOptions(parameters: URLSearchParams): ZodiacOptions {
         code: 'AYANAMSA_SENZA_ZODIACO',
       });
     }
-    options.ayanamsa = ayanamsa as AyanamsaId;
+    options.ayanamsa = ayanamsa;
   }
 
   return options;
+}
+
+/**
+ * L'ayanamsa richiesto, se c'è, senza chiedere niente sullo zodiaco.
+ *
+ * Sta a parte da `readZodiacOptions` perché non tutte le rotte hanno uno
+ * zodiaco da scegliere: su `/api/jyotish` è siderale per definizione, e
+ * pretendere lì il parametro che lo dice significherebbe farlo scrivere a ogni
+ * richiesta per non dire niente.
+ */
+export function readAyanamsa(parameters: URLSearchParams): AyanamsaId | undefined {
+  const ayanamsa = parameters.get('ayanamsa');
+  if (!ayanamsa) return undefined;
+
+  if (!AYANAMSAS.has(ayanamsa)) {
+    throw error(400, {
+      message: `Ayanamsa "${ayanamsa}" non riconosciuto. Ammessi: ${[...AYANAMSAS].join(', ')}.`,
+      code: 'AYANAMSA_NON_VALIDO',
+    });
+  }
+
+  return ayanamsa as AyanamsaId;
 }
 
 export function readChartOptions(parameters: URLSearchParams): ChartOptions {

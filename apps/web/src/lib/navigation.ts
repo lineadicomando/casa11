@@ -13,6 +13,7 @@ export interface Section {
 export const SECTIONS: readonly Section[] = [
   { href: '/', label: 'Tema natale' },
   { href: '/transiti', label: 'Transiti' },
+  { href: '/vedico', label: 'Vedica' },
   { href: '/cielo', label: 'Cielo' },
   { href: '/elezione', label: 'Elezione' },
 ];
