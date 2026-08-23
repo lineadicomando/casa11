@@ -253,6 +253,21 @@
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
 <h1 class="nascosto">Transiti</h1>
 
+<div class="cappello">
+  <p>
+    I transiti mettono il cielo di un momento a confronto con un tema di
+    nascita: quali pianeti stanno toccando adesso i punti della carta, con
+    quale aspetto e se il contatto si sta stringendo o sciogliendo.
+  </p>
+  <p>
+    Accanto al quadro dell'istante c'è il calendario dei passaggi, con l'ora
+    esatta in cui ciascun aspetto si perfeziona: serve perché un pianeta lento
+    che retrograda perfeziona lo stesso contatto tre volte in pochi mesi. Le
+    orbite qui sono molto più strette che nel tema natale, e non per gusto —
+    <a href="/metodo#aspetti">perché i transiti vogliono orbite strette</a>.
+  </p>
+</div>
+
 <ModuloPieghevole
   bind:aperto
   etichetta="Nascita e opzioni"

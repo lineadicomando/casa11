@@ -304,6 +304,22 @@
 
 <h1 class="nascosto">Elezione</h1>
 
+<div class="cappello">
+  <p>
+    Scegliere il momento, invece di leggerlo. Per ogni giorno e per un luogo
+    dato: le ore planetarie con il pianeta che regge ciascuna, il grado che
+    sorge quando comincia, e i tratti in cui la Luna è vuota di corso.
+  </p>
+  <p>
+    Le ore planetarie non durano sessanta minuti: il giorno si divide comunque
+    in dodici parti, lunghe d'estate e corte d'inverno, e comincia all'alba e
+    non a mezzanotte —
+    <a href="/metodo#elezione">come si contano le ore planetarie</a>. Quale
+    ora sia propizia questo sito non lo dice: consegna il calendario, la
+    scelta è di chi legge.
+  </p>
+</div>
+
 <ModuloPieghevole
   bind:aperto
   etichetta="Luogo"

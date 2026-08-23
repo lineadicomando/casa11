@@ -405,6 +405,37 @@ tbody tr.evidenziato {
   white-space: nowrap;
 }
 
+/*
+ * Il cappello: due righe in testa a una sezione, che dicono che cosa la
+ * sezione fa.
+ *
+ * Sta qui e non nelle pagine perché è lo stesso elemento visto cinque volte —
+ * lo stesso argomento delle tabelle dei risultati poco sopra — e perché deve
+ * restare identico: cinque cappelli con cinque misure sarebbero cinque
+ * elementi diversi, non lo stesso ripetuto.
+ *
+ * **Non compete col modulo.** Chi arriva qui sapendo già cosa vuole deve
+ * trovare i campi dov'erano, non tre righe più in basso: per questo il corpo è
+ * minore di quello del testo e il colore è quello tenue, che lo mette un passo
+ * dietro senza toglierlo. La larghezza si ferma a 42rem, la stessa della
+ * colonna di lettura dell'informativa: il guscio ne misura 72, e una riga di
+ * prosa lunga così l'occhio la perde tornando a capo.
+ */
+.cappello {
+  max-width: 42rem;
+  margin: 0 0 1.6rem;
+  font-size: 0.9rem;
+  color: var(--testo-tenue);
+}
+
+.cappello p {
+  margin: 0;
+}
+
+.cappello p + p {
+  margin-top: 0.5rem;
+}
+
 .nota,
 .errore {
   margin: 1rem 0 0;
@@ -449,10 +480,14 @@ tbody tr.evidenziato {
      risposta se la porta scritta nell'intestazione. Un'istruzione — «scegli un
      corpo per isolarne gli aspetti» — su un foglio è una promessa che nessuno
      può mantenere; le spiegazioni del dominio restano, che su carta servono
-     quanto a schermo. */
+     quanto a schermo. Il cappello se ne va col modulo, e per le due ragioni
+     insieme: presenta una sezione a chi ci arriva, e chi ha in mano il foglio
+     c'è già arrivato — e il collegamento che porta al metodo, stampato, non
+     porta più da nessuna parte. */
   header,
   footer,
   .modulo,
+  .cappello,
   .secondario,
   .istruzione {
     display: none;

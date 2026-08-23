@@ -179,6 +179,22 @@
 
 <h1 class="nascosto">Vedica</h1>
 
+<div class="cappello">
+  <p>
+    La stessa nascita letta secondo il Jyotisha, l'astrologia indiana: il
+    quadro delle dodici case, il nakshatra in cui cade la Luna, le carte
+    divisionali, le drishti e le dasha vimshottari, che dividono la vita in
+    periodi retti da un graha a partire dal nakshatra di nascita.
+  </p>
+  <p>
+    Le posizioni non coincidono con quelle del tema occidentale, e non è un
+    errore di nessuno dei due: si contano da un'origine diversa, e oggi fra i
+    due zodiaci corrono poco più di ventiquattro gradi — quasi un segno
+    intero. <a href="/metodo#zodiaco">Da dove viene la differenza</a>, e
+    perché l'ayanamsa si sceglie.
+  </p>
+</div>
+
 <!-- Le stesse opzioni due volte no: nella striscia stanno quelle che si
      cambiano guardando il risultato — un altro ayanamsa, un ordine di dasha in
      meno — e nel modulo ci sono anche le caselle delle divisionali, che si

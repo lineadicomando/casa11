@@ -220,6 +220,22 @@
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
 <h1 class="nascosto">Cielo</h1>
 
+<div class="cappello">
+  <p>
+    Dove sono i pianeti adesso, o in qualunque altro istante, senza che serva
+    una data di nascita: posizioni nei segni, aspetti fra loro e distribuzione
+    fra elementi e modalità. Il luogo è facoltativo, e serve solo a chi vuole
+    anche le case.
+  </p>
+  <p>
+    Sotto, due elenchi che si leggono in ordine di tempo: gli ingressi nei
+    segni e le stazioni — i giorni in cui un pianeta si ferma e cambia verso —
+    e gli istanti in cui due corpi formano un aspetto esatto. Le posizioni
+    vengono dalle effemeridi Swiss Ephemeris:
+    <a href="/metodo#effemeridi">con quale precisione</a>.
+  </p>
+</div>
+
 <ModuloPieghevole
   bind:aperto
   etichetta="Luogo e opzioni"

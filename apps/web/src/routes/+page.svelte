@@ -169,6 +169,29 @@
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
 <h1 class="nascosto">Tema natale</h1>
 
+<!-- Che cosa questa sezione fa, per chi ci arriva senza saperlo — da una
+     ricerca, da un collegamento condiviso. Due righe e non un paragrafo: sotto
+     c'è il modulo, che è quello che la gente è venuta a compilare.
+
+     Il collegamento al metodo non è di cortesia: è l'unica cosa in questa
+     pagina che spieghi perché la stessa nascita dia carte diverse altrove, ed
+     è la domanda che chi confronta due programmi si fa per prima. -->
+<div class="cappello">
+  <p>
+    Il tema natale è la mappa del cielo di un istante e di un luogo precisi:
+    dove stavano il Sole, la Luna e i pianeti al momento della nascita, in
+    quali case cadono e che aspetti formano fra loro. Servono data, ora e
+    luogo — e l'ora pesa più di quanto sembri, perché l'Ascendente si sposta
+    di un grado ogni quattro minuti.
+  </p>
+  <p>
+    Se l'ora di nascita non si sa, il calcolo si fa lo stesso: restano i segni
+    e gli aspetti, cadono le case e gli assi. Il sistema con cui dividere le
+    case si sceglie fra nove, e cambia la carta più di quanto ci si aspetti —
+    <a href="/metodo#case">come si dividono le case</a>.
+  </p>
+</div>
+
 <!-- Un tema di nascita non si sfoglia nel tempo: la data è quella, e la striscia
      non ha nessun istante da offrire. Ha però l'asse lungo cui questa pagina si
      rilegge davvero — la domificazione — e quello sì che si cambia guardando le
