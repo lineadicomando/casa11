@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # La versione che `engines` chiede come minima. Non `latest`: un
           # controllo che si rompe da solo il giorno in cui esce Node 25 non
@@ -38,7 +38,7 @@ jobs:
       # dati binari con dentro le posizioni dei pianeti dal 1800 al 2399. La
       # chiave è lo script che le scarica, perché è lì che è scritto quali file
       # siano — cambiarlo è l'unico motivo per cui la cache debba decadere.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: packages/core/ephe
           key: ephe-${{ hashFiles('packages/core/scripts/download-ephe.mjs') }}
@@ -71,15 +71,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # `load` la lascia nel demone locale, che è tutto il punto: non si
       # pubblica niente, si avvia qui sotto. La cache è a strati come quella
       # del Dockerfile, quindi finché i package.json non cambiano l'`npm ci`
       # dentro l'immagine non si rifà.
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           target: runtime
