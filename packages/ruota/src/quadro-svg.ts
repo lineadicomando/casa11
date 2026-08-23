@@ -20,8 +20,13 @@ import type { BodyId } from './types.js';
 import { CHIARA, type Palette } from './palette.js';
 import {
   celleQuadro,
+  centroInscritto,
+  corpoCheEntra,
+  distanzaDalBordo,
+  ritaglia,
   GRAHA_SIGLA,
   QUADRO_SIZE,
+  type BloccoDiTesto,
   type CellaQuadro,
   type Punto,
   type SquareChart,
@@ -31,32 +36,57 @@ import {
 /** Margine attorno al riquadro: qui niente sporge, serve solo a non tagliare il bordo. */
 export const QUADRO_PADDING = 16;
 
-/** I corpi dei caratteri. Nel file non c'è un foglio di stile: ogni misura sta sul nodo. */
-const CORPO = {
-  glifoSegno: 22,
-  numeroCasa: 13,
-  sigla: 20,
-} as const;
+/**
+ * Le larghezze del testo, in **multipli del corpo del carattere**.
+ *
+ * Misurate su DejaVu Sans, che è il font che il PNG carica e il primo che il
+ * documento nomina, e arrotondate per eccesso: servono a decidere quanto
+ * grande scrivere, e sbagliarle per difetto manda le sigle contro il bordo
+ * della cella. Per indice, quante sigle stanno sulla riga.
+ */
+const LARGHEZZA_RIGA = [0, 1.15, 3, 4.8] as const;
+
+/** Quella dell'intestazione, glifo del segno e numero della casa insieme. */
+const LARGHEZZA_INTESTAZIONE = 2.2;
+
+/** Quanto del corpo il testo occupa in altezza, e quanto passa fra due righe. */
+const ALTEZZA_RIGA = 0.8;
+const PASSO_RIGA = 1.25;
 
 /** Quante sigle stanno su una riga prima di andare a capo. */
 const SIGLE_PER_RIGA = 3;
 
-/** Distanza fra due righe di contenuto, in punti. */
-const INTERLINEA = 24;
+/**
+ * Il corpo oltre il quale non si sale, per quanto spazio ci sia.
+ *
+ * Serve al rombo del nord, che è largo il doppio dei triangoli che gli stanno
+ * intorno: lasciarlo crescere quanto potrebbe darebbe a due sigle un corpo da
+ * titolo. Oltre un certo punto il testo smette di sembrare grande e comincia a
+ * sembrare sbagliato.
+ */
+const TETTO = 46;
 
 /**
- * Quanto il contenuto di una cella si scosta dal baricentro verso il centro
- * del quadro.
+ * L'aria che resta fra il testo e le pareti della cella.
  *
- * Serve ai triangoli d'angolo dello stile del nord: il loro baricentro cade a
- * due terzi verso l'angolo retto, cioè verso lo spigolo esterno, e tre sigle
- * scritte lì sfiorano il bordo. Un dodicesimo di tragitto verso il centro le
- * riporta dentro senza spostarle abbastanza da farle sembrare fuori posto.
- *
- * Sta qui e non in `quadro.ts` di proposito: il baricentro di un poligono è un
- * fatto e resta quello: dove convenga scrivere è una scelta del disegno.
+ * `corpoCheEntra` restituisce il corpo che *tocca* il bordo, che è il limite e
+ * non una misura da usare. Un settimo scarso di margine è quanto basta perché
+ * la cella sembri contenere il testo invece di stringerlo.
  */
-const RIENTRO = 0.12;
+const MARGINE = 0.86;
+
+/**
+ * Quanto l'intestazione sta sotto le sigle.
+ *
+ * Il segno e il numero della casa dicono dove si è, non che cosa c'è: sono
+ * l'etichetta della cella e non il suo contenuto. Nel sud il segno per giunta
+ * è dato dalla posizione e nel nord lo è la casa, quindi in entrambi gli stili
+ * metà dell'intestazione ripete qualcosa che il disegno già dice.
+ */
+const RAPPORTO_INTESTAZIONE = 0.62;
+
+/** E il numero della casa sta sotto il glifo del segno, per la stessa ragione. */
+const RAPPORTO_NUMERO = 0.62;
 
 const FONT = "'DejaVu Sans', system-ui, sans-serif";
 
@@ -100,7 +130,8 @@ export function quadroSvg(chart: SquareChart, opzioni: OpzioniQuadro = {}): stri
     }" height="${QUADRO_SIZE + QUADRO_PADDING * 2}" fill="${palette.sfondo}"/>`,
   ];
 
-  for (const cella of celle) pezzi.push(...disegnaCella(cella, stile, palette));
+  const layout = impagina(celle, stile);
+  for (const cella of celle) pezzi.push(...disegnaCella(cella, stile, palette, layout));
 
   const vista = `${-QUADRO_PADDING} ${-QUADRO_PADDING} ${QUADRO_SIZE + QUADRO_PADDING * 2} ${
     QUADRO_SIZE + QUADRO_PADDING * 2
@@ -118,7 +149,211 @@ export function quadroSvg(chart: SquareChart, opzioni: OpzioniQuadro = {}): stri
   ].join('\n');
 }
 
-function disegnaCella(cella: CellaQuadro, stile: StileQuadro, palette: Palette): string[] {
+/** Dove va il contenuto di ogni cella, e con che corpo si scrive. */
+interface Impaginazione {
+  /** Dove va il blocco dei graha, per cella. */
+  ancora: Map<CellaQuadro, Punto>;
+  /** Dove va il centro dell'intestazione. */
+  testa: Map<CellaQuadro, Punto>;
+  corpoSigla: number;
+  corpoIntestazione: number;
+}
+
+/**
+ * Il cartellino di una cella: dove sta, e da che parte è stato spinto.
+ *
+ * La direzione serve al ritaglio: è la stessa lungo cui il cartellino si è
+ * allontanato dal centro, e quindi la normale della retta che lo separa dai
+ * graha.
+ */
+interface Testa {
+  punto: Punto;
+  /** Versore che dal corpo della cella punta verso il cartellino. */
+  fuori: Punto;
+}
+
+/**
+ * Impagina il quadro: **una misura sola per tutto il disegno, ricavata dalla
+ * cella che sta peggio.**
+ *
+ * Non una per cella: celle vicine con corpi diversi si leggono come un errore
+ * di stampa, e il quadro è una tabella, non una nuvola di etichette. E non una
+ * costante, che è ciò che c'era prima: una costante deve reggere nove graha in
+ * un triangolo d'angolo del nord, e quel caso si trova cercandolo. Applicarla
+ * al tema mediano — sei celle occupate su dodici, una o due sigle per cella —
+ * vuol dire scrivere in venti punti dentro caselle che ne reggono
+ * quarantacinque, ed è la ragione per cui il quadro sembrava vuoto.
+ *
+ * Due passate, perché le due misure si tengono per la coda: il cartellino è
+ * una frazione delle sigle, e le sigle hanno solo lo spazio che il cartellino
+ * lascia. Si stima, si posa il cartellino, si rimisura al netto di quello.
+ */
+function impagina(celle: readonly CellaQuadro[], stile: StileQuadro): Impaginazione {
+  // Prima passata: quanto starebbe nella cella intera. Serve solo a decidere
+  // quanto grande fare il cartellino, che è una frazione di quella misura.
+  const provvisorio = minimo(celle, (cella) =>
+    corpoCheEntra(cella.polygon, centroInscritto(cella.polygon), bloccoDeiGraha(cella), TETTO),
+  );
+
+  // L'intestazione si posa prima e si misura dopo: dove vada dipende da quanto
+  // è grande, e quanto possa essere grande dipende da dove si trova. Si rompe
+  // il giro puntando alla misura voluta e ridimensionando se là non ci sta.
+  const mira = Math.min(TETTO, provvisorio * MARGINE) * RAPPORTO_INTESTAZIONE;
+  const teste = new Map(celle.map((cella) => [cella, testaDellaCella(cella, stile, mira)]));
+
+  const corpoIntestazione = Math.min(
+    mira,
+    MARGINE *
+      minimo(celle, (cella) =>
+        corpoCheEntra(
+          cella.polygon,
+          (teste.get(cella) as Testa).punto,
+          { righe: [LARGHEZZA_INTESTAZIONE], altezza: ALTEZZA_RIGA, passo: PASSO_RIGA },
+          mira / MARGINE,
+        ),
+      ),
+  );
+
+  // Seconda passata sulla cella al netto del cartellino. Il blocco dei graha
+  // può solo rimpicciolirsi rispetto alla prima, mai crescere: il ritaglio
+  // toglie spazio e non ne aggiunge.
+  const zone = new Map(
+    celle.map((cella) => [cella, zonaDeiGraha(cella, teste.get(cella) as Testa, corpoIntestazione)]),
+  );
+  const ancora = new Map(
+    [...zone].map(([cella, zona]) => [cella, centroInscritto(zona)] as const),
+  );
+
+  const corpoSigla = Math.min(
+    TETTO,
+    MARGINE *
+      minimo(celle, (cella) =>
+        corpoCheEntra(
+          zone.get(cella) as Punto[],
+          ancora.get(cella) as Punto,
+          bloccoDeiGraha(cella),
+          TETTO,
+        ),
+      ),
+  );
+
+  return {
+    ancora,
+    testa: new Map([...teste].map(([cella, testa]) => [cella, testa.punto] as const)),
+    corpoSigla,
+    corpoIntestazione,
+  };
+}
+
+/**
+ * La cella meno la fascia in cui sta il cartellino.
+ *
+ * Si taglia perpendicolarmente alla direzione in cui il cartellino è stato
+ * spinto, appena al di qua di questo. Nel sud quella direzione è l'alto per
+ * tutte e dodici le caselle; nel nord è il raggio che va verso la cornice, e
+ * cambia con la cella.
+ */
+function zonaDeiGraha(cella: CellaQuadro, testa: Testa, corpo: number): Punto[] {
+  const stacco = corpo * 0.85;
+  const taglio = {
+    x: testa.punto.x - testa.fuori.x * stacco,
+    y: testa.punto.y - testa.fuori.y * stacco,
+  };
+
+  const zona = ritaglia(cella.polygon, taglio, testa.fuori);
+
+  // Un cartellino grande dentro una cella piccola può non lasciare niente.
+  // Meglio il blocco stretto della cella intera che nessun blocco: sarà la
+  // misura del corpo, poi, a tenerlo dentro.
+  return zona.length >= 3 ? zona : [...cella.polygon];
+}
+
+/** Le righe di sigle di una cella, misurate in em. Una cella vuota non vincola nessuno. */
+function bloccoDeiGraha(cella: CellaQuadro): BloccoDiTesto {
+  return {
+    righe: aCapo(cella.bodies, SIGLE_PER_RIGA).map(
+      (riga) => LARGHEZZA_RIGA[riga.length] ?? LARGHEZZA_RIGA[SIGLE_PER_RIGA] ?? 0,
+    ),
+    altezza: ALTEZZA_RIGA,
+    passo: PASSO_RIGA,
+  };
+}
+
+function minimo(celle: readonly CellaQuadro[], quanto: (cella: CellaQuadro) => number): number {
+  return celle.reduce((meno, cella) => Math.min(meno, quanto(cella)), Infinity);
+}
+
+/**
+ * Dove sta la testa della cella, cioè il suo cartellino.
+ *
+ * **I due stili chiedono due regole**, ed è la stessa divergenza che
+ * `celleQuadro` ha già: il sud è una griglia e si legge come una tabella, dove
+ * i cartellini devono stare tutti nello stesso spigolo o non sembrano una
+ * colonna; il nord è una raggiera attorno a un centro, dove «lo stesso
+ * spigolo» non vuol dire niente e il posto naturale è in fuori, sul lato che
+ * dà sulla cornice.
+ *
+ * Sta qui e non in `quadro.ts` per la ragione di sempre: la forma di una cella
+ * è un fatto e resta quella, dove convenga scrivere è una scelta del disegno.
+ */
+function testaDellaCella(cella: CellaQuadro, stile: StileQuadro, corpo: number): Testa {
+  if (stile === 'sud') {
+    const x = Math.min(...cella.polygon.map((punto) => punto.x));
+    const y = Math.min(...cella.polygon.map((punto) => punto.y));
+
+    // Nella casella del lagna lo spigolo è già occupato dalla diagonale, che
+    // è la marca con cui questi quadri si stampano da sempre e non si tocca.
+    // Il cartellino le passa sotto invece di attraversarla.
+    const scarto = cella.lagna ? tagliaDelLagna(cella.polygon) : 0;
+
+    return {
+      punto: { x: x + scarto + corpo * (LARGHEZZA_INTESTAZIONE / 2 + 0.35), y: y + corpo * 0.85 },
+      fuori: { x: 0, y: -1 },
+    };
+  }
+
+  // Nel nord si esce dal centro inscritto lungo il raggio che viene dal centro
+  // del quadro, e ci si ferma quando il bordo si avvicina troppo. Gli ultimi
+  // due decimi si lasciano: appiccicato alla cornice il cartellino sembra
+  // appartenere a quella e non alla cella.
+  const centro = centroInscritto(cella.polygon);
+  const origine = QUADRO_SIZE / 2;
+  const lunghezza = Math.hypot(centro.x - origine, centro.y - origine) || 1;
+  const fuori = { x: (centro.x - origine) / lunghezza, y: (centro.y - origine) / lunghezza };
+  const passo = quantoSiEsce(cella.polygon, centro, fuori, corpo * 0.6);
+
+  return {
+    punto: { x: centro.x + fuori.x * passo * 0.8, y: centro.y + fuori.y * passo * 0.8 },
+    fuori,
+  };
+}
+
+/** Quanto si può camminare da `da` nella direzione data restando a `margine` dal bordo. */
+function quantoSiEsce(
+  polygon: readonly Punto[],
+  da: Punto,
+  verso: Punto,
+  margine: number,
+): number {
+  let dentro = 0;
+  let fuori = QUADRO_SIZE;
+
+  for (let giro = 0; giro < 30; giro += 1) {
+    const mezzo = (dentro + fuori) / 2;
+    const punto = { x: da.x + verso.x * mezzo, y: da.y + verso.y * mezzo };
+    if (distanzaDalBordo(polygon, punto) >= margine) dentro = mezzo;
+    else fuori = mezzo;
+  }
+
+  return dentro;
+}
+
+function disegnaCella(
+  cella: CellaQuadro,
+  stile: StileQuadro,
+  palette: Palette,
+  layout: Impaginazione,
+): string[] {
   const pezzi: string[] = [];
   const colore = palette.elementi[SIGN_ELEMENT[cella.sign]];
 
@@ -139,21 +374,22 @@ function disegnaCella(cella: CellaQuadro, stile: StileQuadro, palette: Palette):
   // è la posizione stessa.
   if (cella.lagna && stile === 'sud') pezzi.push(diagonaleDelLagna(cella.polygon, palette));
 
-  // Il contenuto in righe centrate sul baricentro: l'intestazione col segno e
-  // la casa, poi le sigle dei graha. Una pila sola invece di ancoraggi diversi
-  // per rombi e triangoli — le forme cambiano, il blocco no.
-  const righe = aCapo(cella.bodies, SIGLE_PER_RIGA);
+  pezzi.push(...intestazione(cella, layout, colore, palette));
 
-  // Il blocco è alto quanto l'intestazione più le righe di sigle, e si centra
-  // sull'ancoraggio invece di partire da lì: una cella con tre graha e una
-  // vuota devono sembrare riempite allo stesso modo.
-  const ancora = versoIlCentro(cella.centro);
-  const primaRiga = ancora.y - (righe.length * INTERLINEA) / 2;
+  // Le sigle stanno da sole al centro della cella, e l'intestazione è uscita
+  // dalla pila: una cella vuota si legge allora come una cella etichettata e
+  // vuota, invece che come una cella con dentro un glifo perso.
+  const righe = aCapo(cella.bodies, SIGLE_PER_RIGA);
+  if (righe.length === 0) return pezzi;
+
+  const { corpoSigla } = layout;
+  const ancora = layout.ancora.get(cella) as Punto;
+  const passo = corpoSigla * PASSO_RIGA;
+  const prima = ancora.y - (righe.length * passo) / 2 + passo / 2;
 
   pezzi.push(
-    intestazione(cella, ancora.x, primaRiga, colore, palette),
     ...righe.map((riga, indice) =>
-      rigaDiSigle(ancora.x, primaRiga + (indice + 1) * INTERLINEA, riga, palette),
+      rigaDiSigle(ancora.x, prima + indice * passo, riga, corpoSigla, colore),
     ),
   );
 
@@ -174,8 +410,20 @@ function aCapo(bodies: readonly BodyId[], quanti: number): BodyId[][] {
  * scrivere: così ogni graha ha un nodo suo con il proprio nome sopra, e chi
  * inserisce il quadro in una pagina può illuminarne uno senza rigenerare il
  * disegno. Nel file scaricato gli attributi non danno fastidio a nessuno.
+ *
+ * Le sigle prendono **il colore dell'elemento del segno che le ospita**, lo
+ * stesso del velo della cella e del glifo in testa. Non è una classificazione
+ * dei graha, che sarebbe una dottrina e non spetta al disegno dichiararla: è
+ * la cella che si legge come una cosa sola invece che come una cornice colorata
+ * con dentro del testo grigio.
  */
-function rigaDiSigle(x: number, y: number, riga: readonly BodyId[], palette: Palette): string {
+function rigaDiSigle(
+  x: number,
+  y: number,
+  riga: readonly BodyId[],
+  corpo: number,
+  colore: string,
+): string {
   const sigle = riga
     .map(
       (graha) =>
@@ -183,39 +431,47 @@ function rigaDiSigle(x: number, y: number, riga: readonly BodyId[], palette: Pal
     )
     .join(' ');
 
-  return `<text x="${n(x)}" y="${n(y)}" font-size="${CORPO.sigla}" fill="${
-    palette.testo
-  }" text-anchor="middle" dominant-baseline="central">${sigle}</text>`;
+  return `<text x="${n(x)}" y="${n(y)}" font-size="${n(
+    corpo,
+  )}" fill="${colore}" text-anchor="middle" dominant-baseline="central">${sigle}</text>`;
 }
 
-/** Il baricentro tirato di un poco verso il centro del quadro. Vedi `RIENTRO`. */
-function versoIlCentro(punto: Punto): Punto {
-  const centro = QUADRO_SIZE / 2;
-  return {
-    x: punto.x + (centro - punto.x) * RIENTRO,
-    y: punto.y + (centro - punto.y) * RIENTRO,
-  };
-}
-
-/** Il glifo del segno e, se c'è, il numero della casa: su una riga sola. */
+/** Il glifo del segno e, se c'è, il numero della casa: in testa alla cella. */
 function intestazione(
   cella: CellaQuadro,
-  x: number,
-  y: number,
+  layout: Impaginazione,
   colore: string,
   palette: Palette,
-): string {
-  if (cella.house === undefined) {
-    return testo(x, y, SIGN_GLYPH[cella.sign], CORPO.glifoSegno, colore);
-  }
+): string[] {
+  const { corpoIntestazione: corpo } = layout;
+  const testa = layout.testa.get(cella) as Punto;
+
+  // Il glifo sta dove sta anche quando il numero non c'è: un tema senza ora di
+  // nascita non ha case, e i suoi cartellini devono restare in colonna con
+  // quelli di uno che ce l'ha.
+  const pezzi = [testo(testa.x - corpo * 0.52, testa.y, SIGN_GLYPH[cella.sign], corpo, colore)];
+  if (cella.house === undefined) return pezzi;
 
   // Il numero sta a destra del glifo, più piccolo e più tenue: dice una cosa
   // che nel sud si muove e nel nord è già nella posizione, quindi non deve
   // contendere l'occhio al segno.
-  return [
-    testo(x - 11, y, SIGN_GLYPH[cella.sign], CORPO.glifoSegno, colore),
-    testo(x + 14, y, String(cella.house), CORPO.numeroCasa, palette.testoTenue),
-  ].join('\n');
+  pezzi.push(
+    testo(
+      testa.x + corpo * 0.62,
+      testa.y,
+      String(cella.house),
+      corpo * RAPPORTO_NUMERO,
+      palette.testoTenue,
+    ),
+  );
+
+  return pezzi;
+}
+
+/** Quanto lato la diagonale del lagna taglia. */
+function tagliaDelLagna(polygon: readonly Punto[]): number {
+  const xs = polygon.map((punto) => punto.x);
+  return (Math.max(...xs) - Math.min(...xs)) * 0.32;
 }
 
 /**
@@ -226,12 +482,9 @@ function intestazione(
  * come segno d'orientamento per chi la sa leggere.
  */
 function diagonaleDelLagna(polygon: readonly Punto[], palette: Palette): string {
-  const xs = polygon.map((punto) => punto.x);
-  const ys = polygon.map((punto) => punto.y);
-  const x = Math.min(...xs);
-  const y = Math.min(...ys);
-  const lato = Math.max(...xs) - x;
-  const taglio = lato * 0.32;
+  const x = Math.min(...polygon.map((punto) => punto.x));
+  const y = Math.min(...polygon.map((punto) => punto.y));
+  const taglio = tagliaDelLagna(polygon);
 
   return `<path d="M ${n(x)} ${n(y + taglio)} L ${n(x + taglio)} ${n(y)}" stroke="${
     palette.accento
@@ -250,9 +503,9 @@ function testo(
   corpoCarattere: number,
   colore: string,
 ): string {
-  return `<text x="${n(x)}" y="${n(
-    y,
-  )}" font-size="${corpoCarattere}" fill="${colore}" text-anchor="middle" dominant-baseline="central">${esc(
+  return `<text x="${n(x)}" y="${n(y)}" font-size="${n(
+    corpoCarattere,
+  )}" fill="${colore}" text-anchor="middle" dominant-baseline="central">${esc(
     contenuto,
   )}</text>`;
 }

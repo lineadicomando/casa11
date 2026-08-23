@@ -105,13 +105,85 @@ describe('quadroSvg', () => {
   });
 
   it('numera le case quando c\'è un lagna, e tace quando non c\'è', () => {
-    const con = quadroSvg(CARTA, { stile: 'sud' });
-    const senza = quadroSvg({ positions: CARTA.positions }, { stile: 'sud' });
+    const con = quadroSvg(CARTA, { stile: 'sud', palette: CHIARA });
+    const senza = quadroSvg({ positions: CARTA.positions }, { stile: 'sud', palette: CHIARA });
 
-    // Dodici numeri di casa, uno per cella, nel corpo più piccolo.
-    const numeri = (svg: string) => (svg.match(/font-size="13"/g) ?? []).length;
+    // Dodici numeri di casa, uno per cella. Si contano dal colore e non dal
+    // corpo: quello ormai lo decide la forma della cella, e cambia col tema.
+    const numeri = (svg: string) =>
+      (svg.match(new RegExp(`fill="${CHIARA.testoTenue}"`, 'g')) ?? []).length;
     expect(numeri(con)).toBe(12);
     expect(numeri(senza)).toBe(0);
+  });
+
+  it('scrive le sigle nel colore dell\'elemento del segno che le ospita', () => {
+    // La cella si legge come una cosa sola invece che come una cornice
+    // colorata con dentro del testo grigio. Non è una classificazione dei
+    // graha: è il segno che dà il colore, e i graha ci stanno dentro.
+    const svg = quadroSvg(CARTA, { stile: 'sud', palette: CHIARA });
+
+    // Il Sole sta in Acquario, che è d'aria; Marte in Pesci, che è d'acqua.
+    const riga = (sigla: string) =>
+      svg
+        .split('<text')
+        .find((pezzo) => pezzo.includes(`>${sigla}</tspan>`)) ?? '';
+
+    expect(riga('Su')).toContain(`fill="${CHIARA.elementi.aria}"`);
+    expect(riga('Ma')).toContain(`fill="${CHIARA.elementi.acqua}"`);
+    expect(svg).not.toContain(`fill="${CHIARA.testo}"`);
+  });
+
+  it('scrive più in grande quando le celle sono più libere', () => {
+    // È la ragione di tutta l'impaginazione: il corpo non è una costante
+    // tarata sul caso peggiore, ma la misura che la cella concede a *questa*
+    // carta. Un tema con un graha per casella deve risultare più grande di
+    // uno con otto graha in una casella sola.
+    const corpo = (svg: string) =>
+      Math.max(...[...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1])));
+
+    const sparsa = quadroSvg(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'sole', sign: 'ariete' },
+          { id: 'luna', sign: 'toro' },
+          { id: 'marte', sign: 'gemelli' },
+        ],
+      },
+      { stile: 'sud' },
+    );
+    const ammassata = quadroSvg(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'sole', sign: 'ariete' },
+          { id: 'luna', sign: 'ariete' },
+          { id: 'mercurio', sign: 'ariete' },
+          { id: 'venere', sign: 'ariete' },
+          { id: 'marte', sign: 'ariete' },
+          { id: 'giove', sign: 'ariete' },
+          { id: 'saturno', sign: 'ariete' },
+          { id: 'nodo-nord', sign: 'ariete' },
+        ],
+      },
+      { stile: 'sud' },
+    );
+
+    expect(corpo(sparsa)).toBeGreaterThan(corpo(ammassata));
+  });
+
+  it('usa un corpo solo per tutte le sigle del disegno', () => {
+    // I rombi del nord sono larghi il doppio dei triangoli che li circondano,
+    // e ne reggerebbero di più. La misura resta una sola e la detta il più
+    // stretto: celle vicine con corpi diversi si leggono come un errore di
+    // stampa, e il quadro è una tabella, non una nuvola di etichette.
+    const corpiDelleSigle = (svg: string) =>
+      new Set(
+        [...svg.matchAll(/font-size="([\d.]+)"[^>]*>(?=<tspan)/g)].map((trovato) => trovato[1]),
+      );
+
+    expect(corpiDelleSigle(quadroSvg(CARTA, { stile: 'nord' })).size).toBe(1);
+    expect(corpiDelleSigle(quadroSvg(CARTA, { stile: 'sud' })).size).toBe(1);
   });
 
   it('si disegna senza lagna al sud e si rifiuta al nord', () => {
