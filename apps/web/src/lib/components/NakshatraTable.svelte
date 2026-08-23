@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { JyotishaChart } from '@undicesimacasa/core';
   import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '@undicesimacasa/ruota';
+  import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
 
   /**
@@ -14,9 +15,11 @@
     nakshatras: JyotishaChart['nakshatras'];
     /** I corpi, per la posizione in gradi accanto al nakshatra. */
     bodies: { id: string; longitude: number; sign: string; signDegree: number }[];
+    /** Il graha isolato, condiviso con le altre tabelle e col quadro. */
+    evidenza: Evidenza;
   }
 
-  let { nakshatras, bodies }: Props = $props();
+  let { nakshatras, bodies, evidenza }: Props = $props();
 
   const posizione = (id: string) => bodies.find((body) => body.id === id);
 </script>
@@ -37,7 +40,11 @@
     <tbody>
       {#each nakshatras as voce (voce.id)}
         {@const corpo = posizione(voce.id)}
-        <tr>
+        <tr
+          onmouseenter={() => evidenza.sorvola(voce.id)}
+          onmouseleave={() => evidenza.sorvola(null)}
+          class:evidenziato={evidenza.attivo === voce.id}
+        >
           <td class="glifo">{BODY_GLYPH[voce.id as keyof typeof BODY_GLYPH]}</td>
           <td>{voce.name}</td>
           <td>

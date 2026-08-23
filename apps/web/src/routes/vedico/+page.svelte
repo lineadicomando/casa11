@@ -256,9 +256,9 @@
 
         <BodyTable bodies={graha} {evidenza} title="Graha" houseTitle="Bhava" />
 
-        <NakshatraTable nakshatras={jyotisha.nakshatras} bodies={jyotisha.chart.bodies} />
+        <NakshatraTable nakshatras={jyotisha.nakshatras} bodies={jyotisha.chart.bodies} {evidenza} />
 
-        <DashaTable dasha={jyotisha.dasha} />
+        <DashaTable dasha={jyotisha.dasha} {evidenza} />
 
         <section>
           <h3 class="titolo-sezione">Carte divisionali</h3>
@@ -302,10 +302,10 @@
         </section>
 
         {#each jyotisha.vargas as varga (varga.varga)}
-          <VargaTable {varga} {stile} />
+          <VargaTable {varga} {stile} {evidenza} />
         {/each}
 
-        <DrishtiTable drishti={jyotisha.drishti} />
+        <DrishtiTable drishti={jyotisha.drishti} {evidenza} />
       </div>
     </div>
   </Risultato>

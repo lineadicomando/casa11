@@ -16,6 +16,7 @@
  */
 
 import { SIGN_ELEMENT, SIGN_GLYPH } from './glyphs.js';
+import type { BodyId } from './types.js';
 import { CHIARA, type Palette } from './palette.js';
 import {
   celleQuadro,
@@ -141,32 +142,50 @@ function disegnaCella(cella: CellaQuadro, stile: StileQuadro, palette: Palette):
   // Il contenuto in righe centrate sul baricentro: l'intestazione col segno e
   // la casa, poi le sigle dei graha. Una pila sola invece di ancoraggi diversi
   // per rombi e triangoli — le forme cambiano, il blocco no.
-  const sigle = cella.bodies
-    .map((graha) => GRAHA_SIGLA[graha] ?? graha)
-    .reduce<string[]>((linee, sigla) => {
-      const ultima = linee[linee.length - 1];
-      if (ultima && ultima.split(' ').length < SIGLE_PER_RIGA) {
-        linee[linee.length - 1] = `${ultima} ${sigla}`;
-      } else {
-        linee.push(sigla);
-      }
-      return linee;
-    }, []);
+  const righe = aCapo(cella.bodies, SIGLE_PER_RIGA);
 
   // Il blocco è alto quanto l'intestazione più le righe di sigle, e si centra
   // sull'ancoraggio invece di partire da lì: una cella con tre graha e una
   // vuota devono sembrare riempite allo stesso modo.
   const ancora = versoIlCentro(cella.centro);
-  const primaRiga = ancora.y - (sigle.length * INTERLINEA) / 2;
+  const primaRiga = ancora.y - (righe.length * INTERLINEA) / 2;
 
   pezzi.push(
     intestazione(cella, ancora.x, primaRiga, colore, palette),
-    ...sigle.map((riga, indice) =>
-      testo(ancora.x, primaRiga + (indice + 1) * INTERLINEA, riga, CORPO.sigla, palette.testo),
+    ...righe.map((riga, indice) =>
+      rigaDiSigle(ancora.x, primaRiga + (indice + 1) * INTERLINEA, riga, palette),
     ),
   );
 
   return pezzi;
+}
+
+/** Spezza i graha di una cella in righe da al massimo `quanti`. */
+function aCapo(bodies: readonly BodyId[], quanti: number): BodyId[][] {
+  const righe: BodyId[][] = [];
+  for (let i = 0; i < bodies.length; i += quanti) righe.push([...bodies.slice(i, i + quanti)]);
+  return righe;
+}
+
+/**
+ * Una riga di sigle, **una `tspan` per graha**.
+ *
+ * Non un testo solo con le sigle unite da uno spazio, che sarebbe più corto da
+ * scrivere: così ogni graha ha un nodo suo con il proprio nome sopra, e chi
+ * inserisce il quadro in una pagina può illuminarne uno senza rigenerare il
+ * disegno. Nel file scaricato gli attributi non danno fastidio a nessuno.
+ */
+function rigaDiSigle(x: number, y: number, riga: readonly BodyId[], palette: Palette): string {
+  const sigle = riga
+    .map(
+      (graha) =>
+        `<tspan data-graha="${esc(graha)}">${esc(GRAHA_SIGLA[graha] ?? graha)}</tspan>`,
+    )
+    .join(' ');
+
+  return `<text x="${n(x)}" y="${n(y)}" font-size="${CORPO.sigla}" fill="${
+    palette.testo
+  }" text-anchor="middle" dominant-baseline="central">${sigle}</text>`;
 }
 
 /** Il baricentro tirato di un poco verso il centro del quadro. Vedi `RIENTRO`. */

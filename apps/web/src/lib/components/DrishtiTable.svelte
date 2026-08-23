@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DrishtiChart } from '@undicesimacasa/core';
   import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '@undicesimacasa/ruota';
+  import type { Evidenza } from '$lib/evidenza.svelte';
 
   /**
    * Gli sguardi fra i graha.
@@ -15,9 +16,11 @@
    */
   interface Props {
     drishti: DrishtiChart;
+    /** Il graha isolato, condiviso con le altre tabelle e col quadro. */
+    evidenza: Evidenza;
   }
 
-  let { drishti }: Props = $props();
+  let { drishti, evidenza }: Props = $props();
 </script>
 
 <section>
@@ -47,7 +50,14 @@
       </thead>
       <tbody>
         {#each drishti.aspects as aspect, i (`${aspect.from}-${aspect.to}-${aspect.house}-${i}`)}
-          <tr>
+          <!-- La riga si accende da tutt'e due i lati: uno sguardo è una
+               relazione, e chi cerca Saturno vuole vedere sia quelli che getta
+               sia quelli che riceve. -->
+          <tr
+            onmouseenter={() => evidenza.sorvola(aspect.from)}
+            onmouseleave={() => evidenza.sorvola(null)}
+            class:evidenziato={evidenza.attivo === aspect.from || evidenza.attivo === aspect.to}
+          >
             <td class="glifo">{BODY_GLYPH[aspect.from]}</td>
             <td>{aspect.fromName}</td>
             <td class="freccia" aria-hidden="true">→</td>
@@ -73,7 +83,11 @@
     </thead>
     <tbody>
       {#each drishti.signs as cast, i (`${cast.from}-${cast.house}-${i}`)}
-        <tr>
+        <tr
+          onmouseenter={() => evidenza.sorvola(cast.from)}
+          onmouseleave={() => evidenza.sorvola(null)}
+          class:evidenziato={evidenza.attivo === cast.from}
+        >
           <td class="glifo">{BODY_GLYPH[cast.from]}</td>
           <td>{cast.fromName}</td>
           <td class="numerico">{cast.house}ª</td>

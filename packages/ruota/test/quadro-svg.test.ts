@@ -52,18 +52,37 @@ describe('quadroSvg', () => {
     // per riga, e la convenzione dei quadri vedici è questa.
     const svg = quadroSvg(CARTA);
 
-    expect(svg).toContain('Su Me Ve');
-    expect(svg).toContain('Ma Sa Ra');
+    expect(svg).toContain('>Su</tspan>');
+    expect(svg).toContain('>Ve</tspan>');
+    expect(svg).toContain('>Ra</tspan>');
     expect(svg).not.toContain('☉');
+  });
+
+  it('dà a ogni sigla un nodo suo, col nome del graha sopra', () => {
+    // Serve a chi inserisce il quadro in una pagina e vuole illuminarne uno
+    // senza rigenerare il disegno. Nel file scaricato non dà fastidio a nessuno.
+    const svg = quadroSvg(CARTA);
+
+    expect(svg).toContain('<tspan data-graha="sole">Su</tspan>');
+    expect(svg).toContain('<tspan data-graha="nodo-nord">Ra</tspan>');
+    // Nove graha, nove nodi: uno per ciascuno, e nessuno di più.
+    expect((svg.match(/data-graha=/g) ?? []).length).toBe(9);
+  });
+
+  it('tiene tre sigle per riga, che è ciò che sta nel triangolo più stretto', () => {
+    const svg = quadroSvg(CARTA);
+    // Acquario ne ha tre: una riga sola con tre tspan dentro.
+    const righe = svg.match(/<text[^>]*>(<tspan[^>]*>[A-Za-z]{2}<\/tspan> ?)+<\/text>/g) ?? [];
+    expect(righe.some((riga) => (riga.match(/tspan/g) ?? []).length === 6)).toBe(true);
   });
 
   it('non fa entrare i tre che graha non sono', () => {
     const svg = quadroSvg(CARTA);
 
     // Urano sta in Vergine insieme a Ketu: nella cella deve comparire il solo Ketu.
-    expect(svg).toContain('Ke');
-    expect(svg).not.toContain('Ur');
-    expect(svg).not.toContain('Pl');
+    expect(svg).toContain('>Ke</tspan>');
+    expect(svg).not.toContain('data-graha="urano"');
+    expect(svg).not.toContain('data-graha="plutone"');
   });
 
   it('marca il lagna con l\'accento', () => {
@@ -117,7 +136,7 @@ describe('quadroSvg', () => {
     const nord = quadroSvg(CARTA, { stile: 'nord' });
 
     expect(sud).not.toBe(nord);
-    for (const sigla of ['Su Me Ve', 'Ma Sa Ra', 'Mo', 'Ju', 'Ke']) {
+    for (const sigla of ['>Su<', '>Me<', '>Ve<', '>Mo<', '>Ju<', '>Ke<']) {
       expect(sud).toContain(sigla);
       expect(nord).toContain(sigla);
     }

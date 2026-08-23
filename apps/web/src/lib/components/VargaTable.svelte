@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { VargaChart } from '@undicesimacasa/core';
   import { BODY_GLYPH, quadroSvg, SIGN_GLYPH, SIGN_LABEL, type StileQuadro } from '@undicesimacasa/ruota';
+  import type { Evidenza } from '$lib/evidenza.svelte';
   import { PALETTE_PAGINA } from '$lib/palette-pagina';
 
   /**
@@ -22,9 +23,29 @@
      * il quadro sotto la regola che l'ha prodotto.
      */
     stile?: StileQuadro | undefined;
+    /** Il graha isolato, condiviso con le altre tabelle e col quadro. */
+    evidenza: Evidenza;
   }
 
-  let { varga, stile = undefined }: Props = $props();
+  let { varga, stile = undefined, evidenza }: Props = $props();
+
+  /** Il nodo in cui l'SVG viene inserito, per illuminarne una sigla. */
+  let contenitore = $state<HTMLDivElement | null>(null);
+
+  /**
+   * Accende la sigla del graha scelto dentro il quadro.
+   *
+   * Si tocca il DOM invece di rigenerare l'SVG, ed è voluto: il disegno è una
+   * stringa, e rifarla a ogni passaggio del puntatore sostituirebbe una
+   * sessantina di nodi per volta. Gli appigli sono i `data-graha` che
+   * `quadroSvg` scrive apposta, e qui basta accendere e spegnere una classe.
+   */
+  $effect(() => {
+    const scelto = evidenza.attivo;
+    for (const nodo of contenitore?.querySelectorAll('[data-graha]') ?? []) {
+      nodo.classList.toggle('acceso', nodo.getAttribute('data-graha') === scelto);
+    }
+  });
 
   /**
    * Lo stesso disegno che si scarica, inserito nella pagina.
@@ -53,7 +74,7 @@
 
   {#if disegno}
     <!-- eslint-disable-next-line svelte/no-at-html-tags -- è il nostro SVG, non input -->
-    <div class="quadro">{@html disegno}</div>
+    <div class="quadro" bind:this={contenitore}>{@html disegno}</div>
   {/if}
 
   <table>
@@ -78,7 +99,11 @@
         </tr>
       {/if}
       {#each varga.positions as position (position.id)}
-        <tr>
+        <tr
+          onmouseenter={() => evidenza.sorvola(position.id)}
+          onmouseleave={() => evidenza.sorvola(null)}
+          class:evidenziato={evidenza.attivo === position.id}
+        >
           <td class="glifo">{BODY_GLYPH[position.id]}</td>
           <td>{position.name}</td>
           <td>
@@ -96,6 +121,14 @@
 <style>
   /* Il viewBox scala da sé: qui si toglie solo la larghezza fissa che l'SVG
      porta addosso, perché nasce anche come file a misura piena. */
+  /* La sigla scelta prende l'accento e il peso: dentro una cella non c'è
+     spazio per un contorno, e il colore da solo si perde fra quelli degli
+     elementi. */
+  .quadro :global([data-graha].acceso) {
+    fill: var(--accento);
+    font-weight: 700;
+  }
+
   .quadro :global(svg) {
     display: block;
     width: 100%;

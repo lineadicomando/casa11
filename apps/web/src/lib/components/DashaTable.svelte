@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { BodyId, DashaPeriod, VimshottariDasha } from '@undicesimacasa/core';
   import { BODY_GLYPH } from '@undicesimacasa/ruota';
+  import type { Evidenza } from '$lib/evidenza.svelte';
 
   /**
    * La catena delle dasha, coi sotto-periodi rientrati.
@@ -14,9 +15,11 @@
     dasha: VimshottariDasha;
     /** L'istante rispetto a cui evidenziare, in UTC. Default: adesso. */
     adesso?: string;
+    /** Il graha isolato, condiviso con le altre tabelle e col quadro. */
+    evidenza: Evidenza;
   }
 
-  let { dasha, adesso = new Date().toISOString() }: Props = $props();
+  let { dasha, adesso = new Date().toISOString(), evidenza }: Props = $props();
 
   const inCorso = (period: DashaPeriod): boolean =>
     period.start <= adesso && adesso < period.end;
@@ -71,7 +74,15 @@
     </thead>
     <tbody>
       {#each tutte as period (period.start + period.lord + period.level)}
-        <tr class:evidenziato={inCorso(period)}>
+        <!-- Due cose da distinguere: il periodo in corso, che è un fatto, e il
+             graha scelto, che è una domanda di chi guarda. La prima resta
+             marcata, la seconda si accende sopra. -->
+        <tr
+          onmouseenter={() => evidenza.sorvola(period.lord)}
+          onmouseleave={() => evidenza.sorvola(null)}
+          class:corrente={inCorso(period)}
+          class:evidenziato={evidenza.attivo === period.lord}
+        >
           <td class="glifo">{period.level === 1 ? BODY_GLYPH[period.lord] : ''}</td>
           <td style:padding-left="{(period.level - 1) * 1.2}rem">
             {nome(period.lord)}
@@ -86,6 +97,12 @@
 </section>
 
 <style>
+  /* Il periodo in corso: un segno che resta, più tenue dell'evidenza, perché
+     non risponde a una domanda ma dice dove si è. */
+  tbody tr.corrente td {
+    background: var(--accento-tenue);
+  }
+
   .nota {
     margin: 0 0 0.75rem;
     color: var(--testo-tenue);
