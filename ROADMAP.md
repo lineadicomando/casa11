@@ -221,6 +221,100 @@ sopravvive abbastanza da giustificarlo.
 
 Verifica: cambiare un'orbita in `ASPECTS` e vedere il test cadere.
 
+## 6. La domanda che manca ai transiti: che cosa è attivo in un arco
+
+Oggi ci sono due tool e nessuno dei due risponde a «che cosa è in orbita fra il
+1° e il 30 settembre». `compute_transits` fotografa **un istante**;
+`find_transit_passages` elenca **gli istanti in cui un aspetto si perfeziona**.
+Fra i due manca l'intervallo, che è quello che serve per leggere un periodo —
+un giorno, una settimana, un mese, un bimestre. È una domanda sola con `from` e
+`to` diversi: **non serve un enum di periodi**, e non deve entrarci. Chiamare
+«bimestre» un arco è comodità di chi chiama, non un fatto del motore.
+
+### Quasi tutto il calcolo c'è già
+
+`windowAround`, `packages/core/src/passages.ts:180`, calcola già l'intervallo in
+cui ogni passaggio resta in orbita, e lo fa quasi gratis: cammina sui campioni
+già presi e dimezza solo l'ultimo. Il margine di campionamento a
+`passages.ts:65` è `WIDEST_ORB / MEAN_DAILY_MOTION[bodyId]`, cioè esattamente il
+tempo massimo che un corpo impiega ad attraversare l'orbita più larga concessa:
+non è un margine prudenziale, è dimensionato sul caso peggiore.
+
+Quel lavoro viene poi buttato via da una riga, `passages.ts:79`:
+
+```js
+found.filter((passage) => passage.julianDay >= start && passage.julianDay <= end)
+```
+
+Sostituire «l'istante esatto cade nell'arco» con «la finestra interseca l'arco»
+non è matematica nuova: è un predicato diverso su valori già calcolati. Il
+commento sopra il filtro lo dice quasi in chiaro.
+
+### Il pezzo che invece manca davvero
+
+`passagesOf`, `passages.ts:116`, trova i passaggi cercando i **cambi di segno**
+di `gap`, cioè le perfezioni. Un transito che entra in orbita, staziona a due
+gradi e mezzo dal punto natale e retrocede **senza mai perfezionarsi** non
+produce nessuna radice, quindi nessun passaggio, quindi nessuna finestra. Oggi è
+invisibile a ragione, perché lì non c'è nessun istante esatto da elencare — ma
+in un elenco di ciò che è attivo quel transito c'è, e per mesi.
+
+Va quindi cercata la radice di `|gap| − orbLimit` **indipendentemente** da
+quella di `gap`. `bisect` in `roots.ts` sa già farlo ed è la stessa funzione che
+`windowAround` chiama: solo, oggi la invoca ancorata a un istante esatto. Va
+scollegata da quell'ancora.
+
+Secondo caso, più semplice: quando il bordo non si trova entro
+`MAX_WINDOW_DAYS` (1095, `roots.ts:30`) la finestra oggi viene omessa. In un
+elenco di transiti attivi «in orbita per tutto l'arco» **è la risposta**, non un
+dato mancante, e va detta invece che taciuta.
+
+Niente di tutto questo tocca la catena di calcolo sincrona né lo stato globale
+dell'ayanamsa: si resta dentro `zodiacContext`, come il resto del file.
+
+### Decisioni già prese, per non ridiscuterle
+
+- **Le superfici espongono solo dati.** MCP, CLI e API restano agnostiche
+  rispetto alla lettura: dicono quale transito è in orbita, con che aspetto, con
+  quanta orbita ai bordi, e quante volte si perfeziona dentro l'arco.
+  L'interpretazione la fanno gli agenti, su fattori che non si trattano qui e
+  che non entrano nel repo.
+- **Nessun punteggio, nessun indice di intensità del periodo.** Sarebbe il
+  «totale solo» che il progetto rifiuta: pesare Saturno contro Giove è una
+  dottrina, e finirebbe nel codice senza che chi legge possa vederla. Si
+  espongono i componenti, come `Distribution` porta `counted`.
+- **Nessun `mode:` su `find_transit_passages`.** Il precedente è un tool per
+  domanda — `compute_sky` accanto a `find_sky_events` — e le descrizioni sono
+  scritte apposta perché un modello non li confonda. Un flag che ribalta il
+  significato delle righe è la cosa più facile da sbagliare per un agente.
+- **Niente interfaccia web.** La funzione serve agli agenti e alla riga di
+  comando: l'endpoint sì, la pagina e la tabella Svelte no.
+- Serve un tetto all'arco: `MAX_RANGE_DAYS` in `tools.ts` e
+  `lib/server/range.ts` sono il precedente.
+
+### Nome e superfici
+
+`find_transit_passages` risponde a *quando*, questo a *che cosa*: i due nomi
+devono renderlo ovvio a un modello che li legge di fianco. `find_active_transits`
+per l'MCP, `attivi.ts` accanto a `passages.ts` in `core`.
+
+Due commit, nell'ordine della skill `nuova-funzione`: il calcolo con la CLI e i
+test, che è il grosso; poi rotta GET e tool MCP con la descrizione che dice
+anche che cosa non fare.
+
+Verifica, in due casi distinti perché provano due cose diverse:
+
+1. **Il filtro.** Tema del 2 giugno 1978, 15:15, Palermo, arco
+   `2026-07-01 → 2026-08-01`. Saturno quadrato Venere (finestra
+   2026-05-26 → 2026-09-29, esatto il 22 giugno e il 31 agosto) e Saturno
+   opposizione Plutone (finestra 2026-05-29 → 2026-09-25, esatto il 27 giugno e
+   il 25 agosto) sono in orbita per tutto l'arco e non si perfezionano dentro:
+   oggi `find_transit_passages` su quell'arco non restituisce nulla. Caso reale,
+   già verificato, nessuna costruzione.
+2. **La radice nuova.** Un transito che entri in orbita e retroceda senza mai
+   perfezionarsi va costruito apposta — il caso 1 non lo copre, perché lì le
+   perfezioni esistono e cadono solo fuori dall'arco.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:
