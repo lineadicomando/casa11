@@ -26,7 +26,7 @@
  */
 
 import { build, files, prerendered, version } from '$service-worker';
-import { cacheKey, isApiRequest } from '$lib/cache-policy';
+import { cacheKey, isApiRequest, isCrawlerAsset } from '$lib/cache-policy';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -41,8 +41,12 @@ const CACHE = `casa11-${version}`;
  * Tutto ciò che la build produce e che ha un indirizzo stabile: i chunk con
  * l'impronta nel nome (`build`), i file di `static/` — favicon e icone —
  * (`files`), e le rotte prerenderizzate, cioè il manifesto (`prerendered`).
+ *
+ * Meno l'anteprima dei collegamenti condivisi, che sta in `static/` ma non è
+ * roba da browser: il perché è in `lib/cache-policy.ts`, insieme alle altre
+ * due regole.
  */
-const PRECARICATI = [...build, ...files, ...prerendered];
+const PRECARICATI = [...build, ...files.filter((file) => !isCrawlerAsset(file)), ...prerendered];
 
 /** Per sapere in fretta se una richiesta è di quelle precaricate. */
 const NELLA_SCORTA = new Set(PRECARICATI);

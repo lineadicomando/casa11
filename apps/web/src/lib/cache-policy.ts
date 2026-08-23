@@ -45,3 +45,22 @@ export function isApiRequest(url: URL): boolean {
 export function cacheKey(url: URL): string {
   return `${url.origin}${url.pathname}`;
 }
+
+/**
+ * I file che esistono solo per chi non è un browser, e che nel precarico del
+ * service worker non entrano.
+ *
+ * L'anteprima dei collegamenti condivisi è trenta chilobyte che nessuno che
+ * apra il sito guarderà mai: la chiedono i server delle piattaforme quando
+ * qualcuno incolla un indirizzo, e la chiedono da casa loro. Sta in `static/`
+ * perché è un file fermo con un indirizzo fermo, e da lì `$service-worker` la
+ * metterebbe fra i `files` da scaricare all'installazione — cioè addosso a
+ * ogni dispositivo, per un'immagine che su quel dispositivo non comparirà.
+ *
+ * Restarne fuori non le toglie niente: chi la chiede non esegue service
+ * worker, e un browser che ci capitasse la prenderebbe dalla rete come
+ * qualunque altra cosa non conservata.
+ */
+export function isCrawlerAsset(path: string): boolean {
+  return path === '/og.png';
+}

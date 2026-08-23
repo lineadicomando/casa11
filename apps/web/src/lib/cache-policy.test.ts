@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cacheKey, isApiRequest } from './cache-policy';
+import { cacheKey, isApiRequest, isCrawlerAsset } from './cache-policy';
 
 const SITO = 'https://undicesimacasa.example';
 
@@ -39,5 +39,19 @@ describe('cacheKey', () => {
 
   it('butta anche il frammento', () => {
     expect(cacheKey(new URL('/privacy#cookie', SITO))).toBe(`${SITO}/privacy`);
+  });
+});
+
+describe('isCrawlerAsset', () => {
+  it('tiene fuori dal precarico l\'anteprima dei collegamenti', () => {
+    expect(isCrawlerAsset('/og.png')).toBe(true);
+  });
+
+  it('lascia dentro le icone, che servono a chi installa il sito', () => {
+    expect(isCrawlerAsset('/favicon.svg')).toBe(false);
+    expect(isCrawlerAsset('/apple-touch-icon.png')).toBe(false);
+    expect(isCrawlerAsset('/icon-192.png')).toBe(false);
+    expect(isCrawlerAsset('/icon-512.png')).toBe(false);
+    expect(isCrawlerAsset('/icon-maskable-512.png')).toBe(false);
   });
 });

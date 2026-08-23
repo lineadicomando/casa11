@@ -1,13 +1,14 @@
 /**
- * Le icone a punti: quella della schermata iniziale di iOS e quelle che
- * l'installazione dell'applicazione web chiede.
+ * Le immagini a punti del sito: le icone dell'installazione e l'anteprima dei
+ * collegamenti condivisi.
  *
  * Né Safari né il manifesto guardano l'SVG: senza questi file chi aggiunge il
  * sito alla schermata iniziale si ritrova un rettangolo bianco con dentro una
  * miniatura della pagina, e su Android l'installazione non viene nemmeno
- * offerta. È l'unico posto in tutto il progetto in cui servano immagini a
- * punti, e non ha senso versionarne copie che poi divergono dal disegno: si
- * generano dal favicon, che è la fonte.
+ * offerta. Un'anteprima, allo stesso modo, vuole un PNG — nessuna piattaforma
+ * disegna un SVG. Sono i soli posti in tutto il progetto in cui servano
+ * immagini a punti, e non ha senso versionarne copie che poi divergono dal
+ * disegno: si generano dal favicon, che è la fonte.
  *
  * Gira prima del `build` e prima del `dev`, e non fa niente quando i PNG sono
  * già più recenti di ciò da cui vengono — un avvio di sviluppo non deve pagare
@@ -139,4 +140,89 @@ for (const { file, lato, mascherabile: conMaschera } of ICONE) {
   await writeFile(destinazione, png);
 
   console.log(`${file} — ${lato}×${lato}, ${(png.length / 1024).toFixed(1)} kB`);
+}
+
+/**
+ * L'anteprima dei collegamenti condivisi: 1200×630, il sigillo su fondo scuro.
+ *
+ * **Senza una riga di testo, ed è una scelta obbligata.** Questo script gira
+ * nello stage di compilazione dell'immagine Docker, che è una `slim` e non ha
+ * font installati: là dentro resvg non troverebbe niente con cui disegnare le
+ * lettere e il PNG uscirebbe muto, senza errori. È lo stesso inciampo che il
+ * `Dockerfile` risolve per la ruota installando DejaVu **nel runtime** — ma il
+ * runtime è un altro stage, e questo file nasce prima. Metterci il nome
+ * significherebbe portarsi i font anche nella compilazione per una stringa che
+ * l'anteprima ha già: `og:title` sta scritto accanto all'immagine in ogni
+ * piattaforma che la mostri, e ripeterlo nei pixel non aggiunge niente.
+ *
+ * Il disegno è la griglia da 100 del marchio, portata al centro della tela: i
+ * due cerchi con le misure di `components/Marchio.svelte`, e al centro la
+ * stella del favicon. **La fascia resta vuota**: là dentro vanno ☉ e ☽, che
+ * sono glifi scritti, e riempirla d'altro non sarebbe più il marchio.
+ *
+ * La stella è quella piena del favicon e non quella di tratto del marchio, e
+ * non è un ripiego: un'anteprima si guarda piccola — in una conversazione sta
+ * su duecento punti di larghezza — e a quella misura le corde interne del
+ * {12/5} si chiudono in una macchia, che è esattamente l'argomento con cui il
+ * favicon le aveva già tolte. La sagoma è la stessa; vedi `static/favicon.svg`.
+ */
+const SOCIALE = { file: 'og.png', larghezza: 1200, altezza: 630 };
+
+/**
+ * Il diametro del sigillo sulla tela, in punti: il cerchio esterno del marchio.
+ *
+ * 460 su 630 d'altezza lascia un'ottantina di punti d'aria sopra e sotto. Più
+ * grande il sigillo tocca i bordi in un'anteprima che le piattaforme ritagliano
+ * volentieri; più piccolo diventa un bollino in mezzo al nero.
+ */
+const SIGILLO = 460;
+
+/**
+ * Il colore del tratto: `--testo` dell'aspetto scuro, preso da `app.css`.
+ *
+ * Nel marchio i cerchi valgono `currentColor` e seguono l'aspetto scelto; qui
+ * di aspetti non ce n'è, perché il fondo è quello del favicon ed è scuro
+ * sempre — un'immagine condivisa non sa su che pagina finirà.
+ */
+const TRATTO = '#ebe7de';
+
+function anteprima(svg) {
+  const { stella, fondo } = scomponi(svg);
+
+  // Dalla griglia da 100 del marchio alla tela. Il sigillo va al centro:
+  // `translate(-50 -50)` dopo la scala rimette l'origine della griglia dove
+  // deve stare, che è il modo di centrare senza calcolare due offset.
+  const scala = (SIGILLO / 100).toFixed(4);
+  const centro = `translate(${SOCIALE.larghezza / 2} ${SOCIALE.altezza / 2}) scale(${scala}) translate(-50 -50)`;
+
+  // La stella del favicon vive in una griglia da 64 col raggio a 27; nel
+  // marchio è a 32 su 100. Questa è la conversione fra le due, e non una
+  // misura scelta: cambiando il favicon cambia da sé.
+  const stellaNelMarchio = `translate(50 50) scale(${(32 / 27).toFixed(4)}) translate(-32 -32)`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${SOCIALE.larghezza}" height="${SOCIALE.altezza}" viewBox="0 0 ${SOCIALE.larghezza} ${SOCIALE.altezza}">
+  <rect width="${SOCIALE.larghezza}" height="${SOCIALE.altezza}" fill="${fondo}"/>
+  <g transform="${centro}">
+    <g fill="none" stroke="${TRATTO}" stroke-width="0.9">
+      <circle cx="50" cy="50" r="47.5"/>
+      <circle cx="50" cy="50" r="35.5"/>
+    </g>
+    <g transform="${stellaNelMarchio}">${stella}</g>
+  </g>
+</svg>`;
+}
+
+const destinazioneSociale = join(STATIC, SOCIALE.file);
+
+if (!(await aggiornato(destinazioneSociale))) {
+  const resvg = new Resvg(anteprima(svg), {
+    fitTo: { mode: 'width', value: SOCIALE.larghezza },
+  });
+  const png = resvg.render().asPng();
+
+  await writeFile(destinazioneSociale, png);
+
+  console.log(
+    `${SOCIALE.file} — ${SOCIALE.larghezza}×${SOCIALE.altezza}, ${(png.length / 1024).toFixed(1)} kB`,
+  );
 }
