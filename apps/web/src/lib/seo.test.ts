@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SECTIONS } from './navigation';
-import { PAGINE_PUBBLICHE, sitemapXml } from './seo';
+import { PAGINE_PUBBLICHE, robotsTxt, sitemapXml } from './seo';
 
 const ORIGINE = 'https://esempio.it';
 
@@ -57,5 +57,37 @@ describe('sitemapXml', () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
     expect(xml.trimEnd().endsWith('</urlset>')).toBe(true);
+  });
+});
+
+describe('robotsTxt', () => {
+  it('chiude /api e nient\'altro', () => {
+    const righe = robotsTxt(ORIGINE)
+      .split('\n')
+      .filter((riga) => riga.startsWith('Disallow:'));
+
+    expect(righe).toEqual(['Disallow: /api/']);
+  });
+
+  it('non lascia fuori nessuna pagina pubblica', () => {
+    const chiuse = robotsTxt(ORIGINE)
+      .split('\n')
+      .filter((riga) => riga.startsWith('Disallow: '))
+      .map((riga) => riga.slice('Disallow: '.length));
+
+    for (const percorso of PAGINE_PUBBLICHE) {
+      expect(chiuse.some((chiusa) => percorso.startsWith(chiusa))).toBe(false);
+    }
+  });
+
+  it('indica la sitemap con un indirizzo assoluto', () => {
+    expect(robotsTxt(ORIGINE)).toContain(`Sitemap: ${ORIGINE}/sitemap.xml`);
+    expect(robotsTxt('http://localhost:3000')).toContain(
+      'Sitemap: http://localhost:3000/sitemap.xml',
+    );
+  });
+
+  it('vale per tutti i crawler', () => {
+    expect(robotsTxt(ORIGINE).startsWith('User-agent: *\n')).toBe(true);
   });
 });

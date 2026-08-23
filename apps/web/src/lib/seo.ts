@@ -69,3 +69,30 @@ export function sitemapXml(origin: string): string {
     '',
   ].join('\n');
 }
+
+/**
+ * `robots.txt`: una sola porta chiusa, e l'indirizzo della sitemap.
+ *
+ * **`/api` fuori.** Sono undici endpoint che rispondono JSON: non hanno niente
+ * da fare in un indice, e un crawler che li segue spende su di essi i passaggi
+ * che avrebbe dato alle pagine. Non è una misura di riservatezza — quelle
+ * chiamate portano data, ora e luogo di nascita, ma `robots.txt` è un file
+ * pubblico e non nasconde niente a nessuno: chi rispetta questo file non
+ * indovina gli indirizzi, e chi non lo rispetta non è tenuto fuori da una
+ * riga di testo. Quello che tiene i dati di nascita fuori dall'indice è il
+ * canonico senza parametri in `components/Meta.svelte`, e fuori dal disco è
+ * `cache-policy.ts`.
+ *
+ * Tutto il resto passa, e non serve dirlo: l'assenza di una regola è già un
+ * permesso, e un `Allow: /` scritto sotto un `Disallow` più stretto è il modo
+ * classico di bloccarsi il sito per sbaglio.
+ */
+export function robotsTxt(origin: string): string {
+  return [
+    'User-agent: *',
+    'Disallow: /api/',
+    '',
+    `Sitemap: ${new URL('/sitemap.xml', origin).href}`,
+    '',
+  ].join('\n');
+}
