@@ -12,11 +12,15 @@ ephe/
 # Vedi packages/geo/scripts/import-geonames.mjs
 packages/geo/data/
 
-# L'icona per iOS, rasterizzata dal favicon prima di ogni build e di ogni avvio
-# in sviluppo. Versionarla vorrebbe dire tenere a mano una copia del disegno,
-# che prima o poi diverge dall'originale.
+# Le icone a punti — quella di iOS e quelle che l'installazione dell'app web
+# chiede — rasterizzate dal favicon prima di ogni build e di ogni avvio in
+# sviluppo. Versionarle vorrebbe dire tenere a mano delle copie del disegno,
+# che prima o poi divergono dall'originale.
 # Vedi apps/web/scripts/build-icons.mjs
 apps/web/static/apple-touch-icon.png
+apps/web/static/icon-192.png
+apps/web/static/icon-512.png
+apps/web/static/icon-maskable-512.png
 
 .env
 .env.*

@@ -1,15 +1,17 @@
 /**
- * L'icona per la schermata iniziale di iOS.
+ * Le icone a punti: quella della schermata iniziale di iOS e quelle che
+ * l'installazione dell'applicazione web chiede.
  *
- * Safari vuole un PNG e non guarda l'SVG: senza, chi aggiunge il sito alla
- * schermata iniziale si ritrova un rettangolo bianco con dentro una miniatura
- * della pagina. È l'unico posto in tutto il progetto in cui serva un'immagine a
- * punti, e per una sola immagine non ha senso versionarne una copia che poi
- * diverge dal disegno: si genera dal favicon, che è la fonte.
+ * Né Safari né il manifesto guardano l'SVG: senza questi file chi aggiunge il
+ * sito alla schermata iniziale si ritrova un rettangolo bianco con dentro una
+ * miniatura della pagina, e su Android l'installazione non viene nemmeno
+ * offerta. È l'unico posto in tutto il progetto in cui servano immagini a
+ * punti, e non ha senso versionarne copie che poi divergono dal disegno: si
+ * generano dal favicon, che è la fonte.
  *
- * Gira prima del `build` e prima del `dev`, e non fa niente quando il PNG è già
- * più recente del suo SVG — un avvio di sviluppo non deve pagare una
- * rasterizzazione per un file che nessuno ha toccato.
+ * Gira prima del `build` e prima del `dev`, e non fa niente quando i PNG sono
+ * già più recenti di ciò da cui vengono — un avvio di sviluppo non deve pagare
+ * una rasterizzazione per un file che nessuno ha toccato.
  */
 
 import { Resvg } from '@resvg/resvg-js';
@@ -19,39 +21,122 @@ import { fileURLToPath } from 'node:url';
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const SORGENTE = join(QUI, '..', 'static', 'favicon.svg');
-const DESTINAZIONE = join(QUI, '..', 'static', 'apple-touch-icon.png');
+const STATIC = join(QUI, '..', 'static');
 
 /**
- * 180 punti: la misura che iOS chiede agli schermi a tripla densità, ed è la
- * più grande fra quelle che chiede. Le altre le ricava lui riducendo, che è
- * l'operazione che riesce bene; ingrandire no.
+ * Da che cosa dipendono i PNG: il disegno e **questo script**.
+ *
+ * Il secondo non è pignoleria. Le misure e la geometria dell'icona mascherabile
+ * — la stretta, il fondo pieno — stanno qui e non nel favicon: cambiarle senza
+ * toccare l'SVG lascerebbe in circolazione i PNG di prima, che è il modo
+ * peggiore di sbagliare — nessun errore, e l'icona vecchia.
  */
-const LATO = 180;
+const FONTI = [SORGENTE, fileURLToPath(import.meta.url)];
 
-/** `true` se il PNG esiste ed è più recente del disegno da cui viene. */
-async function aggiornato() {
+/**
+ * Quanto la stella si stringe nell'icona mascherabile.
+ *
+ * Una `maskable` viene ritagliata dalla piattaforma con la forma che preferisce
+ * — cerchio, goccia, quadrato smussato — e può mangiarsi il 20% di ogni lato:
+ * quello che deve sopravvivere sta nel cerchio centrale all'80%. Nel favicon la
+ * stella arriva a 27 su 64 di raggio, cioè 0,84 di diametro, e una maschera
+ * tonda le taglierebbe le punte. Da 27 a 19 il diametro scende a 0,59, dentro
+ * lo 0,8 con dell'aria intorno invece che al pelo.
+ */
+const STRETTA = 19 / 27;
+
+/**
+ * Le uscite. `mascherabile` distingue le due forme del disegno: il favicon così
+ * com'è, oppure la stella rimontata a sagoma piena per la maschera.
+ */
+const ICONE = [
+  // 180 punti: la misura che iOS chiede agli schermi a tripla densità, ed è la
+  // più grande fra quelle che chiede. Le altre le ricava lui riducendo, che è
+  // l'operazione che riesce bene; ingrandire no.
+  { file: 'apple-touch-icon.png', lato: 180, mascherabile: false },
+  // Le due misure che il manifesto dichiara: 192 è quella dell'icona sulla
+  // schermata iniziale di Android, 512 quella della schermata di avvio, ed è
+  // anche il minimo che i browser chiedono per offrire l'installazione.
+  { file: 'icon-192.png', lato: 192, mascherabile: false },
+  { file: 'icon-512.png', lato: 512, mascherabile: false },
+  { file: 'icon-maskable-512.png', lato: 512, mascherabile: true },
+];
+
+/** `true` se il PNG esiste ed è più recente di tutto ciò da cui dipende. */
+async function aggiornato(destinazione) {
   try {
-    const [sorgente, destinazione] = await Promise.all([stat(SORGENTE), stat(DESTINAZIONE)]);
-    return destinazione.mtimeMs >= sorgente.mtimeMs;
+    const [uscita, ...entrate] = await Promise.all([
+      stat(destinazione),
+      ...FONTI.map((fonte) => stat(fonte)),
+    ]);
+    return entrate.every((entrata) => uscita.mtimeMs >= entrata.mtimeMs);
   } catch {
     return false;
   }
 }
 
-if (await aggiornato()) {
-  process.exit(0);
+/**
+ * Prende dal favicon la stella e il colore del suo riquadro.
+ *
+ * Estrarli invece di riscriverli qui è ciò che tiene una sorgente sola: il
+ * tracciato della stella è dodici punte di coordinate, e una seconda copia
+ * diverge alla prima correzione. Se il disegno cambia forma — due tracciati, un
+ * `<g>` intorno — l'estrazione fallisce a voce alta invece di produrre in
+ * silenzio un'icona sbagliata.
+ */
+function scomponi(svg) {
+  const stelle = svg.match(/<path\b[^>]*\/>/g) ?? [];
+  if (stelle.length !== 1) {
+    throw new Error(
+      `favicon.svg: atteso un solo <path>, trovati ${stelle.length}. ` +
+        'Il disegno è cambiato: aggiornare questo script.',
+    );
+  }
+
+  const fondo = svg.match(/<rect\b[^>]*\bfill="([^"]+)"/);
+  if (!fondo) {
+    throw new Error('favicon.svg: nessun <rect> con un fill da cui prendere il fondo.');
+  }
+
+  return { stella: stelle[0], fondo: fondo[1] };
 }
 
-const svg = await readFile(SORGENTE);
+/**
+ * La stella su un quadrato pieno, senza angoli arrotondati.
+ *
+ * L'arrotondamento del favicon qui è di troppo per due volte: la piattaforma
+ * applica già la propria maschera, e due smussi sovrapposti lasciano una
+ * frangia scura lungo il bordo. Il fondo invece resta e deve arrivare fino al
+ * taglio, perché è quello che tiene l'oro leggibile — vedi il commento dentro
+ * `favicon.svg`.
+ */
+function mascherabile(svg) {
+  const { stella, fondo } = scomponi(svg);
+  const scala = STRETTA.toFixed(4);
 
-// Il favicon disegna già il proprio fondo scuro fino ai bordi, quindi non
-// serve dipingerne uno: quello che iOS non ammette è la trasparenza, e qui
-// non ce n'è. `fitTo` scala il disegno alla misura chiesta invece di
-// ritagliarlo, che è la differenza fra un'icona e un dettaglio di un'icona.
-const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: LATO } });
-const png = resvg.render().asPng();
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="${fondo}"/>
+  <g transform="translate(32 32) scale(${scala}) translate(-32 -32)">${stella}</g>
+</svg>`;
+}
 
-await mkdir(dirname(DESTINAZIONE), { recursive: true });
-await writeFile(DESTINAZIONE, png);
+const svg = await readFile(SORGENTE, 'utf8');
 
-console.log(`apple-touch-icon.png — ${LATO}×${LATO}, ${(png.length / 1024).toFixed(1)} kB`);
+for (const { file, lato, mascherabile: conMaschera } of ICONE) {
+  const destinazione = join(STATIC, file);
+  if (await aggiornato(destinazione)) continue;
+
+  // Il favicon disegna già il proprio fondo scuro fino ai bordi, quindi non
+  // serve dipingerne uno: quello che iOS non ammette è la trasparenza, e qui
+  // non ce n'è. `fitTo` scala il disegno alla misura chiesta invece di
+  // ritagliarlo, che è la differenza fra un'icona e un dettaglio di un'icona.
+  const resvg = new Resvg(conMaschera ? mascherabile(svg) : svg, {
+    fitTo: { mode: 'width', value: lato },
+  });
+  const png = resvg.render().asPng();
+
+  await mkdir(STATIC, { recursive: true });
+  await writeFile(destinazione, png);
+
+  console.log(`${file} — ${lato}×${lato}, ${(png.length / 1024).toFixed(1)} kB`);
+}
