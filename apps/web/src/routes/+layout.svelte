@@ -303,6 +303,14 @@
     margin-top: 0.3rem;
   }
 
+  /* Da dove vengono i dati e a quali condizioni: due righe corte in mezzo alla
+     pagina, come il marchio sopra. L'avvertenza no — è un blocco di prosa che
+     può andare a capo, e un testo lungo centrato si legge male perché ogni
+     riga comincia in un punto diverso. */
+  footer p:not(.avvertenza) {
+    text-align: center;
+  }
+
   /* Un blocco a sé, non la prima di tre righe uguali: le attribuzioni che
      seguono sono un'altra cosa, e senza lo stacco l'avvertenza si legge come
      la prima voce del loro elenco.
