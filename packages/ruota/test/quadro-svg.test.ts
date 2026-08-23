@@ -305,6 +305,33 @@ describe('quadroSvg', () => {
     expect(quadroSvg(CARTA, { label: 'Navamsa di prova' })).toContain('Navamsa di prova');
   });
 
+  it('scrive il glifo del segno grande, ma sotto le sigle', () => {
+    // Il cartellino dice dove si è, le sigle che cosa c'è: la gerarchia va
+    // nell'un verso e basta. Ma il glifo non deve nemmeno sparire — a un
+    // terzo delle sigle non si legge più che segno sia.
+    for (const stile of ['sud', 'nord'] as const) {
+      const svg = quadroSvg(CARTA, { stile });
+      const glifo = Number(svg.match(/font-size="([\d.]+)"[^>]*>[\u2648-\u2653]/)?.[1] ?? 0);
+      const sigla = Number(svg.match(/font-size="([\d.]+)"[^>]*>(?=<tspan)/)?.[1] ?? 0);
+
+      expect(glifo).toBeGreaterThan(sigla * 0.6);
+      expect(glifo).toBeLessThan(sigla);
+    }
+  });
+
+  it('tiene il numero della casa sotto il glifo del segno', () => {
+    // Dice una cosa che nel sud si muove e nel nord è già nella posizione:
+    // non deve contendere l'occhio al segno.
+    const svg = quadroSvg(CARTA, { stile: 'sud', palette: CHIARA });
+    const glifo = Number(svg.match(/font-size="([\d.]+)"[^>]*>[\u2648-\u2653]/)?.[1] ?? 0);
+    const numero = Number(
+      svg.match(new RegExp(`font-size="([\\d.]+)"[^>]*fill="${CHIARA.testoTenue}"`))?.[1] ?? 0,
+    );
+
+    expect(numero).toBeGreaterThan(0);
+    expect(numero).toBeLessThan(glifo);
+  });
+
   it('nomina i retrogradi a chi il disegno non lo vede', () => {
     // Il ℞ è un segno grafico: chi legge la descrizione non lo incontra, e
     // senza questo si perderebbe una cosa che a schermo si vede subito.

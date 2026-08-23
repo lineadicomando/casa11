@@ -108,14 +108,22 @@ const TETTO = 46;
 const MARGINE = 0.86;
 
 /**
- * Quanto l'intestazione sta sotto le sigle.
+ * Quanto il cartellino sta sotto le sigle.
  *
  * Il segno e il numero della casa dicono dove si è, non che cosa c'è: sono
  * l'etichetta della cella e non il suo contenuto. Nel sud il segno per giunta
  * è dato dalla posizione e nel nord lo è la casa, quindi in entrambi gli stili
- * metà dell'intestazione ripete qualcosa che il disegno già dice.
+ * metà del cartellino ripete qualcosa che il disegno già dice.
+ *
+ * **Non è però il rapporto fra le due misure finali**, che il nome lo
+ * prometterebbe: si applica alla stima della prima passata, cioè a quanto
+ * starebbe nella cella intera. Le sigle poi hanno solo lo spazio che il
+ * cartellino lascia, e finiscono più in basso di quella stima — nel sud di
+ * pochissimo, nel nord di più, perché là il ritaglio morde il triangolo. Il
+ * rapporto che si vede sul disegno finito è quindi un po' più alto di questo
+ * numero, e non identico nei due stili.
  */
-const RAPPORTO_INTESTAZIONE = 0.62;
+const RAPPORTO_INTESTAZIONE = 0.85;
 
 /** E il numero della casa sta sotto il glifo del segno, per la stessa ragione. */
 const RAPPORTO_NUMERO = 0.62;
@@ -296,7 +304,10 @@ function impagina(celle: readonly CellaQuadro[], stile: StileQuadro): Impaginazi
  * cambia con la cella.
  */
 function zonaDeiGraha(cella: CellaQuadro, testa: Testa, corpo: number): Punto[] {
-  const stacco = corpo * 0.85;
+  // Il cartellino sporge di mezzo corpo scarso dal suo centro: sette decimi
+  // lo scavalcano e lasciano un terzo di corpo d'aria. Di più non serve, e nel
+  // nord costa — là ogni punto tolto al triangolo è un punto tolto alle sigle.
+  const stacco = corpo * 0.72;
   const taglio = {
     x: testa.punto.x - testa.fuori.x * stacco,
     y: testa.punto.y - testa.fuori.y * stacco,
