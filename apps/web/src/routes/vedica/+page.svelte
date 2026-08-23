@@ -173,11 +173,11 @@
 </script>
 
 <Meta
-  titolo="Astrologia vedica"
+  titolo="Vedica"
   descrizione="Tema secondo il Jyotisha: zodiaco siderale, nakshatra, dasha vimshottari, carte divisionali e drishti, calcolati con le effemeridi Swiss Ephemeris."
 />
 
-<h1 class="nascosto">Astrologia vedica</h1>
+<h1 class="nascosto">Vedica</h1>
 
 <!-- Le stesse opzioni due volte no: nella striscia stanno quelle che si
      cambiano guardando il risultato — un altro ayanamsa, un ordine di dasha in

@@ -174,7 +174,7 @@ describe('quello che le dasha dichiarano di non sapere', () => {
     expect(() => computeVimshottari(computeNatalChart(NASCITA))).toThrow(ChartError);
   });
 
-  it('avverte che senza ora di nascita la catena è indicativa per intero', () => {
+  it('avverte che senza ora di nascita le date sono inservibili', () => {
     // Dodici ore di Luna sono sei gradi e mezzo, che su un mahadasha lungo
     // valgono quasi cinque anni: qui l'ora ignota non sposta i confini, li
     // rende inservibili.
@@ -182,8 +182,13 @@ describe('quello che le dasha dichiarano di non sapere', () => {
       { ...NASCITA, time: undefined },
       { zodiac: 'siderale' },
     );
+    const avvertenza = computeVimshottari(senzaOra).warnings.join(' ');
 
-    expect(computeVimshottari(senzaOra).warnings.join(' ')).toMatch(/Ora di nascita ignota/);
+    expect(avvertenza).toMatch(/inservibili/);
+    expect(avvertenza).toMatch(/quasi cinque anni/);
+    // E non ripete che la carta è di mezzogiorno: lo dice già quella del tema,
+    // e le due comparivano di fila cominciando quasi uguali.
+    expect(avvertenza).not.toMatch(/mezzogiorno/);
   });
 
   it('avverte del ripiego su Moshier, che qui vale ore di calendario', () => {

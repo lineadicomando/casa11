@@ -99,11 +99,14 @@ export function computeVimshottari(
   const warnings: string[] = [];
 
   if (!chart.time.timeKnown) {
+    // Non si ripete che la carta è di mezzogiorno: quello lo dice già
+    // l'avvertenza del tema, e le due comparivano di fila cominciando quasi
+    // uguali. Qui si aggiunge solo ciò che di quel fatto vale per le dasha, ed
+    // è tutt'altro ordine di grandezza.
     warnings.push(
-      "Ora di nascita ignota: la Luna è quella di mezzogiorno locale, e in dodici ore " +
-        'si sposta di sei gradi e mezzo. Su un mahadasha lungo sono quasi cinque anni ' +
-        'di scarto sulle date: la catena va considerata indicativa nella sua interezza, ' +
-        'non solo nei confini.',
+      'Senza ora di nascita queste date non sono approssimate ma inservibili: dodici ' +
+        'ore di Luna sono sei gradi e mezzo, che su un mahadasha lungo valgono quasi ' +
+        'cinque anni.',
     );
   }
 

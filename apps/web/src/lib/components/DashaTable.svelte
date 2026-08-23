@@ -24,12 +24,43 @@
   const inCorso = (period: DashaPeriod): boolean =>
     period.start <= adesso && adesso < period.end;
 
-  /** Appiattisce l'albero conservando il livello, per una tabella sola. */
+  /**
+   * I periodi aperti, per l'istante in cui cominciano.
+   *
+   * Aperti si nasce solo lungo la catena di adesso: due ordini sono
+   * ottantuno righe e tre sono settecentoventinove, che non sono un elenco ma
+   * un muro. Quello che si vuole sapere aprendo questa tabella è dove si è, e
+   * il resto si chiede.
+   */
+  let aperti = $state(new Set<string>());
+
+  // La catena del presente si apre da sé, e si riapre se cambia il tema.
+  $effect(() => {
+    aperti = new Set(catenaCorrente(dasha.periods).map((period) => period.start));
+  });
+
+  /** I periodi in corso a `adesso`, dal più ampio al più stretto. */
+  function catenaCorrente(periods: readonly DashaPeriod[]): DashaPeriod[] {
+    const dentro = periods.find(inCorso);
+    if (!dentro) return [];
+    return [dentro, ...catenaCorrente(dentro.periods ?? [])];
+  }
+
+  /** Appiattisce l'albero, scendendo solo dentro i periodi aperti. */
   function righe(periods: readonly DashaPeriod[]): DashaPeriod[] {
-    return periods.flatMap((period) => [period, ...righe(period.periods ?? [])]);
+    return periods.flatMap((period) =>
+      aperti.has(period.start) ? [period, ...righe(period.periods ?? [])] : [period],
+    );
   }
 
   const tutte = $derived(righe(dasha.periods));
+
+  function commuta(period: DashaPeriod): void {
+    const dopo = new Set(aperti);
+    if (dopo.has(period.start)) dopo.delete(period.start);
+    else dopo.add(period.start);
+    aperti = dopo;
+  }
 
   const durata = (period: DashaPeriod): string => {
     const tondo = Math.round(period.years);
@@ -62,6 +93,14 @@
     {dasha.yearLength}, di {dasha.daysPerYear} giorni.
   </p>
 
+  {#if dasha.levels > 1}
+    <p class="nota">
+      I sotto-periodi sono aperti su quello in corso. Gli altri si aprono col
+      triangolino: tutti insieme sarebbero {dasha.levels === 2 ? 'ottantuno' : 'settecentoventinove'}
+      righe.
+    </p>
+  {/if}
+
   <table>
     <thead>
       <tr>
@@ -85,7 +124,22 @@
         >
           <td class="glifo">{period.level === 1 ? BODY_GLYPH[period.lord] : ''}</td>
           <td style:padding-left="{(period.level - 1) * 1.2}rem">
-            {nome(period.lord)}
+            {#if period.periods}
+              <!-- Il triangolino e non la riga intera: la riga la si sorvola
+                   per illuminare il graha altrove, e i due gesti si
+                   pesterebbero i piedi. -->
+              <button
+                type="button"
+                class="apri"
+                aria-expanded={aperti.has(period.start)}
+                onclick={() => commuta(period)}
+              >
+                <span aria-hidden="true">{aperti.has(period.start) ? '▾' : '▸'}</span>
+                {nome(period.lord)}
+              </button>
+            {:else}
+              {nome(period.lord)}
+            {/if}
           </td>
           <td>{giorno(period.local.start)}</td>
           <td>{giorno(period.local.end)}</td>
@@ -101,6 +155,29 @@
      non risponde a una domanda ma dice dove si è. */
   tbody tr.corrente td {
     background: var(--accento-tenue);
+  }
+
+  /* Un pulsante che non sembra un pulsante: la riga è già densa, e un bordo in
+     più la spezzerebbe. Il triangolino dice che si apre, e il focus lo dice a
+     chi arriva col tabulatore. */
+  .apri {
+    padding: 0;
+    background: none;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .apri span {
+    display: inline-block;
+    width: 0.9em;
+    color: var(--testo-tenue);
+  }
+
+  .apri:hover {
+    color: var(--accento);
   }
 
   .nota {
