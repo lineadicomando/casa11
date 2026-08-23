@@ -3,12 +3,14 @@ import { writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import {
   paletteDi,
+  quadroSvg,
   ruotaSvg,
   type NomeTema,
   type OpzioniDisegno,
+  type StileQuadro,
   type WheelChart,
 } from '@undicesimacasa/ruota';
-import { ruotaPng } from '@undicesimacasa/ruota/png';
+import { quadroPng, ruotaPng } from '@undicesimacasa/ruota/png';
 import { letturaDaIncollare, SISTEMI, type OpzioniLettura, type Sistema } from '@undicesimacasa/lettura';
 import { AYANAMSAS } from './ayanamsa.js';
 import { computeNatalChart } from './chart.js';
@@ -102,6 +104,10 @@ Opzioni
                         verso: chi guarda chi non è reciproco
   --drishti-nodi <n>    nessuna (default, forma classica) oppure gioviana, che dà
                         a Rahu e Ketu la quinta, la settima e la nona
+  --quadro <nord|sud>   Fa scrivere a --svg e --png il quadro vedico invece della
+                        ruota. Disegna il varga nominato da --varga, o il D-1 se
+                        non ce n'è. Richiede --zodiaco siderale; lo stile del nord
+                        vuole anche l'ora, perché le sue caselle sono case
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
@@ -293,6 +299,7 @@ function main(argv: string[]): number {
       dasha: { type: 'boolean', default: false },
       varga: { type: 'string' },
       drishti: { type: 'boolean', default: false },
+      quadro: { type: 'string' },
       'drishti-nodi': { type: 'string' },
       livelli: { type: 'string' },
       'anno-dasha': { type: 'string' },
@@ -357,6 +364,34 @@ function main(argv: string[]): number {
     const quale = values.sistema ? '--sistema' : '--repository';
     process.stderr.write(`${quale} richiede --lettura: altrove non compare da nessuna parte.\n`);
     return 2;
+  }
+
+  // Il quadro vedico disegna posizioni siderali: su un tema tropicale sarebbe
+  // una forma indiana riempita coi gradi di un altro sistema.
+  if (values.quadro !== undefined) {
+    if (values.quadro !== 'nord' && values.quadro !== 'sud') {
+      process.stderr.write('--quadro vuole "nord" oppure "sud".\n');
+      return 2;
+    }
+    if (values.zodiaco !== 'siderale') {
+      process.stderr.write('--quadro richiede --zodiaco siderale.\n');
+      return 2;
+    }
+    if (!values.svg && !values.png) {
+      process.stderr.write('--quadro dice come disegnare, non dove: aggiungi --svg o --png.\n');
+      return 2;
+    }
+    const altrove = (['transits', 'passages', 'sky', 'events', 'elezione'] as const).filter(
+      (key) => values[key],
+    );
+    if (altrove.length > 0) {
+      process.stderr.write(
+        `--quadro vale solo per il tema natale, non con ${altrove
+          .map((key) => `--${key}`)
+          .join(', ')}.\n`,
+      );
+      return 2;
+    }
   }
 
   // Un tema vedico letto con le istruzioni tropicali, o viceversa, non dà un
@@ -471,6 +506,12 @@ function main(argv: string[]): number {
         `${orphans.map((o) => `--${o}`).join(', ')} richiede --transits oppure --sky.\n`,
       );
       return 2;
+    }
+
+    // Il quadro prende il posto della ruota, non le si aggiunge: `--svg` è un
+    // nome di file solo.
+    if (values.quadro !== undefined) {
+      return scriviQuadro(chart, values.quadro as StileQuadro, values);
     }
 
     const disegno = scriviDisegno(chart, values);
@@ -628,6 +669,80 @@ function scriviDisegno(
   }
 
   return null;
+}
+
+/**
+ * Scrive il quadro vedico al posto della ruota.
+ *
+ * Un file, un quadro: se `--varga` ne nomina più d'uno non c'è modo di
+ * scegliere, e indovinare sarebbe peggio che chiedere.
+ */
+function scriviQuadro(
+  chart: NatalChart,
+  stile: StileQuadro,
+  values: OpzioniDisegnoCli & { varga?: string | undefined },
+): number {
+  const chiesti = (values.varga ?? 'd1')
+    .split(',')
+    .map((voce) => voce.trim().toLowerCase())
+    .filter((voce) => voce.length > 0);
+
+  if (chiesti.length !== 1) {
+    process.stderr.write(
+      '--quadro disegna un varga solo, e --svg scrive un file solo: nomina un varga solo,\n' +
+        'oppure ometti --varga per la carta rashi.\n',
+    );
+    return 2;
+  }
+
+  const id = chiesti[0] as string;
+  if (!VARGAS.some((varga) => varga.id === id)) {
+    process.stderr.write(
+      `Varga "${id}" non disponibile. Calcolati: ${VARGAS.map((v) => v.id).join(', ')}.\n`,
+    );
+    return 2;
+  }
+
+  if (values.tema && values.tema !== 'chiaro' && values.tema !== 'scuro') {
+    process.stderr.write('Valore di --tema non riconosciuto: atteso "chiaro" oppure "scuro".\n');
+    return 2;
+  }
+
+  let larghezza: number | undefined;
+  if (values.larghezza) {
+    larghezza = Number(values.larghezza);
+    if (!Number.isFinite(larghezza) || larghezza < 100) {
+      process.stderr.write('--larghezza vuole un numero di punti, almeno 100.\n');
+      return 2;
+    }
+  }
+
+  const varga = computeVarga(chart, id as VargaId);
+  const disegno = { palette: paletteDi(values.tema as NomeTema | undefined), stile };
+
+  // Lo stile del nord ha le case fisse: senza lagna la geometria si rifiuta,
+  // e qui il rifiuto va tradotto in un consiglio invece che in una traccia.
+  if (stile === 'nord' && !varga.ascendant) {
+    process.stderr.write(
+      "Lo stile del nord ha le case fisse, e senza ora di nascita non c'è un lagna da\n" +
+        'mettere in prima casa. Usa --quadro sud, dove a essere fissi sono i segni.\n',
+    );
+    return 2;
+  }
+
+  if (values.svg) {
+    writeFileSync(values.svg, quadroSvg(varga, disegno));
+    process.stderr.write(`${values.svg}\n`);
+  }
+  if (values.png) {
+    writeFileSync(
+      values.png,
+      quadroPng(varga, { ...disegno, ...(larghezza ? { larghezza } : {}) }),
+    );
+    process.stderr.write(`${values.png}\n`);
+  }
+
+  return 0;
 }
 
 /**
