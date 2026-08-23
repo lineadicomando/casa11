@@ -17,6 +17,7 @@ import { describe, expect, it } from 'vitest';
 import { BODY_GLYPH, SIGN_GLYPH, ZODIAC_ORDER } from '../src/glyphs.js';
 import { CHIARA, SCURA } from '../src/palette.js';
 import type * as qui from '../src/types.js';
+import { GRAHA, GRAHA_SIGLA, type SquareChart } from '../src/quadro.js';
 
 /**
  * Vale `true` solo se i due tipi si contengono a vicenda. Un `extends` solo
@@ -51,7 +52,24 @@ describe('i tipi ridichiarati', () => {
     const fortuna = (chart: core.NatalChart): qui.ChartPoint | undefined => chart.partOfFortune;
     const transiti = (t: core.TransitChart): qui.TransitChart => t;
 
-    expect([natale, cuspidi, assi, aspetti, fortuna, transiti]).toHaveLength(6);
+    // E un varga deve soddisfare il quadro. È ciò che fa sì che un renderer
+    // solo disegni la carta rashi — che è il D-1 — e tutte le divisionali:
+    // `computeVarga(chart, 'd1')` entra qui senza adattamenti.
+    const quadro = (varga: core.VargaChart): SquareChart => varga;
+
+    expect([natale, cuspidi, assi, aspetti, fortuna, transiti, quadro]).toHaveLength(7);
+  });
+
+  it('danno una sigla a ogni graha, e solo a quelli', () => {
+    // I nove del Jyotisha: se un giorno `BodyId` cambiasse nome a uno di loro,
+    // la sigla sparirebbe dal quadro senza che niente fallisca.
+    const senzaSigla = GRAHA.filter((id) => !(id in GRAHA_SIGLA));
+    expect(senzaSigla).toEqual([]);
+    expect(Object.keys(GRAHA_SIGLA)).toHaveLength(GRAHA.length);
+
+    // E ciascuno dev'essere un corpo che il motore calcola davvero.
+    const sconosciuti = GRAHA.filter((id) => !DEFAULT_BODIES.includes(id));
+    expect(sconosciuti).toEqual([]);
   });
 });
 
