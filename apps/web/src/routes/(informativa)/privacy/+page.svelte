@@ -8,7 +8,7 @@
    * a ogni ricostruzione, e un'informativa che si dice aggiornata senza
    * esserlo dice il falso proprio sul punto in cui deve essere credibile.
    */
-  const AGGIORNAMENTO = '2 agosto 2026';
+  const AGGIORNAMENTO = '23 agosto 2026';
 
   /**
    * Giorni di conservazione dei log del server.
@@ -154,7 +154,7 @@
   resta sul tuo dispositivo dice chi sei.
 </p>
 
-<p>Due cose il browser le conserva, e sarebbe scorretto tacerle.</p>
+<p>Tre cose il browser le conserva, e sarebbe scorretto tacerle.</p>
 
 <ul>
   <li>
@@ -172,7 +172,27 @@
     tocchi il pulsante non viene scritto nulla, e riportandolo su «automatico»
     la voce viene cancellata.
   </li>
+  <li>
+    Il sito si può <strong>installare</strong> come applicazione, e per potersi
+    aprire anche senza collegamento ne tiene una copia sul dispositivo, nel
+    <em>Cache Storage</em> alla voce <code>casa11-</code> seguita dal numero
+    della versione. Dentro ci sono le pagine, i programmi, gli stili e le
+    icone: il contenitore, non il contenuto. <strong>Le risposte del calcolo
+    non ci finiscono mai</strong>, e gli indirizzi delle pagine ci vengono
+    scritti <strong>senza i parametri</strong> — cioè senza la data, l'ora e il
+    luogo che portano con sé — per non farne un elenco dei temi che hai
+    guardato. Disinstallando l'applicazione, o cancellando i dati del sito
+    dalle impostazioni del browser, sparisce tutto.
+  </li>
 </ul>
+
+<p>
+  Installata, l'applicazione fa esattamente quello che fa nel browser, e nulla
+  di più: <strong>non manda notifiche e non ti chiede il permesso di
+  mandartene</strong>, non lavora in sottofondo e non accede a nessun sensore.
+  Senza collegamento si apre e si sfoglia, ma non calcola: i calcoli li fa il
+  server, e senza rete il sito te lo dice invece di far finta.
+</p>
 
 <p>
   Nessuno di questi elementi richiede il tuo consenso: sono strettamente

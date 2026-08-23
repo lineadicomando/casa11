@@ -80,6 +80,15 @@ il motore usa Moshier invece delle effemeridi Swiss.
   le effemeridi nel bundle per la via traversa che il vincolo sul client
   chiudeva dalla porta principale. I documenti di lettura sono uno per sistema
   astrologico, non uno parametrizzato — vedi `src/lettura.ts`.
+- **Il service worker conserva il guscio, non i calcoli.** `/api` non entra
+  mai nella sua cache, e le pagine ci entrano indicizzate per **percorso**,
+  senza query. Le due regole stanno in `apps/web/src/lib/cache-policy.ts` e non
+  nel worker apposta per poterle provare. La ragione è una sola e vale per
+  entrambe: gli indirizzi di questa applicazione portano data, ora e luogo di
+  nascita — `/?date=…&locationId=…` è una URL vera — e una cache che
+  l'applicazione governa, con un nome suo e senza scadenza, sarebbe un elenco
+  dei temi guardati che resta sul dispositivo. Senza rete si apre
+  l'interfaccia; il calcolo no, e `lib/api.ts` lo dice già.
 - **Un disegno non sostituisce i dati**: non porta le avvertenze del calcolo.
   Le superfici lo dicono a chi le usa, e le descrizioni MCP pure.
 

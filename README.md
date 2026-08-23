@@ -62,6 +62,13 @@ npm run dev -w @undicesimacasa/web      # http://localhost:5173
 npm run build && npm start -w @undicesimacasa/web   # http://localhost:3000
 ```
 
+Si installa come applicazione — manifesto, icone e un service worker che tiene
+il guscio sul dispositivo — e senza collegamento si apre e si sfoglia. Non
+calcola: il motore sta sul server, e a rete assente l'interfaccia lo dice
+invece di far finta. Nessuna notifica, né la richiesta di poterne mandare. Il
+service worker si registra solo sulla build, e non dentro Electron: il perché è
+in `apps/web/src/routes/+layout.svelte`.
+
 **Server MCP.** Dieci tool su stdio: non è un servizio da avviare, è un processo
 che il client lancia. Accanto ai tool c'è il prompt `lettura_del_tema`, che
 consegna il tema insieme alle istruzioni per interpretarlo — un prompt e non un
