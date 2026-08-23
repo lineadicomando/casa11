@@ -27,14 +27,22 @@ function normalizeHours(value: number): number {
   return hours < 0 ? hours + 24 : hours;
 }
 
-function formatHours(hours: number): string {
-  const h = Math.floor(hours);
-  const minutesFloat = (hours - h) * 60;
-  const m = Math.floor(minutesFloat);
-  const s = Math.round((minutesFloat - m) * 60);
+/**
+ * L'ora siderale come `hh:mm:ss`.
+ *
+ * **Si arrotonda una volta sola, ai secondi interi, e da lì si conta con
+ * numeri interi.** Il riporto dei sessanta secondi diventa così una divisione,
+ * e non un secondo giro in virgola mobile: riportare il conto su
+ * `h + (m + 1) / 60` e riformattarlo non termina, perché per ventiquattro dei
+ * sessanta minuti possibili quella frazione moltiplicata per sessanta non
+ * torna intera — `41 / 60 * 60` fa `40,99999999999999` — i secondi
+ * riarrotondano di nuovo a sessanta e si riparte dallo stesso valore.
+ */
+export function formatHours(hours: number): string {
+  // Il modulo chiude il caso in cui l'arrotondamento porti a ventiquattro ore
+  // esatte: là il tempo siderale ricomincia da zero.
+  const secondi = Math.round(hours * 3600) % 86_400;
+  const parti = [Math.floor(secondi / 3600), Math.floor(secondi / 60) % 60, secondi % 60];
 
-  // L'arrotondamento dei secondi può produrre 60: si riporta sui minuti.
-  if (s === 60) return formatHours(normalizeHours(h + (m + 1) / 60));
-
-  return [h, m, s].map((part) => String(part).padStart(2, '0')).join(':');
+  return parti.map((parte) => String(parte).padStart(2, '0')).join(':');
 }
