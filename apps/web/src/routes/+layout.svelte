@@ -254,6 +254,20 @@
     margin-top: 0.7rem;
   }
 
+  /* Sopra i 90rem quello stacco separa dal nulla: il marchio se n'è andato nel
+     margine — `position: fixed`, sopra — e sotto la testata non c'è più niente
+     da cui staccarsi. Restano soltanto gli undici punti, in cima alla pagina,
+     dove la pagina dovrebbe già essere cominciata.
+
+     La regola sta qui e non nel blocco del marchio, che pure ha la stessa
+     soglia: là finirebbe *prima* di quella che deve scavalcare, e a parità di
+     specificità vince l'ultima scritta. Un `@media` vale dove viene messo. */
+  @media (min-width: 90rem) {
+    .barra {
+      margin-top: 0;
+    }
+  }
+
   /* I due pulsanti stanno appaiati e non si separano mai: se la barra va a
      capo, ci vanno insieme. */
   .comandi {
