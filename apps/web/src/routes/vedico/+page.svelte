@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AyanamsaId, DashaYear, JyotishaChart, NodeDrishti, VargaId } from '@undicesimacasa/core';
+  import type { StileQuadro } from '@undicesimacasa/ruota';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import {
@@ -47,7 +48,10 @@
   let ayanamsa = $state<AyanamsaId>('lahiri');
   let dashaLevels = $state<1 | 2 | 3>(2);
   let dashaYear = $state<DashaYear>('solare');
-  let vargas = $state<VargaId[]>(['d9']);
+  // D-1 e D-9 accese: la carta rashi e il navamsa si leggono sempre insieme,
+  // ed è la ragione per cui la seconda esiste.
+  let vargas = $state<VargaId[]>(['d1', 'd9']);
+  let stile = $state<StileQuadro>('sud');
   let drishtiNodes = $state<NodeDrishti>('nessuna');
 
   /**
@@ -139,6 +143,20 @@
     vargas = VARGHE.filter((v) => dopo.includes(v.value)).map((v) => v.value);
     void calcola();
   }
+
+  /**
+   * Se il tema abbia un lagna, cioè se lo stile del nord sia disegnabile.
+   *
+   * Le sue caselle sono case: senza ora di nascita non c'è una prima casa da
+   * mettere in alto. La pagina **non lo offre** invece di offrirlo e poi
+   * negarlo — un menù che rifiuta una voce che mostra è un menù che ha
+   * chiesto una cosa che non poteva dare.
+   */
+  const conLagna = $derived(jyotisha?.chart.angles !== undefined);
+
+  $effect(() => {
+    if (!conLagna && stile === 'nord') stile = 'sud';
+  });
 
   /** Questa pagina legge il proprio indirizzo ma non lo scrive mai: c'è dentro una nascita. */
   onMount(() => {
@@ -256,10 +274,35 @@
               </label>
             {/each}
           </div>
+
+          <!-- Lo stile non si manda al server: è una scelta di sola resa, e
+               cambiarla non ricalcola niente. I due quadri dicono la stessa
+               cosa in due disposizioni. -->
+          <div class="stile">
+            <span id="stile-quadro">Quadro</span>
+            <div role="radiogroup" aria-labelledby="stile-quadro" class="scelte">
+              <label class="interruttore">
+                <input type="radio" bind:group={stile} value="sud" />
+                <span>Sud — segni fissi</span>
+              </label>
+              {#if conLagna}
+                <label class="interruttore">
+                  <input type="radio" bind:group={stile} value="nord" />
+                  <span>Nord — case fisse</span>
+                </label>
+              {/if}
+            </div>
+            {#if !conLagna}
+              <p class="nota">
+                Senza ora di nascita non c'è un lagna, e lo stile del nord ha le case
+                fisse: resta quello del sud, dove a essere fissi sono i segni.
+              </p>
+            {/if}
+          </div>
         </section>
 
         {#each jyotisha.vargas as varga (varga.varga)}
-          <VargaTable {varga} />
+          <VargaTable {varga} {stile} />
         {/each}
 
         <DrishtiTable drishti={jyotisha.drishti} />
@@ -294,5 +337,25 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem 1.25rem;
+  }
+
+  .stile {
+    margin-top: 1rem;
+  }
+
+  .stile > span {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--testo-tenue);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .nota {
+    margin: 0.5rem 0 0;
+    max-width: 46rem;
+    color: var(--testo-tenue);
+    font-size: 0.85rem;
   }
 </style>

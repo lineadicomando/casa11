@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { VargaChart } from '@undicesimacasa/core';
-  import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '@undicesimacasa/ruota';
+  import { BODY_GLYPH, quadroSvg, SIGN_GLYPH, SIGN_LABEL, type StileQuadro } from '@undicesimacasa/ruota';
+  import { PALETTE_PAGINA } from '$lib/palette-pagina';
 
   /**
    * Una carta divisionale.
@@ -13,14 +14,47 @@
    */
   interface Props {
     varga: VargaChart;
+    /**
+     * Lo stile del quadro. Omesso, la carta resta la sola tabella.
+     *
+     * Il disegno sta qui e non nella pagina perché è una carta divisionale
+     * vista in due modi, non due cose accostate: chi la guarda deve trovare
+     * il quadro sotto la regola che l'ha prodotto.
+     */
+    stile?: StileQuadro | undefined;
   }
 
-  let { varga }: Props = $props();
+  let { varga, stile = undefined }: Props = $props();
+
+  /**
+   * Lo stesso disegno che si scarica, inserito nella pagina.
+   *
+   * `{@html}` e non un componente interattivo: il quadro non ha niente da
+   * illuminare — le drishti si contano a segni interi, non sono linee — e
+   * così il file e lo schermo sono lo stesso oggetto per costruzione.
+   */
+  const disegno = $derived.by(() => {
+    if (!stile) return null;
+    // Lo stile del nord ha le case fisse: senza lagna la geometria si rifiuta,
+    // e qui non si deve arrivare — la pagina non lo offre nemmeno.
+    if (stile === 'nord' && !varga.ascendant) return null;
+
+    return quadroSvg(varga, {
+      stile,
+      palette: PALETTE_PAGINA,
+      label: `${varga.name} in quadro ${stile === 'nord' ? 'nord' : 'sud'}-indiano`,
+    });
+  });
 </script>
 
 <section>
   <h3 class="titolo-sezione">{varga.name} ({varga.varga.toUpperCase()})</h3>
   <p class="regola">{varga.rule}</p>
+
+  {#if disegno}
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -- è il nostro SVG, non input -->
+    <div class="quadro">{@html disegno}</div>
+  {/if}
 
   <table>
     <thead>
@@ -60,6 +94,16 @@
 </section>
 
 <style>
+  /* Il viewBox scala da sé: qui si toglie solo la larghezza fissa che l'SVG
+     porta addosso, perché nasce anche come file a misura piena. */
+  .quadro :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 30rem;
+    margin: 0 0 1rem;
+  }
+
   .regola {
     margin: 0 0 0.75rem;
     color: var(--testo-tenue);

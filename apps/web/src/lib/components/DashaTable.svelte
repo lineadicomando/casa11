@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DashaPeriod, VimshottariDasha } from '@undicesimacasa/core';
+  import type { BodyId, DashaPeriod, VimshottariDasha } from '@undicesimacasa/core';
   import { BODY_GLYPH } from '@undicesimacasa/ruota';
 
   /**
@@ -36,15 +36,27 @@
   };
 
   const giorno = (iso: string): string => iso.slice(0, 10);
+
+  /**
+   * Il nome di un graha come lo scrive il Jyotisha.
+   *
+   * I due nodi hanno un nome loro — Rahu e Ketu — e gli altri sette prendono
+   * l'iniziale maiuscola: gli identificatori del motore sono minuscoli, e
+   * «periodo di saturno» in una tabella si legge come un refuso.
+   */
+  const nome = (id: BodyId): string => {
+    if (id === 'nodo-nord') return 'Rahu';
+    if (id === 'nodo-sud') return 'Ketu';
+    return id.charAt(0).toUpperCase() + id.slice(1);
+  };
 </script>
 
 <section>
   <h3 class="titolo-sezione">Dasha vimshottari</h3>
   <p class="nota">
-    Il nakshatra della Luna alla nascita è {dasha.nakshatra.name}, retto da
-    {dasha.periods[0]?.lord === dasha.nakshatra.lord ? 'lo stesso graha che apre la catena' : 'il suo signore'}:
-    alla nascita ne restavano {dasha.balance.toFixed(2)} anni. Anno {dasha.yearLength},
-    di {dasha.daysPerYear} giorni.
+    La Luna è nata in {dasha.nakshatra.name}, retto da {nome(dasha.nakshatra.lord)}: la catena
+    comincia da lì, e alla nascita ne restavano {dasha.balance.toFixed(2)} anni. Anno
+    {dasha.yearLength}, di {dasha.daysPerYear} giorni.
   </p>
 
   <table>
@@ -62,7 +74,7 @@
         <tr class:evidenziato={inCorso(period)}>
           <td class="glifo">{period.level === 1 ? BODY_GLYPH[period.lord] : ''}</td>
           <td style:padding-left="{(period.level - 1) * 1.2}rem">
-            {period.lord === 'nodo-nord' ? 'Rahu' : period.lord === 'nodo-sud' ? 'Ketu' : period.lord}
+            {nome(period.lord)}
           </td>
           <td>{giorno(period.local.start)}</td>
           <td>{giorno(period.local.end)}</td>
