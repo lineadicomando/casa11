@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { registerLetturaDelTema } from './prompts.js';
 import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@undicesimacasa/core';
 import {
   registerComputeNatalChart,
@@ -41,7 +42,9 @@ export function createServer(context: ToolContext = {}): McpServer {
         'Per MOSTRARE la carta invece che leggerla c\'è draw_chart_wheel, che ne restituisce ' +
         "l'immagine: si chiama dopo compute_natal_chart e non al posto suo, perché un disegno " +
         'non contiene le avvertenze del calcolo. ' +
-        "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te.",
+        "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te. " +
+        "Se chi scrive vuole una lettura e non i numeri, c'è il prompt lettura_del_tema, che " +
+        'consegna il tema insieme alle istruzioni per interpretarlo.',
     },
   );
 
@@ -53,6 +56,7 @@ export function createServer(context: ToolContext = {}): McpServer {
   registerFindTransitPassages(server, context);
   registerFindSkyEvents(server, context);
   registerFindElectionHours(server, context);
+  registerLetturaDelTema(server, context);
   registerReferenceResources(server);
 
   return server;

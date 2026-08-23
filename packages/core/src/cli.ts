@@ -9,6 +9,7 @@ import {
   type WheelChart,
 } from '@undicesimacasa/ruota';
 import { ruotaPng } from '@undicesimacasa/ruota/png';
+import { letturaDaIncollare, type OpzioniLettura } from '@undicesimacasa/lettura';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
 import {
@@ -64,6 +65,11 @@ Opzioni
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
+  --lettura             Stampa il tema preceduto dalle istruzioni per farlo
+                        interpretare: si incolla in un assistente. Solo per il
+                        tema natale, e non si combina con --json
+  --repository <url>    Indirizzo del sorgente, per la riga di provenienza in
+                        fondo a --lettura. Omesso, la riga non compare
   --ephe <percorso>     Cartella dei file .se1
   --help                Mostra questo messaggio
 
@@ -128,6 +134,8 @@ function main(argv: string[]): number {
       minor: { type: 'boolean', default: false },
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
+      lettura: { type: 'boolean', default: false },
+      repository: { type: 'string' },
       ephe: { type: 'string' },
       svg: { type: 'string' },
       png: { type: 'string' },
@@ -156,6 +164,33 @@ function main(argv: string[]): number {
   if (values.help) {
     process.stdout.write(USAGE);
     return 0;
+  }
+
+  // La lettura vale per il tema natale e per nient'altro. Le istruzioni
+  // parlano di chi è una persona a partire da Sole, Luna e Ascendente: su un
+  // elenco di transiti o su un calendario di ore planetarie non hanno appiglio,
+  // e un modello a cui arrivassero lo stesso riempirebbe il vuoto.
+  if (values.lettura) {
+    if (values.json) {
+      process.stderr.write(
+        '--lettura e --json chiedono due cose diverse: un testo da far leggere e i dati grezzi.\n',
+      );
+      return 2;
+    }
+    const altrove = (['transits', 'passages', 'sky', 'events', 'elezione'] as const).filter(
+      (key) => values[key],
+    );
+    if (altrove.length > 0) {
+      process.stderr.write(
+        `--lettura vale solo per il tema natale, non con ${altrove
+          .map((key) => `--${key}`)
+          .join(', ')}.\n`,
+      );
+      return 2;
+    }
+  } else if (values.repository) {
+    process.stderr.write('--repository richiede --lettura: altrove non compare da nessuna parte.\n');
+    return 2;
   }
 
   // L'elezione, come il cielo, non riguarda nessuna nascita: si risponde prima
@@ -244,6 +279,13 @@ function main(argv: string[]): number {
 
     const disegno = scriviDisegno(chart, values);
     if (disegno !== null) return disegno;
+
+    if (values.lettura) {
+      const opzioni: OpzioniLettura = {};
+      if (values.repository) opzioni.repository = values.repository;
+      process.stdout.write(`${letturaDaIncollare(formatChartCompact(chart), opzioni)}`);
+      return 0;
+    }
 
     process.stdout.write(
       values.json ? `${JSON.stringify(chart, null, 2)}\n` : `${formatChartCompact(chart)}\n`,

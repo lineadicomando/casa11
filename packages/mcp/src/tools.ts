@@ -1174,7 +1174,7 @@ function addYear(date: string): string {
   return next.toISOString().slice(0, 10);
 }
 
-interface ResolvedPlace {
+export interface ResolvedPlace {
   latitude: number;
   longitude: number;
   timezone: string;
@@ -1188,7 +1188,7 @@ interface ResolvedPlace {
  * valori, che è il punto in cui si introducono errori silenziosi (una cifra
  * di longitudine sbagliata sposta l'Ascendente senza che nulla fallisca).
  */
-function resolvePlace(
+export function resolvePlace(
   args: {
     location_id?: number | undefined;
     latitude?: number | undefined;
@@ -1267,7 +1267,7 @@ function describeLocation(location: Location): string {
   return parts.join(', ');
 }
 
-function describeError(error: unknown): string {
+export function describeError(error: unknown): string {
   if (error instanceof ChartError || error instanceof GeoError) {
     return `${error.code}: ${error.message}`;
   }

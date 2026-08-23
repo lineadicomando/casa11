@@ -178,6 +178,56 @@ describe('superficie MCP', () => {
 
     expect(String(result.contents[0]?.text)).toContain('congiunzione');
   });
+
+  it('espone il prompt di lettura, che non è un tool', async () => {
+    // Prompt e non tool perché lo sceglie chi usa il client, non il modello:
+    // il server continua a non chiedere a nessuno di interpretare niente.
+    const { prompts } = await client.listPrompts();
+    const lettura = prompts.find((prompt) => prompt.name === 'lettura_del_tema');
+
+    expect(lettura).toBeDefined();
+    expect(lettura?.description).toContain('non i suoi numeri');
+
+    const { tools } = await client.listTools();
+    expect(tools.map((tool) => tool.name)).not.toContain('lettura_del_tema');
+  });
+
+  it('consegna le istruzioni prima della tabella, senza farla riscrivere', async () => {
+    const result = await client.getPrompt({
+      name: 'lettura_del_tema',
+      arguments: { date: '1968-03-12', time: '14:30', location_id: String(ROMA_ID) },
+    });
+
+    const testo = String(result.messages[0]?.content?.text);
+    expect(result.messages[0]?.role).toBe('user');
+    expect(testo).toContain('ricalcolarlo e non correggerlo');
+    expect(testo.indexOf('Scrivi da un centro')).toBeLessThan(testo.indexOf('CORPI'));
+    // Il luogo in testa come nel tool: nel JSON sta in un campo a parte.
+    expect(testo).toContain('Luogo di nascita: Roma');
+  });
+
+  it('rifiuta un sistema che non esiste invece di leggerne un altro', async () => {
+    const result = await client.getPrompt({
+      name: 'lettura_del_tema',
+      arguments: { date: '1968-03-12', location_id: String(ROMA_ID), sistema: 'vedico' },
+    });
+
+    const testo = String(result.messages[0]?.content?.text);
+    expect(testo).toContain('non riconosciuto');
+    expect(testo).toContain('tropicale');
+    expect(testo).not.toContain('Scrivi da un centro');
+  });
+
+  it('spiega un luogo inesistente invece di fallire di protocollo', async () => {
+    // Chi ha invocato il prompt dal menu del client si aspetta di vedere
+    // qualcosa nella conversazione: un errore di protocollo lì sparisce.
+    const result = await client.getPrompt({
+      name: 'lettura_del_tema',
+      arguments: { date: '1968-03-12', location_id: '999999999' },
+    });
+
+    expect(String(result.messages[0]?.content?.text)).toContain('search_location');
+  });
 });
 
 describe('search_location', () => {
