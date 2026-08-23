@@ -9,7 +9,7 @@ import {
   type WheelChart,
 } from '@undicesimacasa/ruota';
 import { ruotaPng } from '@undicesimacasa/ruota/png';
-import { letturaDaIncollare, type OpzioniLettura } from '@undicesimacasa/lettura';
+import { letturaDaIncollare, SISTEMI, type OpzioniLettura, type Sistema } from '@undicesimacasa/lettura';
 import { AYANAMSAS } from './ayanamsa.js';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
@@ -18,6 +18,7 @@ import {
   formatDashaCompact,
   formatDrishtiCompact,
   formatElectionCompact,
+  formatJyotishaCompact,
   formatNakshatraCompact,
   formatPanchangaCompact,
   formatPassagesCompact,
@@ -106,6 +107,9 @@ Opzioni
   --lettura             Stampa il tema preceduto dalle istruzioni per farlo
                         interpretare: si incolla in un assistente. Solo per il
                         tema natale, e non si combina con --json
+  --sistema <nome>      Quale lettura: tropicale (default) oppure jyotisha, che
+                        porta con sé nakshatra, dasha, navamsa e drishti e vuole
+                        --zodiaco siderale
   --repository <url>    Indirizzo del sorgente, per la riga di provenienza in
                         fondo a --lettura. Omesso, la riga non compare
   --ephe <percorso>     Cartella dei file .se1
@@ -294,6 +298,7 @@ function main(argv: string[]): number {
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       lettura: { type: 'boolean', default: false },
+      sistema: { type: 'string' },
       repository: { type: 'string' },
       ephe: { type: 'string' },
       svg: { type: 'string' },
@@ -347,9 +352,34 @@ function main(argv: string[]): number {
       );
       return 2;
     }
-  } else if (values.repository) {
-    process.stderr.write('--repository richiede --lettura: altrove non compare da nessuna parte.\n');
+  } else if (values.repository || values.sistema) {
+    const quale = values.sistema ? '--sistema' : '--repository';
+    process.stderr.write(`${quale} richiede --lettura: altrove non compare da nessuna parte.\n`);
     return 2;
+  }
+
+  // Un tema vedico letto con le istruzioni tropicali, o viceversa, non dà un
+  // errore: dà un ibrido plausibile, che è peggio. Le due cose vanno insieme.
+  if (values.lettura) {
+    const sistema = values.sistema ?? 'tropicale';
+    if (!SISTEMI.includes(sistema as Sistema)) {
+      process.stderr.write(`Sistema "${sistema}" non riconosciuto. Ammessi: ${SISTEMI.join(', ')}.\n`);
+      return 2;
+    }
+    if (sistema === 'jyotisha' && values.zodiaco !== 'siderale') {
+      process.stderr.write(
+        '--sistema jyotisha richiede --zodiaco siderale: i nakshatra e le dasha sono\n' +
+          'tratti di cielo fra stelle fisse, e nel tropicale non esistono.\n',
+      );
+      return 2;
+    }
+    if (sistema === 'tropicale' && values.zodiaco === 'siderale') {
+      process.stderr.write(
+        'Le istruzioni tropicali su un tema siderale darebbero una lettura sbagliata di\n' +
+          'quasi un segno. Aggiungi --sistema jyotisha, oppure togli --zodiaco siderale.\n',
+      );
+      return 2;
+    }
   }
 
   // L'elezione, come il cielo, non riguarda nessuna nascita: si risponde prima
@@ -446,9 +476,17 @@ function main(argv: string[]): number {
     if (disegno !== null) return disegno;
 
     if (values.lettura) {
-      const opzioni: OpzioniLettura = {};
+      const sistema = (values.sistema ?? 'tropicale') as Sistema;
+      const opzioni: OpzioniLettura = { sistema };
       if (values.repository) opzioni.repository = values.repository;
-      process.stdout.write(`${letturaDaIncollare(formatChartCompact(chart), opzioni)}`);
+
+      // Il tema che accompagna le istruzioni è quello che le istruzioni
+      // descrivono: il vedico porta nakshatra, dasha, navamsa e drishti,
+      // perché senza quelli metà del documento parlerebbe di dati assenti.
+      const tavola =
+        sistema === 'jyotisha' ? formatJyotishaCompact(chart) : formatChartCompact(chart);
+
+      process.stdout.write(`${letturaDaIncollare(tavola, opzioni)}`);
       return 0;
     }
 

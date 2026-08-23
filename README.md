@@ -26,7 +26,7 @@ Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 | `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
 | `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG |
-| `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo |
+| `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo: un documento per sistema astrologico |
 | `packages/mcp` | server MCP: otto tool e un prompt di lettura, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia e API REST, tutti gli endpoint in GET |
 | `apps/desktop` | Electron: la web app in una finestra |
@@ -132,6 +132,12 @@ nessun modello e non manda niente a nessuno.
 Quel prompt è il riferimento unico per la lettura, e vive in
 `packages/lettura` — un pacchetto a sé perché non lo vuole solo il sito: la
 riga di comando lo stampa e il server MCP lo offre agli agenti.
+
+I documenti sono **uno per sistema astrologico**, non uno parametrizzato. Un
+tema vedico ha un altro centro — la Luna e il lagna, non il Sole — altri
+domicili, aspetti che non sono orbite e un impianto temporale che in occidente
+non ha corrispettivo: le istruzioni tropicali applicate a quei dati non danno
+un errore, danno un ibrido plausibile.
 
 Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio
 simbolico, offerta come spunto di riflessione e intrattenimento. Non sostituisce

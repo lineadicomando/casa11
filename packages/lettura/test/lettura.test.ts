@@ -125,3 +125,81 @@ describe('ogni documento di lettura', () => {
     expect(scorrevole(sistema)).toContain('non ha fondamento scientifico');
   });
 });
+
+/**
+ * Quello che il documento vedico deve dire e che l'altro non dice.
+ *
+ * Gli invarianti di sopra girano su entrambi e coprono i limiti condivisi.
+ * Qui c'è ciò che è proprio di questo sistema, e che se cadesse produrrebbe
+ * una lettura sbagliata invece di una lettura incompleta: un modello lasciato
+ * senza queste righe riempie il vuoto con l'astrologia che conosce meglio.
+ */
+describe('il documento vedico', () => {
+  const testo = istruzioniDi('jyotisha').replace(/\s+/g, ' ');
+
+  it('dice che lo zodiaco è siderale e vieta di convertire', () => {
+    expect(testo).toContain('SIDERALE');
+    expect(testo).toContain('non è un errore da correggere');
+    expect(testo).toMatch(/[Nn]on convertire/);
+  });
+
+  it('esclude i tre pianeti moderni dalla lettura', () => {
+    // Sono nella tabella perché il motore li calcola, e senza questa riga il
+    // modello li userebbe: è l'errore più probabile di tutti.
+    expect(testo).toContain('lasciali fuori dalla lettura');
+    expect(testo).toMatch(/Urano, Nettuno e Plutone non appartengono/);
+  });
+
+  it('dà i domicili antichi, che sono la trappola più insidiosa', () => {
+    // Un modello che usa le rulership occidentali su un tema vedico produce
+    // una lettura interamente sbagliata e perfettamente plausibile.
+    expect(testo).toContain('Ariete e Scorpione a Marte');
+    expect(testo).toContain('Capricorno e Acquario a Saturno');
+    expect(testo).toContain('Nessun segno è di Urano');
+  });
+
+  it('mette al centro la Luna e il lagna, non il Sole', () => {
+    expect(testo).toContain('Il centro non è il Sole');
+    expect(testo).toContain('Il Sole viene dopo');
+  });
+
+  it('spiega in che cosa le drishti non sono aspetti', () => {
+    expect(testo).toContain('NON gli aspetti occidentali');
+    expect(testo).toContain('non esistono orbite');
+    expect(testo).toContain('hanno un verso');
+  });
+
+  it('lascia nominare la stagione delle dasha e non ciò che porterà', () => {
+    // È il punto in cui il documento regge o cade: la tabella consegna delle
+    // date, e senza questo il modello le userebbe per predire.
+    expect(testo).toContain('aritmetica, non profezia');
+    expect(testo).toContain('Non usarle per predire');
+    expect(testo).toContain('quando cambia la stagione e non che cosa porterà');
+  });
+
+  it('chiude la porta ai rimedi e alla compatibilità', () => {
+    // Sono i due terreni su cui la tradizione scivola, e su cui un sito che
+    // offre spunti di riflessione non ha niente da dire.
+    expect(testo).toContain('niente pietre da portare');
+    expect(testo).toContain('il secondo non ce l\'hai');
+  });
+
+  it('chiede di spiegare il vocabolario mentre lo si usa', () => {
+    // «Ascendente» un lettore italiano lo conosce, «nakshatra» no: una lettura
+    // piena di parole non tradotte non è più autentica, è illeggibile.
+    expect(testo).toContain('Il vocabolario spiegalo mentre lo usi');
+    expect(testo).toContain('non per fare atmosfera');
+  });
+
+  it('fa controllare quale ayanamsa sia stato usato', () => {
+    expect(testo).toContain('quale ayanamsa');
+    expect(testo).toContain('le scuole non concordano');
+  });
+
+  it('non è il documento tropicale con qualche parola cambiata', () => {
+    // I due si affiancano, non si estendono: se un giorno qualcuno provasse a
+    // comporli da blocchi condivisi, questa prova direbbe che non si può.
+    expect(istruzioniDi('jyotisha')).not.toBe(istruzioniDi('tropicale'));
+    expect(istruzioniDi('jyotisha')).not.toContain('Sole, Luna e Ascendente sono tre voci');
+  });
+});

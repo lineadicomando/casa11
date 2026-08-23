@@ -441,6 +441,22 @@ export interface DrishtiChart {
   warnings: string[];
 }
 
+/**
+ * Che cosa mettere nel tema vedico impaginato.
+ *
+ * I predefiniti sono il taglio che serve a una lettura: due ordini di dasha e
+ * il solo navamsa. Il terzo ordine sono settecentoventinove righe e le altre
+ * carte divisionali riguardano un'area ciascuna: chi le vuole le chiede.
+ */
+export interface JyotishaFormatOptions {
+  /** Default: due ordini. */
+  dasha?: VimshottariOptions;
+  /** Default: il solo `d9`. */
+  vargas?: VargaId[];
+  /** Default: la forma classica, senza sguardi dei nodi. */
+  drishti?: DrishtiOptions;
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'

@@ -6,4 +6,5 @@
  */
 
 export * from './lettura.js';
+export * from './jyotisha.js';
 export * from './tropicale.js';

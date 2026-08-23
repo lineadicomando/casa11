@@ -17,23 +17,24 @@
  * agenti — riformattarla qui la farebbe divergere da quella.
  */
 
+import { JYOTISHA } from './jyotisha.js';
 import { TROPICALE } from './tropicale.js';
 
 /**
  * Il sistema astrologico in cui il tema è scritto, che decide quale documento
  * di istruzioni lo accompagni.
  *
- * Uno solo, per ora, e non è un'enumerazione prematura: i documenti **non si
- * estendono, si affiancano**. Un tema vedico ha un altro centro — la Luna e il
- * lagna, non il Sole — altri domicili, aspetti che non sono orbite e un
- * impianto temporale che in occidente non ha corrispettivo. Le istruzioni
- * tropicali applicate a quei dati non danno un errore, danno un ibrido
- * plausibile, che è peggio.
+ * Due, e **non si estendono: si affiancano**. Un tema vedico ha un altro centro
+ * — la Luna e il lagna, non il Sole — altri domicili, aspetti che non sono
+ * orbite e un impianto temporale che in occidente non ha corrispettivo. Le
+ * istruzioni tropicali applicate a quei dati non danno un errore, danno un
+ * ibrido plausibile, che è peggio.
  */
-export type Sistema = 'tropicale';
+export type Sistema = 'tropicale' | 'jyotisha';
 
 const DOCUMENTI: Readonly<Record<Sistema, string>> = {
   tropicale: TROPICALE,
+  jyotisha: JYOTISHA,
 };
 
 /**

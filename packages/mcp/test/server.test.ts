@@ -206,6 +206,62 @@ describe('superficie MCP', () => {
     expect(testo).toContain('Luogo di nascita: Roma');
   });
 
+  it('col sistema vedico consegna un tema siderale, non uno tropicale', async () => {
+    // Un tema tropicale sotto le istruzioni vediche non darebbe un errore:
+    // darebbe un ibrido plausibile, sbagliato di quasi un segno.
+    const result = await client.getPrompt({
+      name: 'lettura_del_tema',
+      arguments: {
+        date: '1968-03-12',
+        time: '14:30',
+        location_id: String(ROMA_ID),
+        sistema: 'jyotisha',
+      },
+    });
+
+    const testo = String(result.messages[0]?.content?.text);
+    expect(testo).toContain('tema vedico (Jyotisha)');
+    expect(testo).toContain('Zodiaco: siderale');
+    // Le case a segni interi, perché è così che il Jyotisha le conta e le
+    // istruzioni lo dicono: Placidus accanto sarebbe una contraddizione.
+    expect(testo).toContain('Case: segni-interi');
+    expect(testo).not.toContain('AVVERTENZA SULLE CASE');
+  });
+
+  it('col sistema vedico porta anche nakshatra, dasha, navamsa e drishti', () => {
+    // Senza quelli metà del documento parlerebbe di dati che non ci sono.
+    return client
+      .getPrompt({
+        name: 'lettura_del_tema',
+        arguments: {
+          date: '1968-03-12',
+          time: '14:30',
+          location_id: String(ROMA_ID),
+          sistema: 'jyotisha',
+        },
+      })
+      .then((result) => {
+        const testo = String(result.messages[0]?.content?.text);
+        for (const sezione of ['NAKSHATRA', 'DASHA VIMSHOTTARI', 'NAVAMSA (D9)', 'DRISHTI']) {
+          expect(testo).toContain(sezione);
+        }
+      });
+  });
+
+  it('col sistema tropicale non porta niente di vedico', () => {
+    return client
+      .getPrompt({
+        name: 'lettura_del_tema',
+        arguments: { date: '1968-03-12', time: '14:30', location_id: String(ROMA_ID) },
+      })
+      .then((result) => {
+        const testo = String(result.messages[0]?.content?.text);
+        expect(testo).toContain('Zodiaco: tropicale');
+        expect(testo).not.toContain('NAKSHATRA');
+        expect(testo).not.toContain('DASHA');
+      });
+  });
+
   it('rifiuta un sistema che non esiste invece di leggerne un altro', async () => {
     const result = await client.getPrompt({
       name: 'lettura_del_tema',

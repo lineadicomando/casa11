@@ -20,12 +20,19 @@
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { computeNatalChart, formatChartCompact, type BirthData } from '@undicesimacasa/core';
+import {
+  computeNatalChart,
+  formatChartCompact,
+  formatJyotishaCompact,
+  type BirthData,
+  type ChartOptions,
+} from '@undicesimacasa/core';
 import { letturaDaIncollare, SISTEMI, type Sistema } from '@undicesimacasa/lettura';
 import { z } from 'zod';
 import { describeError, resolvePlace, type ToolContext } from './tools.js';
 
-/** Il sistema predefinito, e l'unico finché non ce ne sarà un altro. */
+/** Il sistema predefinito: l'astrologia occidentale, che è ciò che si aspetta
+ * chi non specifica niente. */
 const SISTEMA_PREDEFINITO: Sistema = 'tropicale';
 
 export function registerLetturaDelTema(server: McpServer, context: ToolContext = {}): void {
@@ -66,7 +73,10 @@ export function registerLetturaDelTema(server: McpServer, context: ToolContext =
           .optional()
           .describe(
             `Sistema astrologico della lettura. Ammessi: ${SISTEMI.join(', ')}. ` +
-              `Default: ${SISTEMA_PREDEFINITO}.`,
+              `Default: ${SISTEMA_PREDEFINITO}, che è l'astrologia occidentale. ` +
+              'jyotisha è quella indiana: zodiaco siderale, case a segni interi, e ' +
+              'in più nakshatra, dasha, navamsa e drishti. Non sceglierlo tu — ' +
+              'chiedilo solo se chi scrive lo domanda.',
           ),
       },
     },
@@ -139,17 +149,29 @@ function componi(
     };
     if (args.time !== undefined) birth.time = args.time;
 
-    const chart = computeNatalChart(
-      birth,
-      context.ephemerisPath ? { ephemerisPath: context.ephemerisPath } : {},
-    );
+    // Il tema che accompagna le istruzioni è quello che le istruzioni
+    // descrivono. Un tema tropicale sotto le istruzioni vediche non darebbe un
+    // errore: darebbe un ibrido plausibile, sbagliato di quasi un segno, e
+    // nessuno se ne accorgerebbe. Qui la coppia si decide in un punto solo.
+    const vedico = sistema === 'jyotisha';
+    const options: ChartOptions = {};
+    if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+    if (vedico) {
+      options.zodiac = 'siderale';
+      // Le case a segni interi perché è così che il Jyotisha le conta, e le
+      // istruzioni lo dicono: consegnare cuspidi di Placidus accanto sarebbe
+      // una contraddizione dentro lo stesso testo.
+      options.houseSystem = 'segni-interi';
+    }
+
+    const chart = computeNatalChart(birth, options);
 
     // Il luogo in testa alla tabella come nel tool: nel JSON sta in un campo a
     // parte, e qui un campo a parte non c'è.
     const intestazione = place.label ? `Luogo di nascita: ${place.label}\n` : '';
-    return letturaDaIncollare(intestazione + formatChartCompact(chart), {
-      sistema: sistema as Sistema,
-    });
+    const tavola = vedico ? formatJyotishaCompact(chart) : formatChartCompact(chart);
+
+    return letturaDaIncollare(intestazione + tavola, { sistema: sistema as Sistema });
   } catch (error) {
     return describeError(error);
   }

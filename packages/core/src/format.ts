@@ -1,6 +1,9 @@
 import { BODIES, NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
 import { grahaName, nakshatraOf, requireSidereal } from './nakshatra.js';
+import { computeVimshottari } from './dasha.js';
+import { computeDrishti } from './drishti.js';
+import { computeVarga } from './varga.js';
 import type {
   Angles,
   Aspect,
@@ -13,6 +16,7 @@ import type {
   DrishtiChart,
   ElectionResult,
   House,
+  JyotishaFormatOptions,
   NatalChart,
   NatalPointId,
   Panchanga,
@@ -668,6 +672,49 @@ export function formatDrishtiCompact(drishti: DrishtiChart): string {
   lines.push(...warningLines(drishti.warnings));
 
   return lines.join('\n');
+}
+
+/**
+ * Il tema vedico per intero: la carta, i nakshatra, le dasha, il navamsa e le
+ * drishti, in un testo solo.
+ *
+ * Esiste perché i chiamanti sono più d'uno — la riga di comando e il prompt
+ * MCP, e domani una rotta — e cinque chiamate copiate in tre posti divergono
+ * al primo cambiamento. Che cosa sia «il tema vedico» va deciso in un posto.
+ *
+ * Le case le vuole a **segni interi**, e non è una preferenza: in questo
+ * sistema si contano così, e un tema con le cuspidi di Placidus accanto a
+ * istruzioni che dicono di contarle a segni interi sarebbe una contraddizione
+ * consegnata a chi legge. Chi passa un tema domificato altrimenti riceve
+ * un'avvertenza, non un rifiuto: le posizioni restano giuste, sono le case a
+ * non essere quelle che il sistema intende.
+ */
+export function formatJyotishaCompact(
+  chart: NatalChart,
+  options: JyotishaFormatOptions = {},
+): string {
+  requireSidereal(chart.zodiac, 'Il tema vedico');
+
+  const parti = [formatChartCompact(chart)];
+
+  if (chart.houses.length > 0 && chart.houseSystem !== 'segni-interi') {
+    parti.push(
+      `AVVERTENZA SULLE CASE\nIl tema è domificato con ${chart.houseSystem}, ma il Jyotisha ` +
+        'conta le case a segni interi dal lagna. Le posizioni dei graha sono giuste; le ' +
+        'cuspidi qui sopra non sono quelle che questo sistema intende.',
+    );
+  }
+
+  parti.push(formatNakshatraCompact(chart));
+  parti.push(formatDashaCompact(computeVimshottari(chart, options.dasha ?? { levels: 2 })));
+
+  for (const id of options.vargas ?? ['d9']) {
+    parti.push(formatVargaCompact(computeVarga(chart, id)));
+  }
+
+  parti.push(formatDrishtiCompact(computeDrishti(chart, options.drishti ?? {})));
+
+  return parti.join('\n\n');
 }
 
 function warningLines(warnings: readonly string[]): string[] {
