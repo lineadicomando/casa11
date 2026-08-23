@@ -1,9 +1,11 @@
 <script lang="ts">
   import type {
+    AyanamsaId,
     HouseSystem,
     NatalChart,
     TransitChart,
     TransitPassage,
+    Zodiac,
   } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
   import { onMount } from 'svelte';
@@ -18,6 +20,7 @@
   } from '$lib/api';
   import { birthFromParameters, isComplete, missingBirthFields } from '$lib/birth';
   import { houseSystemOrDefault } from '$lib/house-systems';
+  import { ayanamsaOrDefault, zodiacOrDefault } from '$lib/zodiacs';
   import { Evidenza } from '$lib/evidenza.svelte';
   import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
@@ -51,6 +54,17 @@
   let transitLocation = $state<Location | null>(null);
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
+  let zodiac = $state<Zodiac>('tropicale');
+  let ayanamsa = $state<AyanamsaId>('lahiri');
+
+  /**
+   * Le condizioni del tema su cui i transiti si leggono.
+   *
+   * Lo zodiaco sta qui e non fra le opzioni del transito perché è del tema:
+   * i transitanti lo ereditano da lui, che è l'unico modo di non poterlo
+   * contraddire.
+   */
+  const opzioniTema = $derived({ houseSystem, minorAspects, zodiac, ayanamsa });
 
   let chart = $state<NatalChart | null>(null);
   let transits = $state<TransitChart | null>(null);
@@ -128,6 +142,8 @@
       birthStore.value = birthFromParameters(parametri, luogo);
       houseSystem = houseSystemOrDefault(parametri.get('houseSystem'));
       minorAspects = parametri.get('minorAspects') === 'true';
+      zodiac = zodiacOrDefault(parametri.get('zodiac'));
+      ayanamsa = ayanamsaOrDefault(parametri.get('ayanamsa'));
 
       const transitDate = parametri.get('transitDate');
       if (transitDate) {
@@ -171,7 +187,7 @@
 
     try {
       const body = await fetchTransits(
-        transitParameters(birth, { houseSystem, minorAspects }, transit, transitLocation),
+        transitParameters(birth, opzioniTema, transit, transitLocation),
       );
       if (richiesta !== ultima) return false;
       chart = body.chart;
@@ -216,7 +232,7 @@
 
     try {
       const body = await fetchPassages(
-        passageParameters(birth, { houseSystem, minorAspects }, transit, MESI),
+        passageParameters(birth, opzioniTema, transit, MESI),
       );
       passages = body.passages;
     } catch (cause) {
@@ -256,7 +272,13 @@
   {#snippet dettagli()}
     <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
-        <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
+        <ChartSettings
+          bind:houseSystem
+          bind:minorAspects
+          bind:zodiac
+          bind:ayanamsa
+          housesDisabled={birth.timeUnknown}
+        />
       {/snippet}
     </BirthForm>
 
@@ -311,7 +333,7 @@
           {evidenza}
           nome={['transiti', placeLabel, transits.input.date]}
           link={() =>
-            transitParameters(birth, { houseSystem, minorAspects }, transit, transitLocation)}
+            transitParameters(birth, opzioniTema, transit, transitLocation)}
         />
       </div>
 

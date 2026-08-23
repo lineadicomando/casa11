@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { HouseSystem, NatalChart } from '@undicesimacasa/core';
+  import type { AyanamsaId, HouseSystem, NatalChart, Zodiac } from '@undicesimacasa/core';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { chartParameters, fetchChart, fetchLocation, RequestError } from '$lib/api';
   import { birthFromParameters, isComplete, missingBirthFields } from '$lib/birth';
   import { Evidenza } from '$lib/evidenza.svelte';
   import { houseSystemOrDefault } from '$lib/house-systems';
+  import { ayanamsaOrDefault, zodiacOrDefault } from '$lib/zodiacs';
   import { birthStore } from '$lib/birth-store.svelte';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import AspectTable from '$lib/components/AspectTable.svelte';
@@ -27,6 +28,18 @@
   const birth = $derived(birthStore.value);
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
+  let zodiac = $state<Zodiac>('tropicale');
+  let ayanamsa = $state<AyanamsaId>('lahiri');
+
+  /**
+   * Le condizioni con cui questa pagina chiede il tema.
+   *
+   * Servono in tre posti — il calcolo, il collegamento da copiare, il prompt
+   * di lettura — e devono essere le stesse in tutti e tre: un indirizzo
+   * condiviso che ricalcolasse un tema diverso da quello a schermo sarebbe il
+   * peggiore dei difetti, perché non si vede.
+   */
+  const opzioniTema = $derived({ houseSystem, minorAspects, zodiac, ayanamsa });
 
   let chart = $state<NatalChart | null>(null);
   let placeLabel = $state<string | null>(null);
@@ -66,7 +79,7 @@
     errorMessage = null;
 
     try {
-      const body = await fetchChart(chartParameters(birth, { houseSystem, minorAspects }));
+      const body = await fetchChart(chartParameters(birth, opzioniTema));
       if (richiesta !== ultima) return false;
       chart = body.chart;
       placeLabel = body.place?.label ?? null;
@@ -93,9 +106,17 @@
     const ora = carta.time.timeKnown ? ` · ${carta.input.time}` : ' · ora ignota';
     const ut = carta.time.utc.replace('T', ' ').replace('Z', '');
     const settore = carta.sect ? ` · carta ${carta.sect}` : '';
+    // Lo zodiaco solo quando non è quello atteso. Qui, a differenza della
+    // tabella compatta, la riga sta sotto gli occhi di chi guarda i gradi e
+    // non di chi la incolla altrove: scrivere «tropicale» su ogni tema
+    // sarebbe una parola in più su nove temi su dieci.
+    const zodiaco = carta.ayanamsa
+      ? ` · siderale ${carta.ayanamsa.name}`
+      : '';
     return (
       `${carta.input.date}${ora} · ${carta.input.timezone} · UT ${ut}` +
-      ` · TSL ${carta.siderealTime.formatted}${settore} · effemeridi ${carta.ephemerisMode}`
+      ` · TSL ${carta.siderealTime.formatted}${settore}${zodiaco}` +
+      ` · effemeridi ${carta.ephemerisMode}`
     );
   }
 
@@ -128,6 +149,8 @@
       birthStore.value = birthFromParameters(parametri, luogo);
       houseSystem = houseSystemOrDefault(parametri.get('houseSystem'));
       minorAspects = parametri.get('minorAspects') === 'true';
+      zodiac = zodiacOrDefault(parametri.get('zodiac'));
+      ayanamsa = ayanamsaOrDefault(parametri.get('ayanamsa'));
 
       if (await calcola()) aperto = false;
     })();
@@ -152,6 +175,8 @@
     id="case-striscia"
     bind:houseSystem
     bind:minorAspects
+    bind:zodiac
+    bind:ayanamsa
     housesDisabled={birth.timeUnknown}
     onchange={calcola}
     compact
@@ -168,7 +193,13 @@
   {#snippet dettagli()}
     <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
-        <ChartSettings bind:houseSystem bind:minorAspects housesDisabled={birth.timeUnknown} />
+        <ChartSettings
+          bind:houseSystem
+          bind:minorAspects
+          bind:zodiac
+          bind:ayanamsa
+          housesDisabled={birth.timeUnknown}
+        />
       {/snippet}
     </BirthForm>
 
@@ -202,7 +233,7 @@
           svg={disegno}
           {evidenza}
           nome={['tema', placeLabel, chart.input.date]}
-          link={() => chartParameters(birth, { houseSystem, minorAspects })}
+          link={() => chartParameters(birth, opzioniTema)}
         />
         {#if chart.aspects.length > 0}
           <p class="suggerimento istruzione">
@@ -217,7 +248,7 @@
              aspetti lo troverebbe solo chi ha scorso tutto. Qui e non sotto la
              ruota perché quella è appesa, e un elemento appeso non viene spinto
              da ciò che lo segue — se lo porta sotto, sovrapponendocisi. -->
-        <StrumentiLettura parametri={() => chartParameters(birth, { houseSystem, minorAspects })} />
+        <StrumentiLettura parametri={() => chartParameters(birth, opzioniTema)} />
 
         <BodyTable bodies={chart.bodies} partOfFortune={chart.partOfFortune} {evidenza} />
 

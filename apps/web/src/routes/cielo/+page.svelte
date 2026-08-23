@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { HouseSystem, SkyChart } from '@undicesimacasa/core';
+  import type { AyanamsaId, HouseSystem, SkyChart, Zodiac } from '@undicesimacasa/core';
   import type { Location } from '@undicesimacasa/geo';
   import { onMount } from 'svelte';
   import { replaceState } from '$app/navigation';
@@ -30,6 +30,7 @@
   import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
   import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
   import { houseSystemOrDefault } from '$lib/house-systems';
+  import { ayanamsaOrDefault, zodiacOrDefault } from '$lib/zodiacs';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
   import { Evidenza } from '$lib/evidenza.svelte';
 
@@ -37,6 +38,11 @@
   let location = $state<Location | null>(null);
   let houseSystem = $state<HouseSystem>('placidus');
   let minorAspects = $state(false);
+  let zodiac = $state<Zodiac>('tropicale');
+  let ayanamsa = $state<AyanamsaId>('lahiri');
+
+  /** Le condizioni con cui si chiede il cielo, uguali in ogni punto che lo chiede. */
+  const opzioniCielo = $derived({ houseSystem, minorAspects, zodiac, ayanamsa });
 
   let sky = $state<SkyChart | null>(null);
   let placeLabel = $state<string | null>(null);
@@ -91,6 +97,8 @@
     };
     houseSystem = houseSystemOrDefault(parametri.get('houseSystem'));
     minorAspects = parametri.get('minorAspects') === 'true';
+    zodiac = zodiacOrDefault(parametri.get('zodiac'));
+    ayanamsa = ayanamsaOrDefault(parametri.get('ayanamsa'));
 
     const id = Number(parametri.get('locationId'));
     if (Number.isInteger(id) && id > 0) location = await fetchLocation(id);
@@ -105,7 +113,7 @@
    * il link da mandare a qualcuno — non il tasto Indietro.
    */
   function nellIndirizzo(): void {
-    const parametri = skyParameters(moment, { houseSystem, minorAspects }, location);
+    const parametri = skyParameters(moment, opzioniCielo, location);
     replaceState(`?${parametri}`, {});
   }
 
@@ -136,7 +144,7 @@
     errorMessage = null;
 
     try {
-      const body = await fetchSky(skyParameters(moment, { houseSystem, minorAspects }, location));
+      const body = await fetchSky(skyParameters(moment, opzioniCielo, location));
       if (richiesta !== ultima) return false;
       sky = body.sky;
       placeLabel = body.place?.label ?? null;
@@ -189,7 +197,7 @@
     calendarError = null;
 
     try {
-      calendar = await fetchSkyCalendar(skyCalendarParameters(moment, MESI));
+      calendar = await fetchSkyCalendar(skyCalendarParameters(moment, MESI, zodiac));
     } catch (cause) {
       calendarError =
         cause instanceof RequestError ? cause.message : 'Ricerca del calendario non riuscita.';
@@ -226,7 +234,13 @@
     <div class="campi">
       <LocationSearch selected={location} onselect={selectLocation} label="Luogo (facoltativo)" />
 
-      <ChartSettings bind:houseSystem bind:minorAspects {housesDisabled} />
+      <ChartSettings
+        bind:houseSystem
+        bind:minorAspects
+        bind:zodiac
+        bind:ayanamsa
+        {housesDisabled}
+      />
     </div>
 
 
