@@ -140,14 +140,6 @@
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
 <h1 class="nascosto">Tema natale</h1>
 
-{#if aperto}
-  <!-- Sparisce insieme ai dettagli del modulo. Dice quello che il titolo non
-       dice già, e serve finché si sta impostando; chi ha chiuso il modulo per
-       leggere il tema ha già dimostrato di sapere dove si trova. La
-       provenienza delle effemeridi la dichiara il piè di pagina. -->
-  <p class="sottotitolo">Posizioni planetarie, case e aspetti.</p>
-{/if}
-
 <!-- Un tema di nascita non si sfoglia nel tempo: la data è quella, e la striscia
      non ha nessun istante da offrire. Ha però l'asse lungo cui questa pagina si
      rilegge davvero — la domificazione — e quello sì che si cambia guardando le

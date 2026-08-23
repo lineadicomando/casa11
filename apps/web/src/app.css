@@ -199,18 +199,12 @@ label {
 
 /* Il guscio delle sezioni.
 
-   Sono le quattro pagine viste quattro volte: la stessa riga di sottotitolo, lo
-   stesso pulsante di invio, la stessa griglia con il disegno a sinistra e le
-   tabelle a destra. Stavano scritte per intero in ciascuna, ed è da lì che
-   nascevano le differenze — non c'era nessun posto in cui correggerle tutte.
-   Vale lo stesso ragionamento che teneva già qui le tabelle, qualche riga più
-   sotto. Quello che una sezione ha di suo resta nella sua pagina. */
-
-.sottotitolo {
-  margin: 0 0 1.1rem;
-  color: var(--testo-tenue);
-  font-size: 0.9rem;
-}
+   Sono le quattro pagine viste quattro volte: lo stesso pulsante di invio, la
+   stessa griglia con il disegno a sinistra e le tabelle a destra. Stavano
+   scritte per intero in ciascuna, ed è da lì che nascevano le differenze — non
+   c'era nessun posto in cui correggerle tutte. Vale lo stesso ragionamento che
+   teneva già qui le tabelle, qualche riga più sotto. Quello che una sezione ha
+   di suo resta nella sua pagina. */
 
 /* La riga di campi che si dividono la larghezza: quanti ce ne stanno per riga
    lo decide `auto-fit`, non un numero di colonne scritto a mano, perché fra una
@@ -459,7 +453,6 @@ tbody tr.evidenziato {
   header,
   footer,
   .modulo,
-  .sottotitolo,
   .secondario,
   .istruzione {
     display: none;

@@ -304,13 +304,6 @@
 
 <h1 class="nascosto">Elezione</h1>
 
-{#if aperto}
-  <p class="sottotitolo">
-    Di che cosa è fatto il tempo in un luogo: le ore planetarie, l'Ascendente che
-    sorge, i tratti in cui la Luna è vuota di corso.
-  </p>
-{/if}
-
 <ModuloPieghevole
   bind:aperto
   etichetta="Luogo"

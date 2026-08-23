@@ -212,16 +212,6 @@
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
 <h1 class="nascosto">Cielo</h1>
 
-{#if aperto}
-  <!-- Sparisce insieme ai dettagli del modulo. È la sola riga che distingue
-       questa sezione dai transiti — «fra loro», non «con un tema di nascita» —
-       e serve finché si sta impostando; chi ha chiuso il modulo per sfogliare
-       ha già dimostrato di sapere dove si trova. -->
-  <p class="sottotitolo">
-    Dove sono i pianeti in un dato momento e che aspetti formano fra loro.
-  </p>
-{/if}
-
 <ModuloPieghevole
   bind:aperto
   etichetta="Luogo e opzioni"

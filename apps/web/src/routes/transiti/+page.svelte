@@ -237,16 +237,6 @@
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->
 <h1 class="nascosto">Transiti</h1>
 
-{#if aperto}
-  <!-- Sparisce insieme ai dettagli del modulo. È la sola riga che distingue
-       questa sezione dal cielo — «con un tema di nascita», non «fra loro» — e
-       serve finché si sta impostando; chi ha chiuso il modulo per sfogliare ha
-       già dimostrato di sapere dove si trova. -->
-  <p class="sottotitolo">
-    Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita.
-  </p>
-{/if}
-
 <ModuloPieghevole
   bind:aperto
   etichetta="Nascita e opzioni"
