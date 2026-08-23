@@ -46,8 +46,11 @@ jobs:
           # no. Scaricarlo a ogni giro per non eseguirlo mai è tempo buttato.
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
 
-      # Senza, il motore ripiega su Moshier e aggiunge un'avvertenza che tre
-      # test contano una a una. Vedi packages/core/test/sky.test.ts.
+      # I test passano anche senza — è una proprietà che vale la pena avere, e
+      # un test che la rompesse andrebbe corretto invece che aggirato qui. Si
+      # scaricano lo stesso per due ragioni: è la configurazione che gira in
+      # produzione, ed è la sola in cui i tre confronti fra Swiss Ephemeris e
+      # Moshier hanno qualcosa da confrontare invece di saltare.
       - run: npm run ephe:download -w @undicesimacasa/core
 
       - run: npm test
