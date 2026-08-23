@@ -13,6 +13,8 @@
 
 import { Resvg } from '@resvg/resvg-js';
 import { existsSync } from 'node:fs';
+import { quadroSvg, QUADRO_PADDING, type OpzioniQuadro } from './quadro-svg.js';
+import { QUADRO_SIZE, type SquareChart } from './quadro.js';
 import { ruotaSvg, type OpzioniDisegno } from './svg.js';
 import { PADDING, SIZE, type WheelChart } from './wheel.js';
 
@@ -67,7 +69,40 @@ export interface OpzioniPng extends OpzioniDisegno {
 export function ruotaPng(chart: WheelChart, opzioni: OpzioniPng = {}): Buffer {
   const { larghezza = LARGHEZZA_PREDEFINITA, cartelleFont, ...disegno } = opzioni;
 
-  const resvg = new Resvg(ruotaSvg(chart, disegno), {
+  return rasterizza(ruotaSvg(chart, disegno), larghezza, cartelleFont);
+}
+
+export interface OpzioniQuadroPng extends OpzioniQuadro {
+  /** Larghezza dell'immagine in punti. L'altezza segue, il disegno è quadrato. */
+  larghezza?: number;
+  /** Cartelle in cui cercare i font, in aggiunta a quelle standard. */
+  cartelleFont?: readonly string[];
+}
+
+/** Larghezza predefinita del quadro. Stessa scala della ruota. */
+export const LARGHEZZA_QUADRO = (QUADRO_SIZE + QUADRO_PADDING * 2) * 2;
+
+/** Disegna il quadro vedico e lo rasterizza. */
+export function quadroPng(chart: SquareChart, opzioni: OpzioniQuadroPng = {}): Buffer {
+  const { larghezza = LARGHEZZA_QUADRO, cartelleFont, ...disegno } = opzioni;
+
+  return rasterizza(quadroSvg(chart, disegno), larghezza, cartelleFont);
+}
+
+/**
+ * Da SVG a PNG, con i font trovati davvero.
+ *
+ * Una funzione sola per i due disegni, e non è pulizia: la parte di valore qui
+ * è l'elenco delle cartelle — senza, su un'immagine `slim` il PNG esce **senza
+ * testo**, e sembra un disegno riuscito finché non lo si legge. Duplicarla
+ * significherebbe che un giorno uno dei due la perde.
+ */
+function rasterizza(
+  svg: string,
+  larghezza: number,
+  cartelleFont: readonly string[] | undefined,
+): Buffer {
+  const resvg = new Resvg(svg, {
     fitTo: { mode: 'width', value: larghezza },
     font: {
       loadSystemFonts: true,

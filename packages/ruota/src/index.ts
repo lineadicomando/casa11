@@ -18,6 +18,7 @@
 export * from './glyphs.js';
 export * from './palette.js';
 export * from './quadro.js';
+export * from './quadro-svg.js';
 export * from './svg.js';
 export * from './types.js';
 export * from './wheel.js';
