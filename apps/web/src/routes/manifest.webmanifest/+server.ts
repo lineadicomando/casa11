@@ -1,4 +1,5 @@
 import { SECTIONS } from '$lib/navigation';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME } from '$lib/project';
 import type { RequestHandler } from './$types';
 
 /**
@@ -29,12 +30,11 @@ const FONDO = '#1a1917';
 export const GET: RequestHandler = () => {
   const manifesto = {
     id: '/',
-    name: 'undicesimacasa',
-    // L'abbreviazione che il marchio usa già: sotto un'icona ci stanno sette
-    // caratteri, e «undicesimacasa» verrebbe troncato a metà parola.
-    short_name: 'XI casa',
-    description:
-      'Temi natali, transiti e ore planetarie calcolati con le effemeridi Swiss Ephemeris.',
+    name: SITE_NAME,
+    // L'abbreviazione che il marchio usa già; il perché sta in `lib/project.ts`,
+    // insieme alla descrizione, perché a dirle è anche qualcun altro.
+    short_name: SITE_SHORT_NAME,
+    description: SITE_DESCRIPTION,
     lang: 'it',
     dir: 'ltr',
     start_url: '/',

@@ -14,6 +14,13 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
+  import {
+    LICENSE_URL,
+    REPOSITORY_URL,
+    SITE_DESCRIPTION,
+    SITE_NAME,
+    SITE_SHORT_NAME,
+  } from '$lib/project';
 
   interface Props {
     /** Il titolo della sezione, senza il nome del sito: lo aggiunge qui. */
@@ -42,6 +49,42 @@
    * `ORIGIN` va dichiarato in produzione — vedi il README.
    */
   const anteprima = $derived(`${page.url.origin}/og.png`);
+
+  /**
+   * Il sito detto in una forma che una macchina legge: nome, indirizzo, lingua
+   * e licenza.
+   *
+   * **Un `WebSite` e nient'altro.** Quello che si potrebbe aggiungere qui è
+   * quasi tutto roba che il vincolo del motore non lascia dire: un
+   * `potentialAction` di ricerca descriverebbe una ricerca che non c'è, e le
+   * marcature che promettono un risultato ricco — le domande frequenti in
+   * testa — vanno riempite di affermazioni, che è esattamente la merce che
+   * questo progetto non produce. Qui dentro non c'è nessun dato astrologico:
+   * sono i connotati del sito, non del cielo.
+   *
+   * Va su tutte le pagine e non solo sulla prima: è lo stesso nodo, con lo
+   * stesso `url`, e chi lo legge lo riconosce come tale. Costa duecento byte e
+   * risparmia una regola in più su chi debba renderlo.
+   */
+  const strutturati = $derived(
+    JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      alternateName: SITE_SHORT_NAME,
+      url: `${page.url.origin}/`,
+      description: SITE_DESCRIPTION,
+      inLanguage: 'it-IT',
+      license: LICENSE_URL,
+      // Finché `REPOSITORY_URL` è vuoto la voce non c'è: `sameAs: ['']` non
+      // dichiara nessun altrove, dichiara un indirizzo rotto.
+      ...(REPOSITORY_URL ? { sameAs: [REPOSITORY_URL] } : {}),
+    })
+      // Un `<` dentro il JSON chiuderebbe il tag che lo contiene, e quello che
+      // segue lo leggerebbe il browser come marcatura. Nessuno di questi campi
+      // ne porta uno oggi; la difesa non costa niente e vale anche domani.
+      .replaceAll('<', '\\u003c'),
+  );
 </script>
 
 <svelte:head>
@@ -70,4 +113,9 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={completo} />
   <meta name="twitter:description" content={descrizione} />
+
+  <!-- `{@html}` e non un `<script>` scritto qui: dentro un componente Svelte
+       un tag `script` nel corpo è il blocco del componente, non un elemento da
+       rendere. -->
+  {@html '<script type="application/ld+json">' + strutturati + '</script>'}
 </svelte:head>
