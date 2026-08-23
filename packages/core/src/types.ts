@@ -94,6 +94,61 @@ export interface ZodiacOptions {
   ayanamsa?: AyanamsaId;
 }
 
+/** I ventisette nakshatra, nell'ordine a partire da 0° dell'Ariete siderale. */
+export type NakshatraId =
+  | 'ashwini'
+  | 'bharani'
+  | 'krittika'
+  | 'rohini'
+  | 'mrigashira'
+  | 'ardra'
+  | 'punarvasu'
+  | 'pushya'
+  | 'ashlesha'
+  | 'magha'
+  | 'purva-phalguni'
+  | 'uttara-phalguni'
+  | 'hasta'
+  | 'chitra'
+  | 'swati'
+  | 'vishakha'
+  | 'anuradha'
+  | 'jyeshtha'
+  | 'mula'
+  | 'purva-ashadha'
+  | 'uttara-ashadha'
+  | 'shravana'
+  | 'dhanishta'
+  | 'shatabhisha'
+  | 'purva-bhadrapada'
+  | 'uttara-bhadrapada'
+  | 'revati';
+
+/**
+ * Dove cade una longitudine fra i ventisette nakshatra.
+ *
+ * Vale **solo su una longitudine siderale**: un nakshatra è un tratto di cielo
+ * fra stelle fisse. Vedi `nakshatra.ts`.
+ */
+export interface NakshatraPosition {
+  id: NakshatraId;
+  /** Il nome in sanscrito, che non si traduce. */
+  name: string;
+  /** Posizione nei ventisette, 1-27. */
+  index: number;
+  /**
+   * Il graha che lo regge, nell'ordine vimshottari.
+   *
+   * `nodo-nord` e `nodo-sud` vanno letti come Rahu e Ketu: in questo sistema
+   * non sono punti calcolati ma graha con un nome. Vedi `GRAHA_NAMES`.
+   */
+  lord: BodyId;
+  /** Il quarto di nakshatra, 1-4. Ognuno misura 3°20'. */
+  pada: 1 | 2 | 3 | 4;
+  /** Posizione dentro il nakshatra in gradi decimali, [0, 13.333). */
+  degree: number;
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'

@@ -1,5 +1,6 @@
 import { BODIES, NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
+import { grahaName, nakshatraOf, requireSidereal } from './nakshatra.js';
 import type {
   Angles,
   Aspect,
@@ -479,6 +480,39 @@ function distributionLines(distribution: Distribution): string[] {
 function zodiacLine(chart: { zodiac: Zodiac; ayanamsa?: AyanamsaInfo }): string {
   if (!chart.ayanamsa) return `Zodiaco: ${chart.zodiac}`;
   return `Zodiaco: ${chart.zodiac} (${chart.ayanamsa.name} ${formatDegrees(chart.ayanamsa.degrees)})`;
+}
+
+/**
+ * I nakshatra dei corpi di un tema siderale.
+ *
+ * Una tabella a parte e non una colonna in più fra i corpi: la divisione in
+ * ventisette è un'altra lettura dello stesso cielo, e appiccicarla di fianco ai
+ * segni farebbe una riga in cui due sistemi si contendono lo spazio. Chi la
+ * vuole la chiede.
+ *
+ * Ci sono dentro anche Urano, Nettuno e Plutone, che **graha non sono**: il
+ * Jyotisha ne conta nove ed è più vecchio di loro di qualche millennio. Ma un
+ * nakshatra è una divisione del cerchio, e ogni longitudine ne ha una: toglierli
+ * sarebbe il motore che decide chi conta, che è esattamente ciò che non fa.
+ * Quali corpi compaiano lo sceglie chi chiede il tema, con `options.bodies`.
+ */
+export function formatNakshatraCompact(chart: NatalChart): string {
+  requireSidereal(chart.zodiac, 'La tabella dei nakshatra');
+
+  const lines: string[] = ['NAKSHATRA'];
+
+  for (const body of chart.bodies) {
+    const nakshatra = nakshatraOf(body.longitude);
+    lines.push(
+      `${grahaName(body.id, body.name).padEnd(11)} ` +
+        `${formatZodiacal(body.longitude).padEnd(11)} ` +
+        `${nakshatra.name.padEnd(18)} ` +
+        `pada ${nakshatra.pada}  ` +
+        `sig. ${grahaName(nakshatra.lord, nakshatra.lord)}`,
+    );
+  }
+
+  return lines.join('\n');
 }
 
 function warningLines(warnings: readonly string[]): string[] {

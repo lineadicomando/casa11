@@ -34,8 +34,19 @@ export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
 export { AYANAMSAS, ayanamsaAt, DEFAULT_AYANAMSA, findAyanamsa, zodiacContext } from './ayanamsa.js';
 export {
+  GRAHA_NAMES,
+  grahaName,
+  NAKSHATRAS,
+  NAKSHATRA_SPAN,
+  nakshatraOf,
+  PADA_SPAN,
+  requireSidereal,
+  VIMSHOTTARI_ORDER,
+} from './nakshatra.js';
+export {
   formatChartCompact,
   formatElectionCompact,
+  formatNakshatraCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
@@ -99,6 +110,8 @@ export type {
   HouseSystem,
   LocalMoment,
   Modality,
+  NakshatraId,
+  NakshatraPosition,
   NatalChart,
   NatalPointId,
   PassageOptions,

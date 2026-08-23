@@ -93,6 +93,15 @@ transiti su /api/transits», «Accorpa l'asse dei Nodi nell'elenco degli aspetti
 Commenti e identificatori di dominio in italiano dove il dominio è italiano
 (`incontri`, `ingressi`, `stazioni`, i `code` degli errori); il resto in inglese.
 
+**I termini dell'astrologia indiana restano in sanscrito e non si traducono**:
+`nakshatra`, `tithi`, `karana`, `yoga`, `dasha`, `varga`, `drishti`, `pada`. La
+regola di sopra dice «nella lingua del dominio», e qui il dominio è quello —
+come `yoga` e `karma`, che in italiano si dicono così. Tradurli produrrebbe
+parole che nessun libro usa e che non si possono cercare da nessuna parte:
+«dimore lunari» per i nakshatra è una perifrasi, non un nome. La prosa dei
+commenti resta italiana, e la prima volta che un termine compare lo si spiega
+in mezza riga.
+
 ## Aggiungere una funzione
 
 Attraversa più superfici e ha una procedura sua: vedi la skill `nuova-funzione`.

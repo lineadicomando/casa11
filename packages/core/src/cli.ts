@@ -16,6 +16,7 @@ import { ChartError } from './errors.js';
 import {
   formatChartCompact,
   formatElectionCompact,
+  formatNakshatraCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
@@ -68,6 +69,9 @@ Opzioni
                         più di ventiquattro gradi: quasi un segno intero
   --ayanamsa <nome>     Con --zodiaco siderale: lahiri (default), true-chitra,
                         krishnamurti, raman, yukteshwar, fagan-bradley
+  --nakshatra           Aggiunge la tabella dei ventisette nakshatra con pada e
+                        signore. Richiede --zodiaco siderale: un nakshatra è un
+                        tratto di cielo fra stelle fisse
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
@@ -186,6 +190,7 @@ function main(argv: string[]): number {
       minor: { type: 'boolean', default: false },
       zodiaco: { type: 'string' },
       ayanamsa: { type: 'string' },
+      nakshatra: { type: 'boolean', default: false },
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       lettura: { type: 'boolean', default: false },
@@ -344,9 +349,15 @@ function main(argv: string[]): number {
       return 0;
     }
 
-    process.stdout.write(
-      values.json ? `${JSON.stringify(chart, null, 2)}\n` : `${formatChartCompact(chart)}\n`,
-    );
+    if (values.json) {
+      process.stdout.write(`${JSON.stringify(chart, null, 2)}\n`);
+      return 0;
+    }
+
+    // I nakshatra dopo il tema e non al posto suo: sono un'altra lettura dello
+    // stesso cielo, non un cielo diverso.
+    const nakshatra = values.nakshatra ? `\n${formatNakshatraCompact(chart)}\n` : '';
+    process.stdout.write(`${formatChartCompact(chart)}\n${nakshatra}`);
     return 0;
   }
 
