@@ -14,6 +14,7 @@ che sono la fonte.
 | `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
 | `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG. Non dipende da `core` |
+| `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo. Riceve una tabella già impaginata: non dipende da `core`, nemmeno dai tipi |
 | `packages/mcp` | server MCP: otto tool, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia + API REST, tutti gli endpoint in GET |
 | `apps/desktop` | Electron: la web app in una finestra. Avvia il server di `web` compilato, non duplica superfici |
@@ -64,6 +65,12 @@ il motore usa Moshier invece delle effemeridi Swiss.
 - **Il PNG sta in `@undicesimacasa/ruota/png`**, punto d'ingresso separato:
   porta un modulo nativo, e nel browser non deve arrivare. Lato web si importa
   solo da `lib/server`.
+- **`packages/lettura` non prende dipendenze, e soprattutto non prende `core`.**
+  Riceve il tema come stringa già impaginata da `format.ts`. Il pulsante che lo
+  copia negli appunti gira nel browser: un import di `core` da qui trascinerebbe
+  le effemeridi nel bundle per la via traversa che il vincolo sul client
+  chiudeva dalla porta principale. I documenti di lettura sono uno per sistema
+  astrologico, non uno parametrizzato — vedi `src/lettura.ts`.
 - **Un disegno non sostituisce i dati**: non porta le avvertenze del calcolo.
   Le superfici lo dicono a chi le usa, e le descrizioni MCP pure.
 

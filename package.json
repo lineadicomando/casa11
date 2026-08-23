@@ -13,10 +13,10 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/core -w @undicesimacasa/geo && npm run build -w @undicesimacasa/mcp -w @undicesimacasa/web",
+    "build": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo && npm run build -w @undicesimacasa/mcp -w @undicesimacasa/web",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/core -w @undicesimacasa/geo && npm run typecheck --workspaces --if-present",
-    "prepare": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/core -w @undicesimacasa/geo"
+    "typecheck": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo && npm run typecheck --workspaces --if-present",
+    "prepare": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",

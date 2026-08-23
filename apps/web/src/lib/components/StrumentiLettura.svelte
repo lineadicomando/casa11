@@ -13,8 +13,9 @@
   contatta nessun altro server.
 -->
 <script lang="ts">
+  import { letturaDaIncollare } from '@undicesimacasa/lettura';
   import { fetchChartCompact, RequestError } from '$lib/api';
-  import { letturaDaIncollare } from '$lib/lettura';
+  import { REPOSITORY_URL } from '$lib/project';
 
   interface Props {
     /** I parametri con cui rileggere questo stesso tema in forma compatta. */
@@ -47,7 +48,12 @@
     ripiego = null;
 
     try {
-      const testo = letturaDaIncollare(await fetchChartCompact(parametri()));
+      // L'indirizzo va passato: il pacchetto non ha modo di sapere da dove sia
+      // servita la copia che sta girando, ed è quella che l'AGPL obbliga a
+      // offrire.
+      const testo = letturaDaIncollare(await fetchChartCompact(parametri()), {
+        repository: REPOSITORY_URL,
+      });
 
       try {
         await navigator.clipboard.writeText(testo);

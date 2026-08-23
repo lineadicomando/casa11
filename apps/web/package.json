@@ -17,6 +17,7 @@
   "dependencies": {
     "@undicesimacasa/core": "*",
     "@undicesimacasa/geo": "*",
+    "@undicesimacasa/lettura": "*",
     "@undicesimacasa/ruota": "*"
   },
   "devDependencies": {

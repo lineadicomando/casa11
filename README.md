@@ -26,6 +26,7 @@ Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 | `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
 | `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG |
+| `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo |
 | `packages/mcp` | server MCP: otto tool, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia e API REST, tutti gli endpoint in GET |
 | `apps/desktop` | Electron: la web app in una finestra |
@@ -127,7 +128,8 @@ leggerlo — da incollare nell'assistente che si preferisce. Il sito non parla c
 nessun modello e non manda niente a nessuno.
 
 Quel prompt è il riferimento unico per la lettura, e vive in
-`apps/web/src/lib/lettura.ts`.
+`packages/lettura` — un pacchetto a sé perché non lo vuole solo il sito: la
+riga di comando lo stampa e il server MCP lo offre agli agenti.
 
 Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio
 simbolico, offerta come spunto di riflessione e intrattenimento. Non sostituisce

@@ -48,7 +48,7 @@
          dicono da dove vengono i dati e a quali condizioni, questa dice che
          cosa il sito è. Non disclama il calcolo — che è esatto, ed è l'unica
          cosa che il motore prometta — ma quello che se ne fa. È la stessa
-         distinzione che le istruzioni in `lib/lettura.ts` chiedono al modello,
+         distinzione che le istruzioni di `@undicesimacasa/lettura` chiedono al modello,
          detta qui a chi legge: due destinatari, due testi. -->
     <p class="avvertenza">
       Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio

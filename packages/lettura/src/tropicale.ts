@@ -1,36 +1,25 @@
 /**
- * Il tema pronto da incollare in un chatbot.
+ * Il documento di lettura del tema tropicale.
  *
- * undicesimacasa calcola e non interpreta: il significato è di chi consuma.
- * Questo modulo non tocca quella divisione, la rende praticabile — mette
- * insieme i dati appena calcolati e le istruzioni per leggerli, e lascia
- * l'interpretazione fuori di qui, in un programma che sceglie chi legge. Il
- * sito non parla con nessun modello: il testo finisce negli appunti, e dove
- * vada poi lo decide chi lo incolla.
+ * **È il riferimento unico**: non esiste un contratto più lungo altrove di cui
+ * questo sia il riassunto. Chi lo cambia cambia il modo in cui il progetto
+ * viene interpretato, ed è l'unico posto in cui farlo.
  *
- * **Queste istruzioni sono il riferimento unico per la lettura**: non esiste
- * un contratto più lungo altrove di cui questo sia il riassunto. Chi le cambia
- * cambia il modo in cui il progetto viene interpretato, ed è l'unico posto in
- * cui farlo.
- *
- * Portano due cose che non si tolgono senza conseguenze. I divieti, che sono
- * la parte che un modello viola per riempire un vuoto. E la griglia di lettura,
+ * Porta due cose che non si tolgono senza conseguenze. I divieti, che sono la
+ * parte che un modello viola per riempire un vuoto. E la griglia di lettura,
  * senza la quale il vuoto lo riempie in un altro modo: eseguendo la procedura
  * tecnica e chiamandola interpretazione.
- */
-
-import { REPOSITORY_URL } from './project';
-
-/**
- * Quello che va detto a chi legge il tema, prima del tema.
  *
- * Corto di proposito, e la ragione è cambiata due volte. Incollare un prompt di
- * sistema di undicimila parole in una casella di chat non funziona: molte lo
- * troncano, e quel che resta è l'inizio. Ma il limite che morde davvero viene
- * prima del troncamento — oltre una certa lunghezza ChatGPT converte l'incolla
- * in un allegato, e un allegato è materiale da consultare, non l'istruzione da
- * eseguire che queste righe sono. La tabella pesa già duemila caratteri e non è
- * comprimibile; l'unico margine è qui, e va speso con avarizia.
+ * **Quanto sia lungo non è un vincolo.** Lo è stato finché si immaginava una
+ * destinazione sola — la casella di chat di un servizio grande — ma dove il
+ * testo vada lo decide chi lo incolla, e non lo sappiamo: un agente con una
+ * finestra ampia non ha lo stesso limite di un modulo web.
+ *
+ * Resta l'osservazione, che vale la pena non riscoprire da capo: oltre una
+ * certa lunghezza ChatGPT converte l'incolla in un allegato, e un allegato è
+ * materiale da consultare, non l'istruzione da eseguire che queste righe sono.
+ * Se un giorno una lettura esce come se le istruzioni non ci fossero, è il
+ * primo posto dove guardare — non un tetto da rispettare in anticipo.
  *
  * La prima versione teneva la gerarchia tecnica e i divieti, e ne usciva un
  * manuale: corretto e morto. Il difetto non era la brevità ma l'ordine — la
@@ -45,7 +34,7 @@ import { REPOSITORY_URL } from './project';
  * scansione di un elenco senza tornare a essere un elenco, e non danno per
  * scontato un vocabolario che chi legge non ha.
  */
-export const ISTRUZIONI = `Questo è un tema natale già calcolato da undicesimacasa con le effemeridi Swiss
+export const TROPICALE = `Questo è un tema natale già calcolato da undicesimacasa con le effemeridi Swiss
 Ephemeris: è il risultato di un calcolo, non la richiesta di farne uno. Non
 ricalcolarlo e non correggerlo — se un valore ti sembra sbagliato dillo invece
 di sistemarlo — e non aggiungere posizioni, aspetti o punti che qui sotto non
@@ -149,23 +138,3 @@ Medio Cielo, niente case, e lascia perdere le attività affini, che si reggono
 sul Medio Cielo — la Luna, poi, ha un margine di quasi un segno. Le righe sotto
 AVVERTENZE dicono che cosa il calcolo non ha potuto fare per intero: riferisci
 quelle che cambiano la fiducia nel risultato.`;
-
-/**
- * Le istruzioni e il tema, in quest'ordine.
- *
- * L'ordine non è indifferente: chi legge incontra prima che cosa farne e poi i
- * dati, e un modello che trovasse la tabella per prima comincerebbe a
- * interpretarla mentre ancora non sa che cosa non deve fare.
- *
- * In fondo, la provenienza. Questo testo è fatto per essere incollato altrove,
- * e altrove nessuno sa da dove vengano i numeri: la riga dice quale programma
- * li ha calcolati. Compare solo se `REPOSITORY_URL` è valorizzato — un
- * indirizzo promesso e non dato è peggio del silenzio.
- */
-export function letturaDaIncollare(tema: string, repository: string = REPOSITORY_URL): string {
-  const provenienza = repository
-    ? `\n\nTema calcolato da undicesimacasa, con le effemeridi Swiss Ephemeris: ${repository}`
-    : '';
-
-  return `${ISTRUZIONI}${provenienza}\n\n${tema}\n`;
-}
