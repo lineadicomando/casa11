@@ -1377,8 +1377,8 @@ export function registerDrawJyotishaChart(server: McpServer, context: ToolContex
         return immagine(
           png,
           `${quale} in stile ${forma} — ${args.date}${dove}. ` +
-            'I nove graha nei dodici segni; i gradi e le avvertenze stanno in ' +
-            'compute_jyotisha_chart, e un disegno non li porta.',
+            'I nove graha nei dodici segni, col ℞ sui retrogradi; i gradi e le ' +
+            'avvertenze stanno in compute_jyotisha_chart, e un disegno non li porta.',
         );
       } catch (error) {
         return fail(describeError(error));

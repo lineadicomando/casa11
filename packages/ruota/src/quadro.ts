@@ -44,7 +44,15 @@ export type StileQuadro = 'nord' | 'sud';
  * solo le disegna tutte.
  */
 export interface SquareChart {
-  positions: readonly { id: BodyId; sign: ZodiacSign }[];
+  positions: readonly {
+    id: BodyId;
+    sign: ZodiacSign;
+    /**
+     * Se il graha è retrogrado. Opzionale: chi non lo sa non lo dice, e il
+     * disegno non marca niente invece di marcare «diretto» per finta.
+     */
+    retrograde?: boolean;
+  }[];
   /** Il segno del lagna. Assente se il tema non ha un Ascendente. */
   ascendant?: ZodiacSign;
 }
@@ -119,6 +127,8 @@ export interface CellaQuadro {
   centro: Punto;
   /** I graha che stanno in quel segno, nell'ordine dei nove. */
   bodies: readonly BodyId[];
+  /** Quali di quelli sono retrogradi. Vuoto se la carta non lo dice. */
+  vakri: ReadonlySet<BodyId>;
   /** `true` per la cella che ospita il lagna. */
   lagna: boolean;
 }
@@ -158,6 +168,7 @@ export function celleQuadro(chart: SquareChart, stile: StileQuadro): CellaQuadro
   }
 
   const abitanti = graharPerSegno(chart);
+  const vakri = vakriDellaCarta(chart);
   const { ascendant } = chart;
 
   if (stile === 'sud') {
@@ -169,6 +180,7 @@ export function celleQuadro(chart: SquareChart, stile: StileQuadro): CellaQuadro
         polygon,
         centro: baricentro(polygon),
         bodies: abitanti.get(sign) ?? [],
+        vakri,
         lagna: sign === ascendant,
       };
     });
@@ -186,9 +198,24 @@ export function celleQuadro(chart: SquareChart, stile: StileQuadro): CellaQuadro
       polygon,
       centro: baricentro(polygon),
       bodies: abitanti.get(sign) ?? [],
+      vakri,
       lagna: indice === 0,
     };
   });
+}
+
+/**
+ * I graha retrogradi, fra i nove.
+ *
+ * Un insieme solo per tutte le celle: è una proprietà della carta, non della
+ * casella, e duplicarlo dodici volte darebbe dodici occasioni di divergere.
+ */
+function vakriDellaCarta(chart: SquareChart): ReadonlySet<BodyId> {
+  return new Set(
+    chart.positions
+      .filter((posizione) => posizione.retrograde === true && GRAHA.includes(posizione.id))
+      .map((posizione) => posizione.id),
+  );
 }
 
 /** I graha di ciascun segno, filtrati ai nove e nel loro ordine. */

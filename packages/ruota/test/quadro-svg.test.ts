@@ -76,6 +76,86 @@ describe('quadroSvg', () => {
     expect(righe.some((riga) => (riga.match(/tspan/g) ?? []).length === 6)).toBe(true);
   });
 
+  it('marca col ℞ i graha retrogradi, e solo quelli', () => {
+    const svg = quadroSvg(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'giove', sign: 'toro', retrograde: true },
+          { id: 'marte', sign: 'toro', retrograde: false },
+        ],
+      },
+      { stile: 'sud' },
+    );
+
+    expect(svg).toContain('℞');
+    expect((svg.match(/℞/g) ?? []).length).toBe(1);
+
+    // Il marchio sta **dentro** la tspan del graha: chi accende una sigla
+    // accende anche il suo marchio, che di quella sigla fa parte.
+    const giove = svg.slice(svg.indexOf('data-graha="giove"'));
+    expect(giove.slice(0, giove.indexOf('</tspan>') + 8)).toContain('℞');
+    expect(svg.slice(svg.indexOf('data-graha="marte"'))).not.toMatch(/^[^<]*℞/);
+  });
+
+  it("disfà lo scostamento dell'apice, che nel browser resterebbe", () => {
+    // Uno `dy` sposta la posizione corrente e ci resta: senza il contrappeso
+    // il resto della riga se ne va in su, e solo a schermo — chi rasterizza
+    // qui non si comporta così, e il difetto non si vedrebbe nei PNG.
+    const svg = quadroSvg(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'giove', sign: 'toro', retrograde: true },
+          { id: 'saturno', sign: 'toro', retrograde: false },
+        ],
+      },
+      { stile: 'sud' },
+    );
+
+    const scostamenti = [...svg.matchAll(/dy="(-?[\d.]+)"/g)].map((trovato) =>
+      Number(trovato[1]),
+    );
+    expect(scostamenti.length).toBe(2);
+    expect(scostamenti[0]).toBeLessThan(0);
+    expect((scostamenti[0] as number) + (scostamenti[1] as number)).toBeCloseTo(0, 6);
+
+    // E il contrappeso deve avere un carattere su cui applicarsi: uno `dy` su
+    // una tspan vuota non fa niente, e la riga resta storta. Il difetto si
+    // vede solo nella pagina, mai in un PNG.
+    expect(svg).toMatch(/<tspan dy="[\d.]+"> <\/tspan>/);
+    expect(svg).not.toMatch(/<tspan dy="[-\d.]+"><\/tspan>/);
+  });
+
+  it('non marca niente quando la carta non dice se i graha siano retrogradi', () => {
+    // `CARTA` non porta `retrograde`: un tema che tace non fa dire al disegno
+    // che i suoi graha sono diretti.
+    expect(quadroSvg(CARTA, { stile: 'sud' })).not.toContain('℞');
+    expect(quadroSvg(CARTA, { stile: 'nord' })).not.toContain('℞');
+  });
+
+  it('tiene conto del marchio quando decide quanto grande scrivere', () => {
+    // Il ℞ allarga la riga, e una riga più larga vuole un corpo più piccolo:
+    // se la misura lo ignorasse, il testo uscirebbe dalla cella.
+    const conSigle = (retrograde: boolean) =>
+      quadroSvg(
+        {
+          ascendant: 'ariete',
+          positions: [
+            { id: 'sole', sign: 'ariete', retrograde },
+            { id: 'luna', sign: 'ariete', retrograde },
+            { id: 'mercurio', sign: 'ariete', retrograde },
+          ],
+        },
+        { stile: 'sud' },
+      );
+
+    const corpo = (svg: string) =>
+      Number(svg.match(/font-size="([\d.]+)"[^>]*>(?=<tspan)/)?.[1] ?? 0);
+
+    expect(corpo(conSigle(true))).toBeLessThan(corpo(conSigle(false)));
+  });
+
   it('non fa entrare i tre che graha non sono', () => {
     const svg = quadroSvg(CARTA);
 
@@ -223,6 +303,26 @@ describe('quadroSvg', () => {
     expect(quadroSvg(CARTA, { stile: 'sud' })).toContain('sud-indiano');
     expect(quadroSvg(CARTA, { stile: 'nord' })).toContain('nord-indiano');
     expect(quadroSvg(CARTA, { label: 'Navamsa di prova' })).toContain('Navamsa di prova');
+  });
+
+  it('nomina i retrogradi a chi il disegno non lo vede', () => {
+    // Il ℞ è un segno grafico: chi legge la descrizione non lo incontra, e
+    // senza questo si perderebbe una cosa che a schermo si vede subito.
+    const con = quadroSvg(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'giove', sign: 'toro', retrograde: true },
+          { id: 'marte', sign: 'toro', retrograde: false },
+        ],
+      },
+      { stile: 'sud' },
+    );
+
+    expect(con).toContain('retrogradi: Ju');
+    expect(con).not.toContain('Ma,');
+    // Nessun retrogrado, nessuna coda: non si annuncia un elenco vuoto.
+    expect(quadroSvg(CARTA, { stile: 'sud' })).not.toContain('retrogradi');
   });
 
   it('dispone gli stessi graha in posti diversi nei due stili', () => {

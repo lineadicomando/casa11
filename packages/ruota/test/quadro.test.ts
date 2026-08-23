@@ -399,3 +399,52 @@ describe('ritaglia', () => {
     }
   });
 });
+
+describe('i graha vakri', () => {
+  it('raccoglie i retrogradi della carta, e nessun altro', () => {
+    const celle = celleQuadro(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'sole', sign: 'ariete', retrograde: false },
+          { id: 'giove', sign: 'toro', retrograde: true },
+          { id: 'saturno', sign: 'toro', retrograde: true },
+        ],
+      },
+      'sud',
+    );
+
+    expect([...(celle[0] as { vakri: ReadonlySet<string> }).vakri].sort()).toEqual([
+      'giove',
+      'saturno',
+    ]);
+  });
+
+  it('è lo stesso insieme in tutte e dodici le celle', () => {
+    // È una proprietà della carta, non della casella: dodici copie sarebbero
+    // dodici occasioni di divergere.
+    const celle = celleQuadro(CARTA, 'sud');
+    for (const cella of celle) expect(cella.vakri).toBe(celle[0]?.vakri);
+  });
+
+  it('resta vuoto quando la carta non dice se i graha siano retrogradi', () => {
+    // `retrograde` è opzionale: chi non lo sa non lo dice, e il disegno non
+    // deve marcare «diretto» per finta.
+    for (const cella of celleQuadro(CARTA, 'sud')) expect(cella.vakri.size).toBe(0);
+  });
+
+  it('non fa entrare i tre che graha non sono', () => {
+    const celle = celleQuadro(
+      {
+        ascendant: 'ariete',
+        positions: [
+          { id: 'urano', sign: 'ariete', retrograde: true },
+          { id: 'marte', sign: 'ariete', retrograde: true },
+        ],
+      },
+      'sud',
+    );
+
+    expect([...(celle[0] as { vakri: ReadonlySet<string> }).vakri]).toEqual(['marte']);
+  });
+});

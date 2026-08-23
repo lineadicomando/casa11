@@ -65,6 +65,19 @@ const LARGHEZZA_SIGLA: Readonly<Partial<Record<BodyId, number>>> = {
 /** Lo spazio che separa due sigle sulla stessa riga. */
 const LARGHEZZA_SPAZIO = 0.51;
 
+/**
+ * Il segno di retrogradazione appeso a una sigla: quanto la allarga, quanto è
+ * grande e quanto sta in alto — tutto in multipli del corpo della riga.
+ *
+ * **Nel colore della sigla e non in quello tenue**, che è la sola differenza
+ * dalla ruota. Là le sigle sono del colore del testo e il grigio serve a
+ * mettere il segno un gradino sotto; qui le sigle portano già il colore
+ * dell'elemento, e un ℞ grigio accanto a una sigla colorata si stacca invece
+ * di appartenerle — oltre a non accendersi con lei quando la pagina la
+ * illumina. A metterlo un gradino sotto bastano il corpo e l'apice.
+ */
+const RETROGRADO = { larghezza: 0.5, corpo: 0.5, apice: 0.28 } as const;
+
 /** Quella dell'intestazione, glifo del segno e numero della casa insieme. */
 const LARGHEZZA_INTESTAZIONE = 2.2;
 
@@ -138,10 +151,20 @@ export function quadroSvg(chart: SquareChart, opzioni: OpzioniQuadro = {}): stri
   const { palette = CHIARA, stile = 'sud', label } = opzioni;
 
   const celle = celleQuadro(chart, stile);
+  // Il ℞ è un segno grafico, e chi il disegno non lo vede non lo incontra:
+  // qui si dice a parole quel che là si vede a colpo d'occhio.
+  const vakri = celle[0]?.vakri ?? new Set<BodyId>();
+  const retrogradi =
+    vakri.size > 0
+      ? `; retrogradi: ${[...vakri].map((graha) => GRAHA_SIGLA[graha] ?? graha).join(', ')}`
+      : '';
+
+  // La coda si aggiunge anche a una descrizione altrui: chi chiama sa che
+  // carta è, ma quali graha siano retrogradi lo sa solo chi la disegna.
   const descrizione =
-    label ??
-    `Quadro vedico in stile ${stile === 'nord' ? 'nord-indiano' : 'sud-indiano'}, ` +
-      'con i nove graha nei dodici segni';
+    (label ??
+      `Quadro vedico in stile ${stile === 'nord' ? 'nord-indiano' : 'sud-indiano'}, ` +
+        'con i nove graha nei dodici segni') + retrogradi;
 
   const pezzi: string[] = [
     `<rect x="${-QUADRO_PADDING}" y="${-QUADRO_PADDING}" width="${
@@ -290,7 +313,9 @@ function zonaDeiGraha(cella: CellaQuadro, testa: Testa, corpo: number): Punto[] 
 /** Le righe di sigle di una cella, misurate in em. Una cella vuota non vincola nessuno. */
 function bloccoDeiGraha(cella: CellaQuadro): BloccoDiTesto {
   return {
-    righe: aCapo(cella.bodies, SIGLE_PER_RIGA).map(larghezzaDellaRiga),
+    righe: aCapo(cella.bodies, SIGLE_PER_RIGA).map((riga) =>
+      larghezzaDellaRiga(riga, cella.vakri),
+    ),
     altezza: ALTEZZA_RIGA,
     passo: PASSO_RIGA,
   };
@@ -305,8 +330,12 @@ function bloccoDeiGraha(cella: CellaQuadro): BloccoDiTesto {
  * di carattere da questo numero, sbagliando per eccesso scrive un po' più
  * piccolo, sbagliando per difetto manda il testo fuori dalla cella.
  */
-function larghezzaDellaRiga(riga: readonly BodyId[]): number {
-  const sigle = riga.reduce((somma, graha) => somma + (LARGHEZZA_SIGLA[graha] ?? 1.4), 0);
+function larghezzaDellaRiga(riga: readonly BodyId[], vakri: ReadonlySet<BodyId>): number {
+  const sigle = riga.reduce(
+    (somma, graha) =>
+      somma + (LARGHEZZA_SIGLA[graha] ?? 1.4) + (vakri.has(graha) ? RETROGRADO.larghezza : 0),
+    0,
+  );
 
   return sigle + Math.max(0, riga.length - 1) * LARGHEZZA_SPAZIO;
 }
@@ -421,7 +450,7 @@ function disegnaCella(
 
   pezzi.push(
     ...righe.map((riga, indice) =>
-      rigaDiSigle(ancora.x, prima + indice * passo, riga, corpoSigla, colore),
+      rigaDiSigle(ancora.x, prima + indice * passo, riga, cella.vakri, corpoSigla, colore),
     ),
   );
 
@@ -453,19 +482,57 @@ function rigaDiSigle(
   x: number,
   y: number,
   riga: readonly BodyId[],
+  vakri: ReadonlySet<BodyId>,
   corpo: number,
   colore: string,
 ): string {
-  const sigle = riga
-    .map(
-      (graha) =>
-        `<tspan data-graha="${esc(graha)}">${esc(GRAHA_SIGLA[graha] ?? graha)}</tspan>`,
-    )
-    .join(' ');
+  const pezzi: string[] = [];
+
+  riga.forEach((graha, indice) => {
+    // Lo spazio che separa due sigle è anche ciò che rimette in riga la
+    // seconda quando la prima porta il marchio: vedi `marchioVakri`.
+    const precedente = riga[indice - 1];
+    if (indice > 0) {
+      pezzi.push(
+        precedente !== undefined && vakri.has(precedente)
+          ? `<tspan dy="${n(corpo * RETROGRADO.apice)}"> </tspan>`
+          : ' ',
+      );
+    }
+
+    pezzi.push(
+      `<tspan data-graha="${esc(graha)}">${esc(GRAHA_SIGLA[graha] ?? graha)}${
+        vakri.has(graha) ? marchioVakri(corpo) : ''
+      }</tspan>`,
+    );
+  });
 
   return `<text x="${n(x)}" y="${n(y)}" font-size="${n(
     corpo,
-  )}" fill="${colore}" text-anchor="middle" dominant-baseline="central">${sigle}</text>`;
+  )}" fill="${colore}" text-anchor="middle" dominant-baseline="central">${pezzi.join('')}</text>`;
+}
+
+/**
+ * Il ℞ dei graha *vakri*, i retrogradi.
+ *
+ * **Sta dentro la `tspan` del graha**, non accanto: chi accende una sigla
+ * accende anche il suo marchio, che di quella sigla fa parte.
+ *
+ * Lo `dy` che lo alza va poi disfatto, perché nell'SVG uno scostamento sposta
+ * la posizione corrente e ci resta: senza contrappeso il resto della riga se
+ * ne andrebbe in su. Il contrappeso però **non può stare su una `tspan`
+ * vuota** — uno `dy` si applica al primo carattere del suo contenuto, e senza
+ * contenuto non si applica affatto — quindi lo porta lo spazio che separa la
+ * sigla dalla successiva, che un carattere è. Dopo l'ultima sigla non serve:
+ * non c'è più niente da rimettere in riga.
+ *
+ * Chi rasterizza qui lo scostamento non se lo porta dietro e il difetto non si
+ * vedrebbe in un PNG: si vedeva solo nella pagina.
+ */
+function marchioVakri(corpo: number): string {
+  return `<tspan dy="${n(-corpo * RETROGRADO.apice)}" font-size="${n(
+    corpo * RETROGRADO.corpo,
+  )}">℞</tspan>`;
 }
 
 /** Il glifo del segno e, se c'è, il numero della casa: in testa alla cella. */
