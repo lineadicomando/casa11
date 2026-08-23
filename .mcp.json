@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "undicesimacasa": {
+      "command": "node",
+      "args": ["packages/mcp/dist/stdio.js"]
+    }
+  }
+}
