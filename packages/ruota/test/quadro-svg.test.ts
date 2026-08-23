@@ -172,6 +172,30 @@ describe('quadroSvg', () => {
     expect(corpo(sparsa)).toBeGreaterThan(corpo(ammassata));
   });
 
+  it('sfrutta le righe strette invece di tararle sulla più larga', () => {
+    // «Mo Ve Ju» e «Su Mo Me» sono tre sigle tutt'e due, ma la seconda è più
+    // larga: misurate a numero di sigle darebbero lo stesso corpo, misurate
+    // davvero no. È il caso peggiore che smette di pagare per tutti.
+    const conSigle = (sigle: SquareChart['positions']) =>
+      quadroSvg({ ascendant: 'ariete', positions: sigle }, { stile: 'sud' });
+
+    const corpo = (svg: string) =>
+      Number(svg.match(/font-size="([\d.]+)"[^>]*>(?=<tspan)/)?.[1] ?? 0);
+
+    const strette = conSigle([
+      { id: 'luna', sign: 'ariete' },
+      { id: 'venere', sign: 'ariete' },
+      { id: 'giove', sign: 'ariete' },
+    ]);
+    const larghe = conSigle([
+      { id: 'sole', sign: 'ariete' },
+      { id: 'luna', sign: 'ariete' },
+      { id: 'mercurio', sign: 'ariete' },
+    ]);
+
+    expect(corpo(strette)).toBeGreaterThan(corpo(larghe));
+  });
+
   it('usa un corpo solo per tutte le sigle del disegno', () => {
     // I rombi del nord sono larghi il doppio dei triangoli che li circondano,
     // e ne reggerebbero di più. La misura resta una sola e la detta il più

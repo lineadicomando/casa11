@@ -37,14 +37,33 @@ import {
 export const QUADRO_PADDING = 16;
 
 /**
- * Le larghezze del testo, in **multipli del corpo del carattere**.
+ * La larghezza di ogni sigla, in **multipli del corpo del carattere**.
  *
  * Misurate su DejaVu Sans, che è il font che il PNG carica e il primo che il
- * documento nomina, e arrotondate per eccesso: servono a decidere quanto
- * grande scrivere, e sbagliarle per difetto manda le sigle contro il bordo
- * della cella. Per indice, quante sigle stanno sulla riga.
+ * documento nomina. Servono a decidere quanto grande scrivere: senza, per
+ * sapere se una riga ci sta bisognerebbe disegnarla, e il disegno è a valle
+ * della decisione.
+ *
+ * **Una per sigla e non una per numero di sigle**: «Mo Ve Ju» e «Su Mo Me»
+ * sono tre sigle tutt'e due, ma la seconda è più larga di mezzo em, e tarare
+ * tutte le righe da tre sulla più larga possibile ruba corpo a ogni riga che
+ * larga non è. È la stessa ragione per cui il corpo non è più una costante:
+ * una misura di caso peggiore applicata al caso normale.
  */
-const LARGHEZZA_RIGA = [0, 1.15, 3, 4.8] as const;
+const LARGHEZZA_SIGLA: Readonly<Partial<Record<BodyId, number>>> = {
+  sole: 1.12,
+  luna: 1.33,
+  marte: 1.29,
+  mercurio: 1.33,
+  giove: 0.89,
+  venere: 1.17,
+  saturno: 1.1,
+  'nodo-nord': 1.1,
+  'nodo-sud': 1.07,
+};
+
+/** Lo spazio che separa due sigle sulla stessa riga. */
+const LARGHEZZA_SPAZIO = 0.51;
 
 /** Quella dell'intestazione, glifo del segno e numero della casa insieme. */
 const LARGHEZZA_INTESTAZIONE = 2.2;
@@ -271,12 +290,25 @@ function zonaDeiGraha(cella: CellaQuadro, testa: Testa, corpo: number): Punto[] 
 /** Le righe di sigle di una cella, misurate in em. Una cella vuota non vincola nessuno. */
 function bloccoDeiGraha(cella: CellaQuadro): BloccoDiTesto {
   return {
-    righe: aCapo(cella.bodies, SIGLE_PER_RIGA).map(
-      (riga) => LARGHEZZA_RIGA[riga.length] ?? LARGHEZZA_RIGA[SIGLE_PER_RIGA] ?? 0,
-    ),
+    righe: aCapo(cella.bodies, SIGLE_PER_RIGA).map(larghezzaDellaRiga),
     altezza: ALTEZZA_RIGA,
     passo: PASSO_RIGA,
   };
+}
+
+/**
+ * Quanto è larga una riga di sigle, in em.
+ *
+ * La somma dei pezzi più gli spazi. Sovrastima di poco la riga vera — le
+ * misure sono degli inchiostri, e messe in fila due sigle si stringono di
+ * qualche centesimo — e **sovrastima è il verso giusto**: chi decide un corpo
+ * di carattere da questo numero, sbagliando per eccesso scrive un po' più
+ * piccolo, sbagliando per difetto manda il testo fuori dalla cella.
+ */
+function larghezzaDellaRiga(riga: readonly BodyId[]): number {
+  const sigle = riga.reduce((somma, graha) => somma + (LARGHEZZA_SIGLA[graha] ?? 1.4), 0);
+
+  return sigle + Math.max(0, riga.length - 1) * LARGHEZZA_SPAZIO;
 }
 
 function minimo(celle: readonly CellaQuadro[], quanto: (cella: CellaQuadro) => number): number {
