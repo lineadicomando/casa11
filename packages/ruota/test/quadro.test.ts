@@ -4,9 +4,14 @@ import {
   baricentro,
   caseDalLagna,
   celleQuadro,
+  centroInscritto,
+  corpoCheEntra,
+  distanzaDalBordo,
   GRAHA,
   GRAHA_SIGLA,
   QUADRO_SIZE,
+  ritaglia,
+  type Punto,
   type SquareChart,
   type StileQuadro,
 } from '../src/quadro.js';
@@ -246,6 +251,151 @@ describe('baricentro', () => {
         expect(voce.centro.y).toBeGreaterThan(0);
         expect(voce.centro.y).toBeLessThan(QUADRO_SIZE);
       }
+    }
+  });
+});
+
+describe('distanzaDalBordo', () => {
+  const quadrato: Punto[] = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+    { x: 0, y: 10 },
+  ];
+
+  it('misura il lato più vicino, e non uno qualunque', () => {
+    expect(distanzaDalBordo(quadrato, { x: 5, y: 5 })).toBe(5);
+    expect(distanzaDalBordo(quadrato, { x: 1, y: 5 })).toBe(1);
+  });
+
+  it('è nulla sul bordo e negativa fuori', () => {
+    expect(distanzaDalBordo(quadrato, { x: 0, y: 5 })).toBe(0);
+    expect(distanzaDalBordo(quadrato, { x: -3, y: 5 })).toBe(-3);
+  });
+
+  it('non dipende dal verso in cui i vertici sono scritti', () => {
+    const alContrario = [...quadrato].reverse();
+    expect(distanzaDalBordo(alContrario, { x: 5, y: 5 })).toBe(5);
+    expect(distanzaDalBordo(alContrario, { x: -3, y: 5 })).toBe(-3);
+  });
+});
+
+describe('centroInscritto', () => {
+  it('coincide col baricentro dove la cella ha un centro di simmetria', () => {
+    const rombo: Punto[] = [
+      { x: 0, y: -2 },
+      { x: 2, y: 0 },
+      { x: 0, y: 2 },
+      { x: -2, y: 0 },
+    ];
+
+    expect(centroInscritto(rombo)).toEqual(baricentro(rombo));
+  });
+
+  it('nel triangolo se ne discosta, e lascia più aria', () => {
+    // È la differenza per cui esiste: il baricentro di un triangolo cade a due
+    // terzi verso l'angolo retto, dove la cella è già stretta.
+    const triangolo: Punto[] = [
+      { x: 0, y: 0 },
+      { x: 12, y: 0 },
+      { x: 0, y: 12 },
+    ];
+
+    const centro = centroInscritto(triangolo);
+    expect(centro).not.toEqual(baricentro(triangolo));
+    expect(distanzaDalBordo(triangolo, centro)).toBeGreaterThan(
+      distanzaDalBordo(triangolo, baricentro(triangolo)),
+    );
+  });
+
+  it('sta dentro ogni cella dei due stili, e più al largo del baricentro', () => {
+    for (const stile of ['nord', 'sud'] as StileQuadro[]) {
+      for (const cella of celleQuadro(CARTA, stile)) {
+        const centro = centroInscritto(cella.polygon);
+        expect(distanzaDalBordo(cella.polygon, centro)).toBeGreaterThan(0);
+        expect(distanzaDalBordo(cella.polygon, centro)).toBeGreaterThanOrEqual(
+          distanzaDalBordo(cella.polygon, baricentro(cella.polygon)),
+        );
+      }
+    }
+  });
+});
+
+describe('corpoCheEntra', () => {
+  const cella: Punto[] = [
+    { x: 0, y: 0 },
+    { x: 100, y: 0 },
+    { x: 100, y: 100 },
+    { x: 0, y: 100 },
+  ];
+  const centro = { x: 50, y: 50 };
+  const blocco = { righe: [4, 4], altezza: 0.8, passo: 1.25 };
+
+  it('restituisce un corpo con cui il blocco ci sta davvero', () => {
+    const corpo = corpoCheEntra(cella, centro, blocco, 200);
+    const passo = corpo * blocco.passo;
+
+    for (const [indice] of blocco.righe.entries()) {
+      const y = centro.y - (blocco.righe.length * passo) / 2 + (indice + 0.5) * passo;
+      expect(distanzaDalBordo(cella, { x: centro.x - 2 * corpo, y })).toBeGreaterThanOrEqual(-1e-6);
+      expect(distanzaDalBordo(cella, { x: centro.x + 2 * corpo, y })).toBeGreaterThanOrEqual(-1e-6);
+    }
+  });
+
+  it('si ferma al tetto quando ci starebbe anche di più', () => {
+    expect(corpoCheEntra(cella, centro, blocco, 5)).toBe(5);
+  });
+
+  it('scende quando le righe crescono', () => {
+    const due = corpoCheEntra(cella, centro, blocco, 200);
+    const quattro = corpoCheEntra(cella, centro, { ...blocco, righe: [4, 4, 4, 4] }, 200);
+
+    expect(quattro).toBeLessThan(due);
+  });
+
+  it('non è vincolato da una cella senza righe', () => {
+    expect(corpoCheEntra(cella, centro, { ...blocco, righe: [] }, 200)).toBe(200);
+  });
+});
+
+describe('ritaglia', () => {
+  const quadrato: Punto[] = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+    { x: 0, y: 10 },
+  ];
+
+  it('tiene la parte opposta alla normale', () => {
+    // Si taglia a metà altezza guardando in su: resta la metà di sotto.
+    const sotto = ritaglia(quadrato, { x: 0, y: 5 }, { x: 0, y: -1 });
+
+    expect(sotto).toHaveLength(4);
+    expect(Math.min(...sotto.map((punto) => punto.y))).toBe(5);
+    expect(Math.max(...sotto.map((punto) => punto.y))).toBe(10);
+  });
+
+  it('lascia la cella intera quando la retta le passa oltre', () => {
+    // Sotto la cella, guardando in su: non toglie niente.
+    expect(ritaglia(quadrato, { x: 0, y: -5 }, { x: 0, y: -1 })).toHaveLength(4);
+  });
+
+  it('non lascia niente quando la cella sta tutta dalla parte sbagliata', () => {
+    expect(ritaglia(quadrato, { x: 0, y: 20 }, { x: 0, y: -1 })).toHaveLength(0);
+  });
+
+  it('quel che resta sta dentro quel che c\'era', () => {
+    const triangolo: Punto[] = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 0, y: 10 },
+    ];
+    const resto = ritaglia(triangolo, { x: 0, y: 3 }, { x: 0, y: -1 });
+
+    expect(resto.length).toBeGreaterThanOrEqual(3);
+    expect(Math.min(...resto.map((punto) => punto.y))).toBe(3);
+    for (const punto of resto) {
+      expect(distanzaDalBordo(triangolo, punto)).toBeGreaterThanOrEqual(-1e-9);
     }
   });
 });

@@ -302,3 +302,172 @@ export function baricentro(polygon: readonly Punto[]): Punto {
 
   return { x: somma.x / polygon.length, y: somma.y / polygon.length };
 }
+
+/**
+ * Il punto della cella più lontano da ogni suo lato.
+ *
+ * **Non il baricentro**, ed è la differenza che il quadro del nord rende
+ * visibile: il baricentro di un triangolo d'angolo cade a due terzi verso
+ * l'angolo retto, cioè verso lo spigolo esterno, dove la cella è già stretta.
+ * Scriverci in mezzo tre sigle le manda contro il bordo. Il centro inscritto è
+ * invece il punto che lascia più aria in tutte le direzioni, che è esattamente
+ * la domanda che ci si pone quando si deve decidere dove va il contenuto.
+ *
+ * Si calcola per via esatta e non cercandolo: qui i poligoni sono soltanto
+ * triangoli, rombi e quadrati, e per entrambe le famiglie la formula c'è.
+ */
+export function centroInscritto(polygon: readonly Punto[]): Punto {
+  // Rombi e quadrati hanno un centro di simmetria, e là ogni lato è alla
+  // stessa distanza a cui può stare: il baricentro *è* il centro inscritto.
+  if (polygon.length !== 3) return baricentro(polygon);
+
+  // Nei triangoli è l'incentro, media dei vertici pesata sul lato opposto.
+  const [a, b, c] = polygon as readonly [Punto, Punto, Punto];
+  const la = distanza(b, c);
+  const lb = distanza(c, a);
+  const lc = distanza(a, b);
+  const perimetro = la + lb + lc;
+
+  return {
+    x: (la * a.x + lb * b.x + lc * c.x) / perimetro,
+    y: (la * a.y + lb * b.y + lc * c.y) / perimetro,
+  };
+}
+
+/**
+ * Quanto un punto dista dal lato più vicino: positivo dentro, negativo fuori.
+ *
+ * Vale per i poligoni convessi coi vertici in un verso solo, che è quel che
+ * `celleQuadro` produce in entrambi gli stili.
+ */
+export function distanzaDalBordo(polygon: readonly Punto[], punto: Punto): number {
+  let minima = Infinity;
+  let verso = 0;
+
+  for (let i = 0; i < polygon.length; i += 1) {
+    const a = polygon[i] as Punto;
+    const b = polygon[(i + 1) % polygon.length] as Punto;
+    const lato = distanza(a, b) || 1;
+    const scostamento = ((b.x - a.x) * (punto.y - a.y) - (b.y - a.y) * (punto.x - a.x)) / lato;
+
+    // Il verso lo detta il primo lato che non passa per il punto: da lì in poi
+    // «dentro» vuol dire dalla stessa parte di quello.
+    if (verso === 0 && Math.abs(scostamento) > 1e-9) verso = Math.sign(scostamento);
+    minima = Math.min(minima, scostamento * (verso || 1));
+  }
+
+  return minima;
+}
+
+/**
+ * Un blocco di righe di testo, misurato in **multipli del corpo del carattere**.
+ *
+ * In em e non in punti perché il corpo è precisamente l'incognita: `corpoCheEntra`
+ * cerca il numero per cui moltiplicarli. Le larghezze le porta chi disegna, che
+ * conosce il font e le stringhe; qui non se ne sa niente e non se ne deve
+ * sapere niente.
+ */
+export interface BloccoDiTesto {
+  /** La larghezza di ciascuna riga. */
+  righe: readonly number[];
+  /** L'altezza di una riga: quanto del corpo il testo occupa davvero. */
+  altezza: number;
+  /** La distanza fra due righe. */
+  passo: number;
+}
+
+/**
+ * Il corpo di carattere più grande con cui il blocco sta dentro la cella,
+ * centrato su `ancora`.
+ *
+ * È la funzione per cui questa rifinitura esiste. Un corpo fisso deve reggere
+ * il caso peggiore — nove graha in un triangolo d'angolo del nord — e quel
+ * caso capita di rado: applicarlo a tutte le altre celle vuol dire disegnare
+ * per metà del riquadro un testo tarato su un tema che non è questo. Qui il
+ * numero si ricava invece dalla forma che deve contenerlo.
+ *
+ * Restituisce `tetto` quando ci starebbe anche di più: oltre un certo punto il
+ * testo smette di sembrare grande e comincia a sembrare sbagliato.
+ */
+export function corpoCheEntra(
+  polygon: readonly Punto[],
+  ancora: Punto,
+  blocco: BloccoDiTesto,
+  tetto: number,
+): number {
+  const sta = (corpo: number): boolean => {
+    const passo = blocco.passo * corpo;
+    const alto = blocco.righe.length * passo;
+
+    return blocco.righe.every((larghezza, indice) => {
+      const y = ancora.y - alto / 2 + (indice + 0.5) * passo;
+      const mezzaLarghezza = (larghezza * corpo) / 2;
+      const mezzaAltezza = (blocco.altezza * corpo) / 2;
+
+      // I quattro angoli bastano: la cella è convessa, e se ci stanno quelli
+      // ci sta tutto il rettangolo.
+      return [
+        { x: ancora.x - mezzaLarghezza, y: y - mezzaAltezza },
+        { x: ancora.x + mezzaLarghezza, y: y - mezzaAltezza },
+        { x: ancora.x + mezzaLarghezza, y: y + mezzaAltezza },
+        { x: ancora.x - mezzaLarghezza, y: y + mezzaAltezza },
+      ].every((angolo) => distanzaDalBordo(polygon, angolo) >= 0);
+    });
+  };
+
+  if (sta(tetto)) return tetto;
+
+  let entra = 0;
+  let esce = tetto;
+  // Trenta bisezioni portano l'incertezza sotto il miliardesimo di punto:
+  // molto oltre quel che serve, e comunque immediate.
+  for (let giro = 0; giro < 30; giro += 1) {
+    const mezzo = (entra + esce) / 2;
+    if (sta(mezzo)) entra = mezzo;
+    else esce = mezzo;
+  }
+
+  return entra;
+}
+
+/**
+ * La parte di cella che resta al di qua di una retta.
+ *
+ * Serve a togliere ai graha la fascia in cui sta l'intestazione: senza, in un
+ * triangolo d'angolo del nord con tre righe di sigle il blocco cresce fin
+ * dentro il cartellino, e il risultato è leggibile solo sapendo già che cosa
+ * c'è scritto. La retta passa per `punto` e ha `fuori` per normale; si tiene
+ * ciò che sta dalla parte opposta a `fuori`.
+ *
+ * È il ritaglio di Sutherland e Hodgman con un piano solo. Una cella convessa
+ * tagliata resta convessa, che è quel che `distanzaDalBordo` e
+ * `centroInscritto` chiedono di poter assumere.
+ */
+export function ritaglia(
+  polygon: readonly Punto[],
+  punto: Punto,
+  fuori: Punto,
+): Punto[] {
+  const dalDiQua = (p: Punto): number => (p.x - punto.x) * fuori.x + (p.y - punto.y) * fuori.y;
+  const rimasti: Punto[] = [];
+
+  for (let i = 0; i < polygon.length; i += 1) {
+    const a = polygon[i] as Punto;
+    const b = polygon[(i + 1) % polygon.length] as Punto;
+    const da = dalDiQua(a);
+    const db = dalDiQua(b);
+
+    if (da <= 0) rimasti.push(a);
+    // Il lato attraversa la retta: si aggiunge il punto in cui la incontra.
+    if (da * db < 0) {
+      const t = da / (da - db);
+      rimasti.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+  }
+
+  return rimasti;
+}
+
+function distanza(a: Punto, b: Punto): number {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
