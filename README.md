@@ -112,6 +112,36 @@ Dove viva il dataset lo decide `GEONAMES_DATA` in `.env` — vedi
 `.env.example`: un nome è un volume Docker, un percorso che inizi per `.` o `/`
 è un bind mount.
 
+## Prima di mettere in rete
+
+Tre cose che il codice non può indovinare da solo, e che una copia pubblicata
+deve sistemare.
+
+**`ORIGIN`.** `adapter-node` ricava l'indirizzo pubblico dagli header della
+richiesta, e dietro un reverse proxy quella deduzione sbaglia lo schema: il
+proxy parla `http` col server anche quando parla `https` col mondo. Ogni
+`<link rel="canonical">` e ogni `og:url` del sito uscirebbe con l'indirizzo
+sbagliato, che è il modo più silenzioso di dividere in due un sito agli occhi
+di un motore di ricerca. Si dichiara una volta:
+
+```sh
+ORIGIN=https://esempio.it node apps/web/build/index.js
+```
+
+Con Docker sta in `.env`; in sviluppo e dentro Electron non serve — là
+l'indirizzo è quello del loopback e il sito non è indicizzato da nessuno.
+
+**`REPOSITORY_URL`** in `apps/web/src/lib/project.ts` va cambiato con
+l'indirizzo del **proprio** sorgente. L'AGPL, articolo 13, obbliga a offrirlo a
+chi usa il programma attraverso la rete, e l'obbligo riguarda il codice che sta
+girando: puntare al repository di qualcun altro non lo assolve. Lo stesso
+indirizzo è il recapito che l'informativa privacy indica.
+
+**La rotazione dei log.** L'informativa dichiara che i log tecnici del server si
+conservano sette giorni. È una dichiarazione, non una configurazione: la rende
+vera il server che sta davanti all'applicazione, e finché non lo si configura
+l'informativa dice il falso.
+
 ## Sviluppo
 
 ```sh

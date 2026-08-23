@@ -9,6 +9,11 @@ x-runtime: &runtime
   image: undicesimacasa:latest
   environment:
     GEONAMES_DB_PATH: /data/geonames.db
+    # L'indirizzo pubblico del sito. Vuoto quando non è dichiarato in `.env`,
+    # e vuoto vale come non impostato: l'applicazione torna a dedurlo dalla
+    # richiesta, che su localhost è giusto. Riguarda solo la superficie web —
+    # gli altri due servizi condividono l'ancora e la ignorano.
+    ORIGIN: "${ORIGIN:-}"
 
 services:
   # Applicazione web e API REST. http://localhost:3000
