@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { dev } from '$app/environment';
   import { page } from '$app/state';
   import { cielo } from '$lib/cielo.svelte';
   import CieloStellato from '$lib/components/CieloStellato.svelte';
@@ -6,9 +7,34 @@
   import Marchio from '$lib/components/Marchio.svelte';
   import { isActive, SECTIONS } from '$lib/navigation';
   import { REPOSITORY_URL } from '$lib/project';
+  import { onMount } from 'svelte';
   import '../app.css';
 
   let { children } = $props();
+
+  /**
+   * Il service worker si registra da qui, e non da SvelteKit, perché ci sono
+   * due posti in cui non deve girare.
+   *
+   * In **sviluppo**: una cache davanti a Vite significa passare le mattinate a
+   * chiedersi perché una modifica non si veda. Il guscio conservato lo si prova
+   * sulla build, che è anche l'unico posto in cui esiste davvero.
+   *
+   * Dentro **Electron**: `apps/desktop/src/main.ts` sorteggia a ogni avvio una
+   * porta libera del loopback, quindi ogni avvio è un'origine diversa. Una
+   * registrazione lì lascerebbe nel profilo di Chromium una cache per porta,
+   * che nessun avvio successivo riuserà e che nessuno cancellerà: una
+   * discarica che cresce di qualche megabyte a ogni doppio clic. E non
+   * servirebbe a niente, perché quel server sta nella stessa macchina — l'app
+   * desktop senza rete non ci va mai.
+   */
+  onMount(() => {
+    if (dev) return;
+    if (!('serviceWorker' in navigator)) return;
+    if (/Electron\//.test(navigator.userAgent)) return;
+
+    void navigator.serviceWorker.register('/service-worker.js');
+  });
 </script>
 
 <CieloStellato {cielo} />
