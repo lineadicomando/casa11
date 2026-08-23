@@ -13,6 +13,9 @@
   import { birthFromParameters, isComplete, missingBirthFields } from '$lib/birth';
   import { birthStore } from '$lib/birth-store.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
+  import JyotishaSettings from '$lib/components/JyotishaSettings.svelte';
+  import QuadroVedico from '$lib/components/QuadroVedico.svelte';
+  import StrumentiDisegno from '$lib/components/StrumentiDisegno.svelte';
   import BodyTable from '$lib/components/BodyTable.svelte';
   import CampiMancanti from '$lib/components/CampiMancanti.svelte';
   import DashaTable from '$lib/components/DashaTable.svelte';
@@ -24,22 +27,7 @@
   import StrumentiLettura from '$lib/components/StrumentiLettura.svelte';
   import VargaTable from '$lib/components/VargaTable.svelte';
   import { Evidenza } from '$lib/evidenza.svelte';
-  import { ayanamsaOrDefault, AYANAMSAS } from '$lib/zodiacs';
-
-  /**
-   * I varga che il motore calcola, con il nome da mostrare.
-   *
-   * Scelti per uso e non per completezza: gli altri dieci stanno in
-   * `ROADMAP.md`, divisi in lotti.
-   */
-  const VARGHE: readonly { value: VargaId; label: string }[] = [
-    { value: 'd1', label: 'D1 Rashi' },
-    { value: 'd3', label: 'D3 Drekkana' },
-    { value: 'd9', label: 'D9 Navamsa' },
-    { value: 'd10', label: 'D10 Dasamsa' },
-    { value: 'd12', label: 'D12 Dwadasamsa' },
-    { value: 'd30', label: 'D30 Trimsamsa' },
-  ];
+  import { ayanamsaOrDefault } from '$lib/zodiacs';
 
   // La nascita è la stessa delle altre sezioni: chi l'ha scritta nel tema la
   // ritrova qui, e viceversa.
@@ -48,9 +36,13 @@
   let ayanamsa = $state<AyanamsaId>('lahiri');
   let dashaLevels = $state<1 | 2 | 3>(2);
   let dashaYear = $state<DashaYear>('solare');
-  // D-1 e D-9 accese: la carta rashi e il navamsa si leggono sempre insieme,
-  // ed è la ragione per cui la seconda esiste.
-  let vargas = $state<VargaId[]>(['d1', 'd9']);
+  /**
+   * Le divisionali da mostrare, oltre alla rashi.
+   *
+   * La D-1 non è fra queste: è il tema, e sta nella colonna del disegno. Al
+   * server si chiede sempre, perché è da lì che quel quadro si disegna.
+   */
+  let vargas = $state<VargaId[]>(['d9']);
   let stile = $state<StileQuadro>('sud');
   let drishtiNodes = $state<NodeDrishti>('nessuna');
 
@@ -61,13 +53,26 @@
    * prompt che descrivesse un tema diverso da quello a schermo sarebbe il
    * peggiore dei difetti, perché non si vede.
    */
-  const opzioni = $derived({ ayanamsa, dashaLevels, dashaYear, vargas, drishtiNodes });
+  const opzioniVediche = $derived({
+    ayanamsa,
+    dashaLevels,
+    dashaYear,
+    vargas: ['d1' as VargaId, ...vargas],
+    drishtiNodes,
+  });
 
   let jyotisha = $state<JyotishaChart | null>(null);
   let placeLabel = $state<string | null>(null);
   let loading = $state(false);
   let errorMessage = $state<string | null>(null);
   const evidenza = new Evidenza();
+  /** Il quadro principale, che gli strumenti devono avere in mano per salvarlo. */
+  let disegno = $state<SVGSVGElement | null>(null);
+
+  /** La carta rashi: il tema, che regge la colonna del disegno. */
+  const rashi = $derived(jyotisha?.vargas.find((varga) => varga.varga === 'd1') ?? null);
+  /** Le divisionali chieste, che sono le altre. */
+  const divisionali = $derived(jyotisha?.vargas.filter((varga) => varga.varga !== 'd1') ?? []);
 
   /**
    * I graha coi nomi che il Jyotisha dà loro.
@@ -103,7 +108,7 @@
     errorMessage = null;
 
     try {
-      const body = await fetchJyotisha(jyotishaParameters(birth, opzioni));
+      const body = await fetchJyotisha(jyotishaParameters(birth, opzioniVediche));
       if (richiesta !== ultima) return false;
       jyotisha = body.jyotisha;
       placeLabel = body.place?.label ?? null;
@@ -133,15 +138,6 @@
   async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     if (await calcola()) aperto = false;
-  }
-
-  function commutaVarga(id: VargaId): void {
-    // Almeno uno resta: una pagina senza nessuna carta divisionale non è più
-    // pulita, è solo priva della cosa che si legge accanto al tema.
-    const dopo = vargas.includes(id) ? vargas.filter((v) => v !== id) : [...vargas, id];
-    if (dopo.length === 0) return;
-    vargas = VARGHE.filter((v) => dopo.includes(v.value)).map((v) => v.value);
-    void calcola();
   }
 
   /**
@@ -183,42 +179,39 @@
 
 <h1 class="nascosto">Astrologia vedica</h1>
 
+<!-- Le stesse opzioni due volte no: nella striscia stanno quelle che si
+     cambiano guardando il risultato — un altro ayanamsa, un ordine di dasha in
+     meno — e nel modulo ci sono anche le caselle delle divisionali, che si
+     decidono prima. -->
+{#snippet opzioni()}
+  <JyotishaSettings
+    bind:ayanamsa
+    bind:dashaLevels
+    bind:dashaYear
+    bind:drishtiNodes
+    bind:vargas
+    onchange={calcola}
+    compact
+  />
+{/snippet}
+
 <ModuloPieghevole
   bind:aperto
-  etichetta="Nascita e opzioni"
+  etichetta="Nascita"
   chiudibile={jyotisha !== null}
   onsubmit={submit}
+  striscia={aperto ? undefined : opzioni}
 >
   {#snippet dettagli()}
     <BirthForm bind:value={birthStore.value}>
       {#snippet options()}
-        <div class="opzioni">
-          <label for="ayanamsa">Ayanamsa</label>
-          <select id="ayanamsa" bind:value={ayanamsa}>
-            {#each AYANAMSAS as voce (voce.value)}
-              <option value={voce.value}>{voce.label}</option>
-            {/each}
-          </select>
-
-          <label for="livelli">Ordini di dasha</label>
-          <select id="livelli" bind:value={dashaLevels}>
-            <option value={1}>1 — nove periodi</option>
-            <option value={2}>2 — ottantuno</option>
-            <option value={3}>3 — settecentoventinove</option>
-          </select>
-
-          <label for="anno">Anno di dasha</label>
-          <select id="anno" bind:value={dashaYear}>
-            <option value="solare">Solare — 365,25 giorni</option>
-            <option value="savana">Savana — 360 giorni</option>
-          </select>
-
-          <label for="nodi">Drishti di Rahu e Ketu</label>
-          <select id="nodi" bind:value={drishtiNodes}>
-            <option value="nessuna">Nessuna — forma classica</option>
-            <option value="gioviana">Quinta, settima e nona — come Giove</option>
-          </select>
-        </div>
+        <JyotishaSettings
+          bind:ayanamsa
+          bind:dashaLevels
+          bind:dashaYear
+          bind:drishtiNodes
+          bind:vargas
+        />
       {/snippet}
     </BirthForm>
 
@@ -244,14 +237,55 @@
     meta={condizioni(jyotisha)}
     avvertenze={[...jyotisha.chart.warnings, ...jyotisha.warnings]}
   >
-    <!-- Nessuna ruota: il Jyotisha si disegna quadrato, nord-indiano o
-         sud-indiano, e la ruota di `packages/ruota` non è quel disegno. Meglio
-         nessun disegno che uno sbagliato — sta in ROADMAP.md. -->
-    <div class="colonne">
+    <div class="griglia">
+      <div class="ruota">
+        {#if rashi}
+          <QuadroVedico
+            chart={rashi}
+            {stile}
+            {evidenza}
+            titolo="Carta rashi"
+            bind:elemento={disegno}
+          />
+        {/if}
+
+        <!-- Lo stile sta sotto il disegno e non fra le opzioni: non ricalcola
+             niente, e riguarda quel disegno lì. I due quadri dicono la stessa
+             cosa in due disposizioni. -->
+        <div class="stile">
+          <span id="stile-quadro">Quadro</span>
+          <div role="radiogroup" aria-labelledby="stile-quadro" class="scelte">
+            <label class="interruttore">
+              <input type="radio" bind:group={stile} value="sud" />
+              <span>Sud — segni fissi</span>
+            </label>
+            {#if conLagna}
+              <label class="interruttore">
+                <input type="radio" bind:group={stile} value="nord" />
+                <span>Nord — case fisse</span>
+              </label>
+            {/if}
+          </div>
+          {#if !conLagna}
+            <p class="nota">
+              Senza ora di nascita non c'è un lagna, e lo stile del nord ha le case
+              fisse: resta quello del sud, dove a essere fissi sono i segni.
+            </p>
+          {/if}
+        </div>
+
+        <StrumentiDisegno
+          svg={disegno}
+          {evidenza}
+          nome={['vedico', placeLabel, jyotisha.chart.input.date]}
+          link={() => jyotishaParameters(birth, opzioniVediche)}
+        />
+      </div>
+
       <div class="tabelle">
         <StrumentiLettura
           sistema="jyotisha"
-          tavola={() => fetchJyotishaCompact(jyotishaParameters(birth, opzioni))}
+          tavola={() => fetchJyotishaCompact(jyotishaParameters(birth, opzioniVediche))}
         />
 
         <BodyTable bodies={graha} {evidenza} title="Graha" houseTitle="Bhava" />
@@ -260,48 +294,7 @@
 
         <DashaTable dasha={jyotisha.dasha} {evidenza} />
 
-        <section>
-          <h3 class="titolo-sezione">Carte divisionali</h3>
-          <div class="scelte">
-            {#each VARGHE as varga (varga.value)}
-              <label class="interruttore">
-                <input
-                  type="checkbox"
-                  checked={vargas.includes(varga.value)}
-                  onchange={() => commutaVarga(varga.value)}
-                />
-                <span>{varga.label}</span>
-              </label>
-            {/each}
-          </div>
-
-          <!-- Lo stile non si manda al server: è una scelta di sola resa, e
-               cambiarla non ricalcola niente. I due quadri dicono la stessa
-               cosa in due disposizioni. -->
-          <div class="stile">
-            <span id="stile-quadro">Quadro</span>
-            <div role="radiogroup" aria-labelledby="stile-quadro" class="scelte">
-              <label class="interruttore">
-                <input type="radio" bind:group={stile} value="sud" />
-                <span>Sud — segni fissi</span>
-              </label>
-              {#if conLagna}
-                <label class="interruttore">
-                  <input type="radio" bind:group={stile} value="nord" />
-                  <span>Nord — case fisse</span>
-                </label>
-              {/if}
-            </div>
-            {#if !conLagna}
-              <p class="nota">
-                Senza ora di nascita non c'è un lagna, e lo stile del nord ha le case
-                fisse: resta quello del sud, dove a essere fissi sono i segni.
-              </p>
-            {/if}
-          </div>
-        </section>
-
-        {#each jyotisha.vargas as varga (varga.varga)}
+        {#each divisionali as varga (varga.varga)}
           <VargaTable {varga} {stile} {evidenza} />
         {/each}
 
@@ -312,33 +305,6 @@
 {/if}
 
 <style>
-  .opzioni {
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  /* Una colonna sola, e con un tetto. Le altre sezioni hanno il disegno a
-     sinistra a reggere la larghezza; qui non c'è, e una tabella di tre colonne
-     stirata su millecento punti mette il numero della bhava a un palmo dal nome
-     del graha. */
-  .colonne {
-    display: grid;
-    gap: 1.5rem;
-    max-width: 54rem;
-  }
-
-  .tabelle {
-    display: grid;
-    gap: 1.75rem;
-    min-width: 0;
-  }
-
-  .scelte {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.25rem;
-  }
-
   .stile {
     margin-top: 1rem;
   }
@@ -350,6 +316,12 @@
     font-size: 0.78rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  .scelte {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
   }
 
   .nota {

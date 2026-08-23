@@ -37,7 +37,7 @@
   import MomentFields from '$lib/components/MomentFields.svelte';
   import PassageTable from '$lib/components/PassageTable.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
-  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
+  import StrumentiDisegno from '$lib/components/StrumentiDisegno.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { isCompleteMoment, nowMoment } from '$lib/moment';
 
@@ -328,7 +328,7 @@
       <div class="ruota">
         <ChartWheel {chart} {transits} {evidenza} bind:elemento={disegno} />
         <LegendaElementi />
-        <StrumentiRuota
+        <StrumentiDisegno
           svg={disegno}
           {evidenza}
           nome={['transiti', placeLabel, transits.input.date]}

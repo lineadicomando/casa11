@@ -27,7 +27,7 @@
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
   import StrumentiLettura from '$lib/components/StrumentiLettura.svelte';
-  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
+  import StrumentiDisegno from '$lib/components/StrumentiDisegno.svelte';
 
   // La nascita non è di questa pagina: chi la scrive qui la ritrova nei
   // transiti e nell'elezione, e viceversa.
@@ -235,7 +235,7 @@
       <div class="ruota">
         <ChartWheel {chart} {evidenza} bind:elemento={disegno} />
         <LegendaElementi />
-        <StrumentiRuota
+        <StrumentiDisegno
           svg={disegno}
           {evidenza}
           nome={['tema', placeLabel, chart.input.date]}

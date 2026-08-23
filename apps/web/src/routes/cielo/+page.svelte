@@ -26,7 +26,7 @@
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import MomentFields from '$lib/components/MomentFields.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
-  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
+  import StrumentiDisegno from '$lib/components/StrumentiDisegno.svelte';
   import SkyMotionTable from '$lib/components/SkyMotionTable.svelte';
   import SkyPassageTable from '$lib/components/SkyPassageTable.svelte';
   import { houseSystemOrDefault } from '$lib/house-systems';
@@ -275,7 +275,7 @@
           bind:elemento={disegno}
         />
         <LegendaElementi />
-        <StrumentiRuota svg={disegno} {evidenza} nome={['cielo', placeLabel, sky.input.date]} />
+        <StrumentiDisegno svg={disegno} {evidenza} nome={['cielo', placeLabel, sky.input.date]} />
         <p class="suggerimento istruzione">
           Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti.
         </p>

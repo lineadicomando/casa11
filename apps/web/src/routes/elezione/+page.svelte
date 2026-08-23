@@ -34,7 +34,7 @@
   import Meta from '$lib/components/Meta.svelte';
   import ModuloPieghevole from '$lib/components/ModuloPieghevole.svelte';
   import Risultato from '$lib/components/Risultato.svelte';
-  import StrumentiRuota from '$lib/components/StrumentiRuota.svelte';
+  import StrumentiDisegno from '$lib/components/StrumentiDisegno.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { formatDegrees } from '$lib/format';
   import { BODY_LABEL, SIGN_LABEL } from '@undicesimacasa/ruota';
@@ -451,7 +451,7 @@
       <div class="ruota">
         <ChartWheel {chart} {transits} {evidenza} bind:elemento={disegno} />
         <LegendaElementi />
-        <StrumentiRuota svg={disegno} {evidenza}
+        <StrumentiDisegno svg={disegno} {evidenza}
           nome={['ora', BODY_LABEL[scelta.ruler], scelta.local.start.slice(0, 10)]}
         />
       </div>

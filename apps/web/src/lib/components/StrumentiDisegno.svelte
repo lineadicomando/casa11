@@ -1,5 +1,11 @@
 <!--
-  Che cosa fare della ruota oltre che guardarla.
+  Che cosa fare del disegno oltre che guardarlo.
+
+  Vale per la ruota e per il quadro vedico senza sapere quale dei due sia: gli
+  serve un nodo SVG nel documento, e `svgAutosufficiente` ne ricava un file coi
+  colori risolti — anche quando a schermo sono `var()`. Un componente solo e non
+  due che si somigliano: i pulsanti sono gli stessi in tutte le sezioni perché
+  sono letteralmente gli stessi.
 
   Un tema natale non finisce nella scheda in cui è stato calcolato: si stampa,
   si allega, si tiene. Il disegno è già un SVG e la pagina è già impaginabile —
@@ -14,7 +20,7 @@
     /** Il disegno da portare via. Manca finché il componente non è montato. */
     svg: SVGSVGElement | null;
     /**
-     * Di che cosa è la ruota, per il nome del file: «tema», il luogo, la data.
+     * Di che cosa è il disegno, per il nome del file: «tema», il luogo, la data.
      * `nomeFile` le ripulisce e le unisce.
      */
     nome: readonly (string | null | undefined)[];
@@ -59,10 +65,11 @@
    * La carta intera, non quella che si sta esaminando.
    *
    * Con un corpo scelto la ruota mostra i soli aspetti che lo toccano e attenua
-   * tutti gli altri glifi: è quello che serve mentre si guarda, e non è quello
-   * che serve in un file. Peggio — le linee escluse non sono attenuate, non
-   * sono disegnate affatto, e nel disegno salvato mancherebbero senza che nulla
-   * lo dica. Un documento non è la fotografia di come lo si stava leggendo.
+   * tutti gli altri glifi; il quadro accende la sigla di quel graha. È quello
+   * che serve mentre si guarda, e non è quello che serve in un file. Peggio,
+   * nella ruota — le linee escluse non sono attenuate, non sono disegnate
+   * affatto, e nel disegno salvato mancherebbero senza che nulla lo dica. Un
+   * documento non è la fotografia di come lo si stava leggendo.
    *
    * La selezione si vede sparire, ed è giusto così: dice che cosa è stato
    * salvato.
