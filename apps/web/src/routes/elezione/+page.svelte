@@ -306,17 +306,14 @@
 
 <div class="cappello">
   <p>
-    Scegliere il momento, invece di leggerlo. Per ogni giorno e per un luogo
-    dato: le ore planetarie con il pianeta che regge ciascuna, il grado che
-    sorge quando comincia, e i tratti in cui la Luna è vuota di corso.
+    Scegliere il momento invece di leggerlo. Per un luogo e per ogni giorno:
+    le ore planetarie col pianeta che regge ciascuna, il grado che sorge, i
+    tratti in cui la Luna è vuota di corso.
   </p>
   <p>
-    Le ore planetarie non durano sessanta minuti: il giorno si divide comunque
-    in dodici parti, lunghe d'estate e corte d'inverno, e comincia all'alba e
-    non a mezzanotte —
+    Le ore non durano sessanta minuti, e il giorno comincia all'alba —
     <a href="/metodo#elezione">come si contano le ore planetarie</a>. Quale
-    ora sia propizia questo sito non lo dice: consegna il calendario, la
-    scelta è di chi legge.
+    ora sia propizia il sito non lo dice: consegna il calendario.
   </p>
 </div>
 

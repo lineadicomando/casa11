@@ -179,15 +179,12 @@
 <div class="cappello">
   <p>
     Il tema natale è la mappa del cielo di un istante e di un luogo precisi:
-    dove stavano il Sole, la Luna e i pianeti al momento della nascita, in
-    quali case cadono e che aspetti formano fra loro. Servono data, ora e
-    luogo — e l'ora pesa più di quanto sembri, perché l'Ascendente si sposta
-    di un grado ogni quattro minuti.
+    dove stavano il Sole, la Luna e i pianeti alla nascita, in quali case
+    cadono e che aspetti formano fra loro. Servono data, ora e luogo.
   </p>
   <p>
-    Se l'ora di nascita non si sa, il calcolo si fa lo stesso: restano i segni
-    e gli aspetti, cadono le case e gli assi. Il sistema con cui dividere le
-    case si sceglie fra nove, e cambia la carta più di quanto ci si aspetti —
+    Senza l'ora si calcola lo stesso: restano i segni e gli aspetti, cadono le
+    case e gli assi. Il sistema con cui dividerle si sceglie fra nove —
     <a href="/metodo#case">come si dividono le case</a>.
   </p>
 </div>

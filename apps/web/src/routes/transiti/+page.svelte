@@ -256,14 +256,13 @@
 <div class="cappello">
   <p>
     I transiti mettono il cielo di un momento a confronto con un tema di
-    nascita: quali pianeti stanno toccando adesso i punti della carta, con
-    quale aspetto e se il contatto si sta stringendo o sciogliendo.
+    nascita: quali pianeti stanno toccando adesso i punti della carta, e con
+    quale aspetto.
   </p>
   <p>
-    Accanto al quadro dell'istante c'è il calendario dei passaggi, con l'ora
-    esatta in cui ciascun aspetto si perfeziona: serve perché un pianeta lento
-    che retrograda perfeziona lo stesso contatto tre volte in pochi mesi. Le
-    orbite qui sono molto più strette che nel tema natale, e non per gusto —
+    Accanto al quadro c'è il calendario dei passaggi, con l'ora esatta in cui
+    ogni aspetto si perfeziona. Le orbite qui sono più strette che nel tema
+    natale —
     <a href="/metodo#aspetti">perché i transiti vogliono orbite strette</a>.
   </p>
 </div>

@@ -161,7 +161,11 @@
   }
 
   header {
-    margin-bottom: 2.5rem;
+    /* Lo stacco che separa la navigazione dalla pagina. Era di 2,5rem quando
+       sotto cominciava subito il modulo; col cappello di mezzo diventavano due
+       vuoti in fila, e quaranta punti di aria prima della prima parola sono
+       una pagina che comincia in ritardo. */
+    margin-bottom: 1.5rem;
     padding-bottom: 0.6rem;
     border-bottom: 1px solid var(--linea);
   }

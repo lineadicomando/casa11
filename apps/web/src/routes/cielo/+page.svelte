@@ -223,16 +223,14 @@
 <div class="cappello">
   <p>
     Dove sono i pianeti adesso, o in qualunque altro istante, senza che serva
-    una data di nascita: posizioni nei segni, aspetti fra loro e distribuzione
-    fra elementi e modalità. Il luogo è facoltativo, e serve solo a chi vuole
-    anche le case.
+    una data di nascita: posizioni, aspetti e distribuzione fra elementi e
+    modalità. Il luogo è facoltativo, e serve solo per le case.
   </p>
   <p>
-    Sotto, due elenchi che si leggono in ordine di tempo: gli ingressi nei
-    segni e le stazioni — i giorni in cui un pianeta si ferma e cambia verso —
-    e gli istanti in cui due corpi formano un aspetto esatto. Le posizioni
-    vengono dalle effemeridi Swiss Ephemeris:
-    <a href="/metodo#effemeridi">con quale precisione</a>.
+    Sotto, in ordine di tempo: gli ingressi nei segni, le stazioni — i giorni
+    in cui un pianeta si ferma e cambia verso — e gli istanti in cui due corpi
+    formano un aspetto esatto.
+    <a href="/metodo#effemeridi">Da dove vengono queste posizioni</a>.
   </p>
 </div>
 

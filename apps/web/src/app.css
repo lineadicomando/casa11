@@ -415,11 +415,23 @@ tbody tr.evidenziato {
  * elementi diversi, non lo stesso ripetuto.
  *
  * **Non compete col modulo.** Chi arriva qui sapendo già cosa vuole deve
- * trovare i campi dov'erano, non tre righe più in basso: per questo il corpo è
- * minore di quello del testo e il colore è quello tenue, che lo mette un passo
- * dietro senza toglierlo. La larghezza si ferma a 42rem, la stessa della
- * colonna di lettura dell'informativa: il guscio ne misura 72, e una riga di
- * prosa lunga così l'occhio la perde tornando a capo.
+ * trovare i campi dov'erano, non sette righe più in basso: per questo il corpo
+ * è minore di quello del testo, il colore è quello tenue, e il testo è corto —
+ * un cappello che si allunga smette di essere un cappello e diventa una pagina
+ * che qualcuno deve scavalcare.
+ *
+ * **Due colonne invece che una, dove c'è posto.** Non è un vezzo tipografico:
+ * è l'unico modo di guadagnare l'altezza senza allungare la riga. Il guscio
+ * misura 72rem, e una riga di prosa lunga così porta centoquaranta battute:
+ * l'occhio il capo successivo non lo ritrova più, ed è la ragione per cui
+ * `(informativa)/+layout.svelte` la sua colonna la ferma a 42.
+ *
+ * Le due colonne stanno sotto quella misura ciascuna, e i 42rem restano il
+ * limite quando la soglia non è raggiunta. Da soli non fanno le settanta
+ * battute del manuale — a questo corpo ne portano un centinaio — ma un
+ * cappello sono due righe e non un capitolo, e la lettura di seguito che quel
+ * limite protegge qui non c'è. Sotto la soglia le due colonne tornano una,
+ * che è anche dove lo scorrimento verticale costa meno.
  */
 .cappello {
   max-width: 42rem;
@@ -434,6 +446,28 @@ tbody tr.evidenziato {
 
 .cappello p + p {
   margin-top: 0.5rem;
+}
+
+/* La soglia: sotto, due colonne verrebbero troppo strette per valerne la pena
+   — sotto le venticinque battute abbondanti la riga si spezza più di quanto
+   si legga. A 60rem ciascuna ne misura una sessantina, che è già una colonna
+   di lettura vera. */
+@media (min-width: 60rem) {
+  .cappello {
+    max-width: none;
+    display: grid;
+    /* `minmax(0, 1fr)` e non `1fr`: senza il minimo a zero una parola lunga —
+       «vimshottari», «Chitrapaksha» — allarga la sua colonna oltre la metà e
+       le due smettono di essere pari. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 2.5rem;
+  }
+
+  /* Affiancati non si accollano: lo stacco fra i due paragrafi è la colonna
+     accanto, non un margine. */
+  .cappello p + p {
+    margin-top: 0;
+  }
 }
 
 .nota,
