@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerLetturaDelTema } from './prompts.js';
 import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@undicesimacasa/core';
 import {
+  registerComputeJyotishaChart,
   registerComputeNatalChart,
   registerComputeSky,
   registerComputeTransits,
@@ -42,6 +43,8 @@ export function createServer(context: ToolContext = {}): McpServer {
         'Per MOSTRARE la carta invece che leggerla c\'è draw_chart_wheel, che ne restituisce ' +
         "l'immagine: si chiama dopo compute_natal_chart e non al posto suo, perché un disegno " +
         'non contiene le avvertenze del calcolo. ' +
+        "Per l'astrologia indiana c'è compute_jyotisha_chart, che non è compute_natal_chart con " +
+        "un'opzione: zodiaco siderale, case a segni interi, nakshatra, dasha e drishti. " +
         "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te. " +
         "Se chi scrive vuole una lettura e non i numeri, c'è il prompt lettura_del_tema, che " +
         'consegna il tema insieme alle istruzioni per interpretarlo.',
@@ -50,6 +53,7 @@ export function createServer(context: ToolContext = {}): McpServer {
 
   registerSearchLocation(server, context);
   registerComputeNatalChart(server, context);
+  registerComputeJyotishaChart(server, context);
   registerDrawChartWheel(server, context);
   registerComputeSky(server, context);
   registerComputeTransits(server, context);

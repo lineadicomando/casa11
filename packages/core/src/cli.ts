@@ -32,6 +32,7 @@ import { findElectionHours } from './election.js';
 import { computePanchanga } from './panchanga.js';
 import { computeVimshottari } from './dasha.js';
 import { computeVarga, VARGAS } from './varga.js';
+import { computeJyotisha } from './jyotisha.js';
 import { computeDrishti } from './drishti.js';
 import { findTransitPassages } from './passages.js';
 import { findSignIngresses, findStations } from './sky-events.js';
@@ -484,7 +485,9 @@ function main(argv: string[]): number {
       // descrivono: il vedico porta nakshatra, dasha, navamsa e drishti,
       // perché senza quelli metà del documento parlerebbe di dati assenti.
       const tavola =
-        sistema === 'jyotisha' ? formatJyotishaCompact(chart) : formatChartCompact(chart);
+        sistema === 'jyotisha'
+          ? formatJyotishaCompact(computeJyotisha(chart))
+          : formatChartCompact(chart);
 
       process.stdout.write(`${letturaDaIncollare(tavola, opzioni)}`);
       return 0;

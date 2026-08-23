@@ -23,6 +23,7 @@ export {
 } from './dasha.js';
 export { computeVarga, findVarga, VARGAS, vargaSignOf } from './varga.js';
 export { computeDrishti, housesSeenBy } from './drishti.js';
+export { computeJyotisha } from './jyotisha.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeDistribution, type DistributionInput } from './distribution.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
@@ -113,6 +114,7 @@ export type {
   BirthData,
   BodyId,
   CelestialBody,
+  ChartFormatOptions,
   ChartOptions,
   ChartPoint,
   DashaPeriod,
@@ -129,7 +131,8 @@ export type {
   EphemerisMode,
   House,
   HouseSystem,
-  JyotishaFormatOptions,
+  JyotishaChart,
+  JyotishaOptions,
   Karana,
   LocalMoment,
   Modality,

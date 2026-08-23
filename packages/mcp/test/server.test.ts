@@ -101,7 +101,7 @@ function imageOf(
 }
 
 describe('superficie MCP', () => {
-  it('espone gli otto tool con descrizione e schema', async () => {
+  it('espone i nove tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
@@ -113,6 +113,17 @@ describe('superficie MCP', () => {
     expect(names).toContain('find_transit_passages');
     expect(names).toContain('find_sky_events');
     expect(names).toContain('find_election_hours');
+    expect(names).toContain('compute_jyotisha_chart');
+
+    const jyotishaTool = tools.find((tool) => tool.name === 'compute_jyotisha_chart');
+    // La descrizione deve dire che non è compute_natal_chart con un'opzione:
+    // fra i due zodiaci corrono quasi un segno, e un agente che li scambia
+    // consegna un tema plausibile e sbagliato.
+    expect(jyotishaTool?.description).toMatch(/NON è compute_natal_chart/);
+    expect(jyotishaTool?.description).toMatch(/siderale/);
+    // E che le date delle dasha non servono a predire.
+    expect(jyotishaTool?.description).toMatch(/non usarle per predire/i);
+    expect(jyotishaTool?.inputSchema.required).toEqual(['date']);
 
     const wheelTool = tools.find((tool) => tool.name === 'draw_chart_wheel');
     // La descrizione deve dire che il disegno non sostituisce i dati: una
@@ -177,6 +188,67 @@ describe('superficie MCP', () => {
     const result = await client.readResource({ uri: 'undicesimacasa://riferimento/aspetti' });
 
     expect(String(result.contents[0]?.text)).toContain('congiunzione');
+  });
+
+  it('calcola un tema vedico siderale e a segni interi', async () => {
+    const compact = textOf(
+      await client.callTool({
+        name: 'compute_jyotisha_chart',
+        arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID },
+      }),
+    );
+
+    expect(compact).toContain('Zodiaco: siderale (Lahiri');
+    expect(compact).toContain('Case: segni-interi');
+    for (const sezione of ['NAKSHATRA', 'DASHA VIMSHOTTARI', 'NAVAMSA (D9)', 'DRISHTI']) {
+      expect(compact).toContain(sezione);
+    }
+  });
+
+  it('non consegna aspetti e distribuzione, che sono letture occidentali', async () => {
+    // Aspetti a orbite dove gli aspetti si contano a segni interi, elementi e
+    // modalità dove non si contano: un agente che li trovasse li userebbe.
+    const compact = textOf(
+      await client.callTool({
+        name: 'compute_jyotisha_chart',
+        arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID },
+      }),
+    );
+
+    expect(compact).not.toContain('\nASPETTI');
+    expect(compact).not.toContain('\nDISTRIBUZIONE');
+    expect(compact).not.toContain('Fortuna');
+  });
+
+  it('lascia scegliere ayanamsa, ordini di dasha e varga', async () => {
+    const compact = textOf(
+      await client.callTool({
+        name: 'compute_jyotisha_chart',
+        arguments: {
+          date: '1968-03-12',
+          time: '14:30',
+          location_id: ROMA_ID,
+          ayanamsa: 'raman',
+          dasha_levels: 1,
+          vargas: ['d9', 'd30'],
+          drishti_nodes: 'gioviana',
+        },
+      }),
+    );
+
+    expect(compact).toContain('Raman');
+    expect(compact).toContain('1 ordine');
+    expect(compact).toContain('TRIMSAMSA (D30)');
+    expect(compact).toContain('come Giove');
+  });
+
+  it('rifiuta un varga che non calcola invece di ignorarlo', async () => {
+    const result = await client.callTool({
+      name: 'compute_jyotisha_chart',
+      arguments: { date: '1968-03-12', location_id: ROMA_ID, vargas: ['d7'] },
+    });
+
+    expect(result.isError).toBe(true);
   });
 
   it('espone il prompt di lettura, che non è un tool', async () => {

@@ -1,9 +1,6 @@
 import { BODIES, NATAL_POINT_NAMES } from './constants.js';
 import { formatDegrees, formatZodiacal } from './math.js';
 import { grahaName, nakshatraOf, requireSidereal } from './nakshatra.js';
-import { computeVimshottari } from './dasha.js';
-import { computeDrishti } from './drishti.js';
-import { computeVarga } from './varga.js';
 import type {
   Angles,
   Aspect,
@@ -15,8 +12,9 @@ import type {
   DistributionGroup,
   DrishtiChart,
   ElectionResult,
+  ChartFormatOptions,
   House,
-  JyotishaFormatOptions,
+  JyotishaChart,
   NatalChart,
   NatalPointId,
   Panchanga,
@@ -42,7 +40,11 @@ import type {
  * dei token del JSON completo, a parità di informazione astrologica.
  * Per le integrazioni programmatiche usare direttamente l'oggetto `NatalChart`.
  */
-export function formatChartCompact(chart: NatalChart): string {
+export function formatChartCompact(
+  chart: NatalChart,
+  options: ChartFormatOptions = {},
+): string {
+  const occidentali = options.westernSections ?? true;
   const lines: string[] = [];
   const { input, time } = chart;
 
@@ -62,7 +64,7 @@ export function formatChartCompact(chart: NatalChart): string {
 
   lines.push('', 'CORPI', ...bodyLines(chart.bodies));
 
-  if (chart.partOfFortune) {
+  if (chart.partOfFortune && occidentali) {
     const house =
       chart.partOfFortune.house !== undefined ? ` casa ${chart.partOfFortune.house}` : '';
     lines.push(
@@ -73,8 +75,10 @@ export function formatChartCompact(chart: NatalChart): string {
   if (chart.angles) lines.push('', 'ASSI', ...angleLines(chart.angles));
   if (chart.houses.length > 0) lines.push('', 'CUSPIDI', ...cuspLines(chart.houses));
 
-  lines.push('', 'ASPETTI', ...aspectLines(chart));
-  lines.push('', 'DISTRIBUZIONE', ...distributionLines(chart.distribution));
+  if (occidentali) {
+    lines.push('', 'ASPETTI', ...aspectLines(chart));
+    lines.push('', 'DISTRIBUZIONE', ...distributionLines(chart.distribution));
+  }
   lines.push(...warningLines(chart.warnings));
 
   return lines.join('\n');
@@ -675,44 +679,27 @@ export function formatDrishtiCompact(drishti: DrishtiChart): string {
 }
 
 /**
- * Il tema vedico per intero: la carta, i nakshatra, le dasha, il navamsa e le
+ * Il tema vedico impaginato: la carta, i nakshatra, le dasha, i varga e le
  * drishti, in un testo solo.
  *
- * Esiste perché i chiamanti sono più d'uno — la riga di comando e il prompt
- * MCP, e domani una rotta — e cinque chiamate copiate in tre posti divergono
- * al primo cambiamento. Che cosa sia «il tema vedico» va deciso in un posto.
- *
- * Le case le vuole a **segni interi**, e non è una preferenza: in questo
- * sistema si contano così, e un tema con le cuspidi di Placidus accanto a
- * istruzioni che dicono di contarle a segni interi sarebbe una contraddizione
- * consegnata a chi legge. Chi passa un tema domificato altrimenti riceve
- * un'avvertenza, non un rifiuto: le posizioni restano giuste, sono le case a
- * non essere quelle che il sistema intende.
+ * Prende il composto e non la carta: che cosa sia «il tema vedico» lo decide
+ * `computeJyotisha`, in un posto solo, e qui si impagina quello che arriva.
  */
-export function formatJyotishaCompact(
-  chart: NatalChart,
-  options: JyotishaFormatOptions = {},
-): string {
-  requireSidereal(chart.zodiac, 'Il tema vedico');
+export function formatJyotishaCompact(jyotisha: JyotishaChart): string {
+  // Senza ASPETTI, DISTRIBUZIONE e Parte di Fortuna: sono letture occidentali
+  // degli stessi gradi, e in un tema vedico non sono un di più ma un errore di
+  // categoria — aspetti a orbite dove gli aspetti sono a segni interi, elementi
+  // e modalità dove non si contano, una sorte ellenistica in un sistema indiano.
+  const parti = [formatChartCompact(jyotisha.chart, { westernSections: false })];
 
-  const parti = [formatChartCompact(chart)];
-
-  if (chart.houses.length > 0 && chart.houseSystem !== 'segni-interi') {
-    parti.push(
-      `AVVERTENZA SULLE CASE\nIl tema è domificato con ${chart.houseSystem}, ma il Jyotisha ` +
-        'conta le case a segni interi dal lagna. Le posizioni dei graha sono giuste; le ' +
-        'cuspidi qui sopra non sono quelle che questo sistema intende.',
-    );
+  if (jyotisha.warnings.length > 0) {
+    parti.push(['AVVERTENZE DEL TEMA VEDICO', ...jyotisha.warnings.map((w) => `- ${w}`)].join('\n'));
   }
 
-  parti.push(formatNakshatraCompact(chart));
-  parti.push(formatDashaCompact(computeVimshottari(chart, options.dasha ?? { levels: 2 })));
-
-  for (const id of options.vargas ?? ['d9']) {
-    parti.push(formatVargaCompact(computeVarga(chart, id)));
-  }
-
-  parti.push(formatDrishtiCompact(computeDrishti(chart, options.drishti ?? {})));
+  parti.push(formatNakshatraCompact(jyotisha.chart));
+  parti.push(formatDashaCompact(jyotisha.dasha));
+  for (const varga of jyotisha.vargas) parti.push(formatVargaCompact(varga));
+  parti.push(formatDrishtiCompact(jyotisha.drishti));
 
   return parti.join('\n\n');
 }

@@ -17,7 +17,13 @@ import {
   formatSkyPassagesCompact,
   formatTransitsCompact,
   type BirthData,
+  computeJyotisha,
+  formatJyotishaCompact,
+  type AyanamsaId,
   type ChartOptions,
+  type JyotishaOptions,
+  type VargaId,
+  type VimshottariOptions,
   type ZodiacOptions,
   type ElectionOptions,
   type HouseSystem,
@@ -107,6 +113,8 @@ const ZODIAC_SCHEMA = {
         'zodiac=siderale. Default: lahiri, ufficiale in India e la più diffusa.',
     ),
 } as const;
+
+const VARGA_IDS = ['d1', 'd3', 'd9', 'd10', 'd12', 'd30'] as const;
 
 const HOUSE_SYSTEMS = [
   'placidus',
@@ -303,6 +311,139 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
 
         const header = place.label ? `Luogo: ${place.label}\n` : '';
         return ok(header + formatChartCompact(chart));
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
+}
+
+export function registerComputeJyotishaChart(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'compute_jyotisha_chart',
+    {
+      title: 'Calcola un tema vedico',
+      description:
+        "Calcola un tema secondo l'astrologia indiana (Jyotisha): zodiaco siderale, case a " +
+        'segni interi dal lagna, e in più i nakshatra dei graha, la catena delle dasha ' +
+        'vimshottari, le carte divisionali e le drishti. ' +
+        "NON è compute_natal_chart con un'opzione: i gradi sono contati dalle stelle fisse " +
+        'invece che dal punto vernale, e fra i due zodiaci corrono oltre ventiquattro gradi, ' +
+        'cioè quasi un segno. Chi qui ha il Sole in Acquario in occidente ce l\'ha in Pesci, e ' +
+        'non è un errore. ' +
+        'Usalo solo se chi scrive chiede astrologia vedica, indiana o Jyotisha: per il tema ' +
+        'occidentale c\'è compute_natal_chart. ' +
+        'Restituisce solo dati verificabili: nessuna interpretazione. Le dasha portano delle ' +
+        'DATE, e sono aritmetica — dicono quando comincia un periodo, non che cosa accadrà ' +
+        'dentro: non usarle per predire. ' +
+        'Fornisci data e ora COME SONO SEGNATE sul documento di nascita, in ora locale. ' +
+        "Se l'ora è ignota ometti time: le dasha diventano indicative di anni, non di giorni, " +
+        'e il tool lo dichiara fra le avvertenze.',
+      inputSchema: {
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .describe('Data di nascita locale, formato YYYY-MM-DD.'),
+        time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe(
+            "Ora di nascita locale, formato HH:mm. Ometti se ignota — non tirare a indovinare: " +
+              'qui un\'ora sbagliata sposta le dasha di anni.',
+          ),
+        location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe('Identificatore GeoNames restituito da search_location.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord.'),
+        longitude: z.number().min(-180).max(180).optional().describe('Longitudine, positiva a Est.'),
+        timezone: z
+          .string()
+          .optional()
+          .describe('Fuso orario IANA, es. "Asia/Kolkata". Obbligatorio se non usi location_id.'),
+        ayanamsa: z
+          .enum(AYANAMSAS)
+          .optional()
+          .describe(
+            "La convenzione siderale, cioè dove si fissa l'inizio dell'Ariete. Default: " +
+              'lahiri, ufficiale in India e la più diffusa. Fra lahiri e raman corre più di un ' +
+              'grado e mezzo, abbastanza da spostare il nakshatra della Luna e con esso tutte ' +
+              'le dasha: non cambiarlo se non te lo chiedono.',
+          ),
+        dasha_levels: z
+          .number()
+          .int()
+          .min(1)
+          .max(3)
+          .optional()
+          .describe(
+            'Ordini di periodo nella catena. 1 sono nove mahadasha, 2 (default) sono ' +
+              'ottantuno, 3 sono settecentoventinove: chiedi il terzo solo se ti serve davvero.',
+          ),
+        dasha_year: z
+          .enum(['solare', 'savana'])
+          .optional()
+          .describe(
+            "Quanti giorni valga un anno di dasha: solare (default, 365,25) è la convenzione " +
+              'dei panchanga moderni, savana (360) quella tradizionale. Su ottant\'anni di ' +
+              'catena la differenza supera l\'anno.',
+          ),
+        vargas: z
+          .array(z.enum(VARGA_IDS))
+          .optional()
+          .describe(
+            'Carte divisionali. Default: il solo d9 (navamsa), che è quella che si legge ' +
+              'sempre accanto al tema. Le altre riguardano un\'area ciascuna.',
+          ),
+        drishti_nodes: z
+          .enum(['nessuna', 'gioviana'])
+          .optional()
+          .describe(
+            'Se Rahu e Ketu gettino sguardi. nessuna (default) è la forma classica; gioviana ' +
+              'dà loro la quinta, la settima e la nona. Le scuole divergono.',
+          ),
+        format: z
+          .enum(['compact', 'json'])
+          .optional()
+          .describe('compact (default): tabelle dense. json: oggetto completo.'),
+      },
+    },
+    async (args) => {
+      try {
+        const place = resolvePlace(args, context);
+        if ('error' in place) return fail(place.error);
+
+        const birth: BirthData = {
+          date: args.date,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          timezone: place.timezone,
+        };
+        if (args.time !== undefined) birth.time = args.time;
+
+        // Siderale e a segni interi non sono predefiniti che si possono
+        // cambiare: sono ciò che rende vedico questo tema. Chi vuole altro
+        // usa compute_natal_chart, che le opzioni ce le ha.
+        const chartOptions: ChartOptions = { zodiac: 'siderale', houseSystem: 'segni-interi' };
+        if (args.ayanamsa) chartOptions.ayanamsa = args.ayanamsa as AyanamsaId;
+        if (context.ephemerisPath) chartOptions.ephemerisPath = context.ephemerisPath;
+
+        const options: JyotishaOptions = {};
+        const dasha: VimshottariOptions = {};
+        if (args.dasha_levels) dasha.levels = args.dasha_levels as 1 | 2 | 3;
+        if (args.dasha_year) dasha.yearLength = args.dasha_year;
+        if (Object.keys(dasha).length > 0) options.dasha = dasha;
+        if (args.vargas) options.vargas = args.vargas as VargaId[];
+        if (args.drishti_nodes) options.drishti = { nodes: args.drishti_nodes };
+
+        const jyotisha = computeJyotisha(computeNatalChart(birth, chartOptions), options);
+
+        if (args.format === 'json') return ok(JSON.stringify(jyotisha, null, 2));
+
+        const header = place.label ? `Luogo: ${place.label}\n` : '';
+        return ok(header + formatJyotishaCompact(jyotisha));
       } catch (error) {
         return fail(describeError(error));
       }

@@ -15,7 +15,7 @@ che sono la fonte.
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
 | `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG. Non dipende da `core` |
 | `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo. Un documento per sistema astrologico. Riceve una tabella già impaginata: non dipende da `core`, nemmeno dai tipi |
-| `packages/mcp` | server MCP: otto tool e un prompt di lettura, trasporto stdio |
+| `packages/mcp` | server MCP: nove tool e un prompt di lettura, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia + API REST, tutti gli endpoint in GET |
 | `apps/desktop` | Electron: la web app in una finestra. Avvia il server di `web` compilato, non duplica superfici |
 

@@ -442,19 +442,61 @@ export interface DrishtiChart {
 }
 
 /**
- * Che cosa mettere nel tema vedico impaginato.
+ * Che cosa mostrare della carta impaginata.
+ */
+export interface ChartFormatOptions {
+  /**
+   * Aspetti, distribuzione e Parte di Fortuna. Default `true`.
+   *
+   * Sono **letture occidentali** degli stessi gradi: aspetti misurati a
+   * orbite, un conteggio per elementi e modalità, una sorte di origine
+   * ellenistica. In un tema vedico non sono un di più ma un errore di
+   * categoria — là gli aspetti si contano a segni interi e gli elementi non si
+   * contano affatto — e chi le trovasse stampate le userebbe.
+   */
+  westernSections?: boolean;
+}
+
+/**
+ * Che cosa mettere nel tema vedico.
  *
  * I predefiniti sono il taglio che serve a una lettura: due ordini di dasha e
  * il solo navamsa. Il terzo ordine sono settecentoventinove righe e le altre
  * carte divisionali riguardano un'area ciascuna: chi le vuole le chiede.
  */
-export interface JyotishaFormatOptions {
+export interface JyotishaOptions {
   /** Default: due ordini. */
   dasha?: VimshottariOptions;
   /** Default: il solo `d9`. */
   vargas?: VargaId[];
   /** Default: la forma classica, senza sguardi dei nodi. */
   drishti?: DrishtiOptions;
+}
+
+/**
+ * Il tema vedico: la carta più ciò che il Jyotisha ci legge sopra.
+ *
+ * Non è un `NatalChart` con dei campi in più. La carta ci sta dentro intera,
+ * perché le posizioni sono le stesse; quello che le si affianca è un'altra
+ * lettura degli stessi gradi. Vedi `jyotisha.ts`, che dice anche che cosa non
+ * c'è e perché.
+ */
+export interface JyotishaChart {
+  /** La carta siderale da cui tutto discende. */
+  chart: NatalChart;
+  /** Il nakshatra di ciascun corpo, col nome che il Jyotisha gli dà. */
+  nakshatras: { id: BodyId; name: string; nakshatra: NakshatraPosition }[];
+  dasha: VimshottariDasha;
+  vargas: VargaChart[];
+  drishti: DrishtiChart;
+  /**
+   * Le avvertenze dei pezzi, raccolte qui.
+   *
+   * Chi legge il tema vedico non deve andarle a cercare dentro la catena delle
+   * dasha. Quelle della carta restano in `chart.warnings`, dove chi conosce il
+   * motore le cerca già.
+   */
+  warnings: string[];
 }
 
 export type AspectId =

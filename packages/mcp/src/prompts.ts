@@ -21,6 +21,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
+  computeJyotisha,
   computeNatalChart,
   formatChartCompact,
   formatJyotishaCompact,
@@ -169,7 +170,9 @@ function componi(
     // Il luogo in testa alla tabella come nel tool: nel JSON sta in un campo a
     // parte, e qui un campo a parte non c'è.
     const intestazione = place.label ? `Luogo di nascita: ${place.label}\n` : '';
-    const tavola = vedico ? formatJyotishaCompact(chart) : formatChartCompact(chart);
+    const tavola = vedico
+      ? formatJyotishaCompact(computeJyotisha(chart))
+      : formatChartCompact(chart);
 
     return letturaDaIncollare(intestazione + tavola, { sistema: sistema as Sistema });
   } catch (error) {
