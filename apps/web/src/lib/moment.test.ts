@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { skyParameters, transitParameters } from './api';
+import {
+  chartParameters,
+  skyCalendarParameters,
+  skyParameters,
+  transitParameters,
+} from './api';
 import { emptyBirthInput, type BirthInput } from './birth';
 import { isCompleteMoment, nowMoment, shiftDate, shiftMoment, type MomentInput } from './moment';
 
@@ -121,6 +126,62 @@ describe('shiftMoment', () => {
     const vuoto: MomentInput = { ...TRANSITO, date: '' };
 
     expect(shiftMoment(vuoto, 'day', 1)).toEqual(vuoto);
+  });
+});
+
+describe('lo zodiaco nei parametri', () => {
+  it('non scrive il tropicale, che è il predefinito', () => {
+    // Questi indirizzi si condividono: il valore predefinito scritto ogni
+    // volta è rumore in una cosa che si incolla in un messaggio.
+    const senza = chartParameters(napoli(), { houseSystem: 'placidus', minorAspects: false });
+    const esplicito = chartParameters(napoli(), {
+      houseSystem: 'placidus',
+      minorAspects: false,
+      zodiac: 'tropicale',
+    });
+
+    expect(senza.has('zodiac')).toBe(false);
+    expect(esplicito.has('zodiac')).toBe(false);
+  });
+
+  it('scrive il siderale e la sua convenzione', () => {
+    const parameters = chartParameters(napoli(), {
+      houseSystem: 'placidus',
+      minorAspects: false,
+      zodiac: 'siderale',
+      ayanamsa: 'raman',
+    });
+
+    expect(parameters.get('zodiac')).toBe('siderale');
+    expect(parameters.get('ayanamsa')).toBe('raman');
+  });
+
+  it('non manda un ayanamsa senza il siderale, che la rotta rifiuterebbe', () => {
+    const parameters = chartParameters(napoli(), {
+      houseSystem: 'placidus',
+      minorAspects: false,
+      ayanamsa: 'raman',
+    });
+
+    expect(parameters.has('ayanamsa')).toBe(false);
+  });
+
+  it('lo porta anche nei transiti, che lo ereditano dal tema', () => {
+    const parameters = transitParameters(
+      napoli(),
+      { houseSystem: 'placidus', minorAspects: false, zodiac: 'siderale' },
+      TRANSITO,
+    );
+
+    expect(parameters.get('zodiac')).toBe('siderale');
+  });
+
+  it('nel calendario del cielo vale per i soli ingressi', () => {
+    const con = skyCalendarParameters(TRANSITO, 6, 'siderale');
+    const senza = skyCalendarParameters(TRANSITO, 6);
+
+    expect(con.get('zodiac')).toBe('siderale');
+    expect(senza.has('zodiac')).toBe(false);
   });
 });
 

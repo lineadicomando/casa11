@@ -325,6 +325,51 @@ describe('compute_natal_chart', () => {
     expect(senzaAvvertenze(compact).length).toBeLessThan(senzaJsonWarnings(json).length / 4);
   });
 
+  it('calcola nello zodiaco siderale, e lo dichiara nella tabella', async () => {
+    const compact = textOf(
+      await client.callTool({
+        name: 'compute_natal_chart',
+        arguments: {
+          date: '1968-03-12',
+          time: '14:30',
+          location_id: ROMA_ID,
+          zodiac: 'siderale',
+        },
+      }),
+    );
+
+    // Il valore in chiaro accanto al nome della scuola: senza, «Sole in
+    // Acquario» è un'affermazione che l'agente non può ricontrollare.
+    expect(compact).toContain('Zodiaco: siderale (Lahiri 23°25');
+  });
+
+  it('dichiara il tropicale invece di tacerlo', async () => {
+    const compact = textOf(
+      await client.callTool({
+        name: 'compute_natal_chart',
+        arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID },
+      }),
+    );
+
+    expect(compact).toContain('Zodiaco: tropicale');
+  });
+
+  it("rifiuta l'ayanamsa senza il siderale invece di ignorarlo", async () => {
+    // Ignorarlo restituirebbe un tema in cui la convenzione chiesta non
+    // compare da nessuna parte, e l'agente non avrebbe modo di accorgersene.
+    const result = await client.callTool({
+      name: 'compute_natal_chart',
+      arguments: {
+        date: '1968-03-12',
+        location_id: ROMA_ID,
+        ayanamsa: 'raman',
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toContain('zodiac=siderale');
+  });
+
   it('accetta la formula alternativa della Parte di Fortuna', async () => {
     // Tema notturno: è il caso in cui le due formule divergono.
     const args = { date: '1968-03-12', time: '23:30', location_id: ROMA_ID, format: 'json' };

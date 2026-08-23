@@ -18,6 +18,7 @@ import {
   formatTransitsCompact,
   type BirthData,
   type ChartOptions,
+  type ZodiacOptions,
   type ElectionOptions,
   type HouseSystem,
   type PassageOptions,
@@ -72,6 +73,41 @@ function fail(message: string): CallToolResult {
   return { content: [{ type: 'text', text: message }], isError: true };
 }
 
+const AYANAMSAS = [
+  'lahiri',
+  'true-chitra',
+  'krishnamurti',
+  'raman',
+  'yukteshwar',
+  'fagan-bradley',
+] as const;
+
+/**
+ * I due parametri dello zodiaco, uguali per ogni tool che riporti un segno.
+ *
+ * Una definizione sola e non quattro copie: le descrizioni dei tool sono la
+ * documentazione del progetto, e quattro copie divergono alla prima modifica.
+ */
+const ZODIAC_SCHEMA = {
+  zodiac: z
+    .enum(['tropicale', 'siderale'])
+    .optional()
+    .describe(
+      'Zodiaco in cui esprimere le longitudini. Default: tropicale, che è quello ' +
+        "dell'astrologia occidentale. siderale è quello ancorato alle stelle fisse, " +
+        "usato dall'astrologia indiana: fra i due corrono oltre ventiquattro gradi, " +
+        'cioè quasi un segno intero. Non sceglierlo tu — è una convenzione di scuola, ' +
+        'e va usata solo se chi scrive la chiede.',
+    ),
+  ayanamsa: z
+    .enum(AYANAMSAS)
+    .optional()
+    .describe(
+      "Convenzione siderale, cioè dove si fissa l'inizio dell'Ariete. Richiede " +
+        'zodiac=siderale. Default: lahiri, ufficiale in India e la più diffusa.',
+    ),
+} as const;
+
 const HOUSE_SYSTEMS = [
   'placidus',
   'koch',
@@ -83,6 +119,26 @@ const HOUSE_SYSTEMS = [
   'topocentrico',
   'alcabizio',
 ] as const;
+
+/**
+ * Lo zodiaco chiesto, tradotto in opzioni del motore.
+ *
+ * Rifiuta l'ayanamsa senza il siderale invece di ignorarlo: accettarlo in
+ * silenzio restituirebbe un tema in cui la convenzione chiesta non compare da
+ * nessuna parte, e l'agente non avrebbe modo di accorgersene.
+ */
+function zodiacOptions(args: {
+  zodiac?: string | undefined;
+  ayanamsa?: string | undefined;
+}): ZodiacOptions | { error: string } {
+  if (args.ayanamsa && args.zodiac !== 'siderale') {
+    return { error: 'Il parametro ayanamsa richiede zodiac=siderale.' };
+  }
+  const options: ZodiacOptions = {};
+  if (args.zodiac) options.zodiac = args.zodiac as ZodiacOptions['zodiac'];
+  if (args.ayanamsa) options.ayanamsa = args.ayanamsa as ZodiacOptions['ayanamsa'];
+  return options;
+}
 
 export interface ToolContext {
   /** Percorso del database delle località. Default: quello del pacchetto geo. */
@@ -190,6 +246,7 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
           .string()
           .optional()
           .describe('Fuso orario IANA, es. "Europe/Rome". Obbligatorio se non usi location_id.'),
+        ...ZODIAC_SCHEMA,
         house_system: z
           .enum(HOUSE_SYSTEMS)
           .optional()
@@ -228,7 +285,10 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
         };
         if (args.time !== undefined) birth.time = args.time;
 
-        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
+        const zodiaco = zodiacOptions(args);
+        if ('error' in zodiaco) return fail(zodiaco.error);
+
+        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false, ...zodiaco };
         if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
         if (args.part_of_fortune_formula) {
           options.partOfFortuneFormula = args.part_of_fortune_formula;
@@ -337,6 +397,7 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
           .max(180)
           .optional()
           .describe('Alternativa a transit_location_id. Va insieme a transit_latitude.'),
+        ...ZODIAC_SCHEMA,
         house_system: z
           .enum(HOUSE_SYSTEMS)
           .optional()
@@ -367,7 +428,10 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
         };
         if (args.time !== undefined) birth.time = args.time;
 
-        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
+        const zodiaco = zodiacOptions(args);
+        if ('error' in zodiaco) return fail(zodiaco.error);
+
+        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false, ...zodiaco };
         if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
         if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
 
@@ -483,6 +547,7 @@ export function registerComputeSky(server: McpServer, context: ToolContext = {})
           .describe('Luogo da cui si guarda, da search_location. Facoltativo: serve solo ad assi e case.'),
         latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord. Va insieme a longitude.'),
         longitude: z.number().min(-180).max(180).optional().describe('Longitudine, positiva a Est. Va insieme a latitude.'),
+        ...ZODIAC_SCHEMA,
         house_system: z
           .enum(HOUSE_SYSTEMS)
           .optional()
@@ -505,7 +570,10 @@ export function registerComputeSky(server: McpServer, context: ToolContext = {})
         const timezone = args.timezone ?? observation.timezone ?? 'UTC';
         const moment = skyMoment(args, timezone);
 
-        const options: SkyOptions = { minorAspects: args.minor_aspects ?? false };
+        const zodiaco = zodiacOptions(args);
+        if ('error' in zodiaco) return fail(zodiaco.error);
+
+        const options: SkyOptions = { minorAspects: args.minor_aspects ?? false, ...zodiaco };
         if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
         if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
         if (observation.place) options.place = observation.place;
@@ -622,6 +690,7 @@ export function registerFindSkyEvents(server: McpServer, context: ToolContext = 
         'da cui era uscito, e i tre attraversamenti sono un passaggio solo. ' +
         "Restano istanti astronomici, non eventi che accadranno a qualcuno.",
       inputSchema: {
+        ...ZODIAC_SCHEMA,
         from: z
           .string()
           .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -674,7 +743,14 @@ export function registerFindSkyEvents(server: McpServer, context: ToolContext = 
         const kinds = new Set<string>(args.include ?? SKY_EVENT_KINDS);
 
         const passageOptions: SkyPassageOptions = { minorAspects: args.minor_aspects ?? false };
-        const eventOptions: SkyEventOptions = {};
+        const zodiaco = zodiacOptions(args);
+        if ('error' in zodiaco) return fail(zodiaco.error);
+
+        // Solo gli eventi lo prendono: un incontro fra due corpi è una
+        // differenza fra longitudini dello stesso istante, e l'ayanamsa le
+        // sposta entrambe. Un ingresso invece è un confine, e i confini si
+        // spostano di tutto l'ayanamsa.
+        const eventOptions: SkyEventOptions = { ...zodiaco };
         if (context.ephemerisPath) {
           passageOptions.ephemerisPath = context.ephemerisPath;
           eventOptions.ephemerisPath = context.ephemerisPath;
@@ -915,6 +991,7 @@ export function registerDrawChartWheel(server: McpServer, context: ToolContext =
           .string()
           .optional()
           .describe('Fuso orario IANA, es. "Europe/Rome". Obbligatorio se non usi location_id.'),
+        ...ZODIAC_SCHEMA,
         house_system: z
           .enum(HOUSE_SYSTEMS)
           .optional()
@@ -985,7 +1062,10 @@ export function registerDrawChartWheel(server: McpServer, context: ToolContext =
         };
         if (args.time !== undefined) birth.time = args.time;
 
-        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false };
+        const zodiaco = zodiacOptions(args);
+        if ('error' in zodiaco) return fail(zodiaco.error);
+
+        const options: ChartOptions = { minorAspects: args.minor_aspects ?? false, ...zodiaco };
         if (args.house_system) options.houseSystem = args.house_system as HouseSystem;
         if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
 

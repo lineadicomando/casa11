@@ -14,6 +14,8 @@ import type { RequestHandler } from './$types';
  * luogo — `locationId` oppure `latitude` e `longitude` — può mancare del
  * tutto. Senza luogo la risposta non ha assi né case, che è la differenza
  * fra un'effemeride e una carta.
+ *
+ * `zodiac` e `ayanamsa` valgono come su `/api/chart`.
  */
 export const GET: RequestHandler = ({ url, setHeaders }) => {
   try {
@@ -21,9 +23,11 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     const place = resolveOptionalPlace(parameters);
     const { moment, explicit } = resolveSkyMoment(parameters, place?.timezone);
 
-    const { houseSystem, minorAspects } = readChartOptions(parameters);
+    const { houseSystem, minorAspects, zodiac, ayanamsa } = readChartOptions(parameters);
     const options: SkyOptions = { minorAspects: minorAspects ?? false };
     if (houseSystem) options.houseSystem = houseSystem;
+    if (zodiac) options.zodiac = zodiac;
+    if (ayanamsa) options.ayanamsa = ayanamsa;
     if (place) options.place = { latitude: place.latitude, longitude: place.longitude };
 
     const sky = computeSky(moment, options);

@@ -6,9 +6,32 @@
  * cambiando solo l'endpoint — e quindi li leggono nello stesso posto.
  */
 
-import type { BirthData, ChartOptions, HouseSystem } from '@undicesimacasa/core';
+import type {
+  AyanamsaId,
+  BirthData,
+  ChartOptions,
+  HouseSystem,
+  ZodiacOptions,
+} from '@undicesimacasa/core';
 import { error } from '@sveltejs/kit';
 import { resolvePlace, type ResolvedPlace } from './place';
+
+/**
+ * Gli ayanamsa ammessi.
+ *
+ * Un elenco scritto qui e non importato da `core`: il client compone gli
+ * stessi indirizzi, e un import di valore dal motore gli trascinerebbe le
+ * effemeridi nel bundle. È la stessa ragione per cui `HOUSE_SYSTEMS` è una
+ * costante locale invece di `Object.keys(HOUSE_SYSTEM_CODES)`.
+ */
+const AYANAMSAS = new Set<string>([
+  'lahiri',
+  'true-chitra',
+  'krishnamurti',
+  'raman',
+  'yukteshwar',
+  'fagan-bradley',
+]);
 
 const HOUSE_SYSTEMS = new Set<string>([
   'placidus',
@@ -48,9 +71,54 @@ export function readBirth(parameters: URLSearchParams): RequestedBirth {
   return { birth, place };
 }
 
+/**
+ * Lo zodiaco richiesto, letto a parte perché non riguarda solo i temi.
+ *
+ * Il calendario del cielo non ha né nascita né opzioni di carta, ma i suoi
+ * ingressi nei segni dipendono da dove comincia l'Ariete come tutto il resto.
+ */
+export function readZodiacOptions(parameters: URLSearchParams): ZodiacOptions {
+  const options: ZodiacOptions = {};
+
+  const zodiac = parameters.get('zodiac');
+  if (zodiac) {
+    if (zodiac !== 'tropicale' && zodiac !== 'siderale') {
+      throw error(400, {
+        message: `Zodiaco "${zodiac}" non riconosciuto: atteso "tropicale" oppure "siderale".`,
+        code: 'ZODIACO_NON_VALIDO',
+      });
+    }
+    options.zodiac = zodiac;
+  }
+
+  const ayanamsa = parameters.get('ayanamsa');
+  if (ayanamsa) {
+    if (!AYANAMSAS.has(ayanamsa)) {
+      throw error(400, {
+        message:
+          `Ayanamsa "${ayanamsa}" non riconosciuto. Ammessi: ${[...AYANAMSAS].join(', ')}.`,
+        code: 'AYANAMSA_NON_VALIDO',
+      });
+    }
+    if (options.zodiac !== 'siderale') {
+      // Accettarlo sullo zodiaco tropicale vuol dire restituire un tema in cui
+      // l'ayanamsa chiesto non compare da nessuna parte, e nessuno se ne
+      // accorge finché non confronta i gradi con un altro programma.
+      throw error(400, {
+        message: 'Il parametro "ayanamsa" richiede "zodiac=siderale".',
+        code: 'AYANAMSA_SENZA_ZODIACO',
+      });
+    }
+    options.ayanamsa = ayanamsa as AyanamsaId;
+  }
+
+  return options;
+}
+
 export function readChartOptions(parameters: URLSearchParams): ChartOptions {
   const options: ChartOptions = {
     minorAspects: parameters.get('minorAspects') === 'true',
+    ...readZodiacOptions(parameters),
   };
 
   const houseSystem = parameters.get('houseSystem');

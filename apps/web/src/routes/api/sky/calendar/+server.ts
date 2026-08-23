@@ -7,6 +7,7 @@ import {
   type SkyPassageOptions,
 } from '@undicesimacasa/core';
 import { error, json } from '@sveltejs/kit';
+import { readZodiacOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError } from '$lib/server/place';
 import { resolvePassageRange } from '$lib/server/range';
@@ -23,6 +24,10 @@ import type { RequestHandler } from './$types';
  * Senza `from` si parte da oggi, senza `to` si arriva a un anno dopo. L'arco
  * ha un tetto di tre anni. Con `bodies` si sceglie chi seguire: senza, tutti
  * tranne la Luna.
+ *
+ * `zodiac=siderale` sposta i soli **ingressi**, che sono attraversamenti di un
+ * confine. Gli incontri fra due corpi restano dove sono: sono differenze fra
+ * longitudini dello stesso istante, e l'ayanamsa le sposta entrambe.
  */
 export const GET: RequestHandler = ({ url, setHeaders }) => {
   try {
@@ -32,7 +37,10 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
 
     const minorAspects = parameters.get('minorAspects') === 'true';
     const passageOptions: SkyPassageOptions = { minorAspects };
-    const eventOptions: SkyEventOptions = {};
+    // Solo gli eventi prendono lo zodiaco: un incontro fra due corpi è una
+    // differenza fra longitudini dello stesso istante, e l'ayanamsa le sposta
+    // entrambe. Un ingresso invece è un confine, e i confini si spostano.
+    const eventOptions: SkyEventOptions = { ...readZodiacOptions(parameters) };
 
     // Senza `bodies` la Luna resta fuori, perché in un anno riempirebbe
     // l'elenco da sola. Ma è anche l'unico modo di avere le lunazioni, e

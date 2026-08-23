@@ -15,6 +15,12 @@ import type { RequestHandler } from './$types';
  * `timezone`; la terna dev'essere completa, perché senza fuso orario non è
  * possibile convertire l'ora locale in Tempo Universale.
  *
+ * Con `zodiac=siderale` le longitudini si contano dalle stelle fisse invece
+ * che dal punto vernale: oltre ventiquattro gradi di differenza, quasi un
+ * segno. `ayanamsa` sceglie la convenzione — `lahiri` (default),
+ * `true-chitra`, `krishnamurti`, `raman`, `yukteshwar`, `fagan-bradley` — e
+ * senza `zodiac=siderale` viene rifiutato invece che ignorato.
+ *
  * Con `format=compact` il tema torna come tabella di testo invece che come
  * JSON. È la stessa resa che il server MCP dà ai suoi agenti — un ottavo dei
  * token, e leggibile anche da chi la incolla altrove — e per la stessa ragione

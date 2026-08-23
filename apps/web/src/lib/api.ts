@@ -8,6 +8,7 @@
  */
 
 import type {
+  AyanamsaId,
   BodyId,
   HouseSystem,
   NatalChart,
@@ -20,6 +21,7 @@ import type {
   TransitChart,
   TransitPassage,
   VoidOfCourse,
+  Zodiac,
 } from '@undicesimacasa/core';
 import type { Location } from '@undicesimacasa/geo';
 import type { BirthInput } from './birth';
@@ -63,6 +65,29 @@ export interface ChartResponse {
 export interface ChartOptionsInput {
   houseSystem: HouseSystem;
   minorAspects: boolean;
+  /**
+   * Lo zodiaco. Omesso o `tropicale`, **non finisce nell'indirizzo**.
+   *
+   * Questi indirizzi sono fatti per essere condivisi, e il predefinito scritto
+   * ogni volta è rumore in una cosa che si incolla in un messaggio. Il motore
+   * legge la stessa cosa da un parametro assente.
+   */
+  zodiac?: Zodiac;
+  /** Vale solo con `zodiac: 'siderale'`. Omesso vale Lahiri. */
+  ayanamsa?: AyanamsaId;
+}
+
+/**
+ * Scrive zodiaco e ayanamsa nei parametri, se c'è qualcosa da scrivere.
+ *
+ * Una funzione sola perché la regola — il tropicale non si scrive, l'ayanamsa
+ * solo accanto al siderale — vale per il tema e per il cielo, e due copie si
+ * disallineerebbero al primo cambiamento.
+ */
+function setZodiac(parameters: URLSearchParams, options: ChartOptionsInput): void {
+  if (options.zodiac !== 'siderale') return;
+  parameters.set('zodiac', 'siderale');
+  if (options.ayanamsa) parameters.set('ayanamsa', options.ayanamsa);
 }
 
 /**
@@ -84,6 +109,8 @@ export function chartParameters(
     houseSystem: options.houseSystem,
     minorAspects: String(options.minorAspects),
   });
+
+  setZodiac(parameters, options);
 
   if (!birth.timeUnknown && birth.time) parameters.set('time', birth.time);
 
@@ -154,6 +181,8 @@ export function skyParameters(
     minorAspects: String(options.minorAspects),
   });
 
+  setZodiac(parameters, options);
+
   if (moment.time) parameters.set('time', moment.time);
   if (location) parameters.set('locationId', String(location.id));
 
@@ -179,12 +208,22 @@ export interface SkyCalendarResponse {
  * avviene alla stessa ora ovunque lo si guardi. Resta il fuso, perché è in
  * quello che le date vanno lette.
  */
-export function skyCalendarParameters(moment: MomentInput, months: number): URLSearchParams {
-  return new URLSearchParams({
+export function skyCalendarParameters(
+  moment: MomentInput,
+  months: number,
+  zodiac?: Zodiac,
+): URLSearchParams {
+  const parameters = new URLSearchParams({
     from: moment.date,
     to: shiftDate(moment.date, 'month', months),
     timezone: moment.timezone,
   });
+
+  // Qui lo zodiaco tocca i soli ingressi nei segni: un incontro fra due corpi
+  // avviene nello stesso istante in entrambi. Vedi la rotta.
+  if (zodiac === 'siderale') parameters.set('zodiac', 'siderale');
+
+  return parameters;
 }
 
 export async function fetchSkyCalendar(
