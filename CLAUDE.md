@@ -53,6 +53,15 @@ il motore usa Moshier invece delle effemeridi Swiss.
   espongono i componenti e si nomina la scuola, mai un totale solo.
 - **Il client non importa valori da `@undicesimacasa/core`, solo tipi.** Un
   import di valore trascina effemeridi e modulo nativo nel bundle del browser.
+- **Niente `async`/`await` nella catena di calcolo** — `chart`, `sky`,
+  `transits`, `passages`, `election`, `sky-events`. Swiss Ephemeris tiene lo
+  zodiaco siderale in **stato globale del modulo nativo**: `set_sid_mode` vale
+  per il processo, non per la chiamata. Oggi è sicuro perché fra l'impostazione
+  e l'ultima `calc_ut` l'event loop non gira; il primo `await` lì dentro apre
+  una corsa fra richieste concorrenti con ayanamsa diversi, e il risultato non
+  è un errore ma un tema sbagliato di ventiquattro gradi. Per la stessa ragione
+  `zodiacContext` restituisce una **copia** del contesto invece di scrivere sui
+  flag di quello che `initEphemeris` tiene in cache.
 - **Il fallimento è parziale**: un corpo non calcolabile produce un avviso, non
   un errore; l'ora ignota produce una carta senza case, non un rifiuto. Gli
   errori di dominio sono `ChartError` con un `code` mappabile su HTTP.

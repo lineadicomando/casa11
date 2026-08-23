@@ -32,6 +32,7 @@ export {
 } from './time.js';
 export { chartSect, computePartOfFortune } from './points.js';
 export { localSiderealTime } from './sidereal.js';
+export { AYANAMSAS, ayanamsaAt, DEFAULT_AYANAMSA, findAyanamsa, zodiacContext } from './ayanamsa.js';
 export {
   formatChartCompact,
   formatElectionCompact,
@@ -81,6 +82,8 @@ export type {
   Aspect,
   AspectId,
   AspectPoint,
+  AyanamsaId,
+  AyanamsaInfo,
   BirthData,
   BodyId,
   CelestialBody,
@@ -122,5 +125,7 @@ export type {
   TransitPassage,
   TransitOptions,
   VoidOfCourse,
+  Zodiac,
+  ZodiacOptions,
   ZodiacSign,
 } from './types.js';

@@ -1,5 +1,6 @@
 import { computeCrossAspects } from './aspects.js';
 import { DEFAULT_TRANSIT_BODIES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from './constants.js';
+import { ayanamsaAt, zodiacContext } from './ayanamsa.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
 import { computeHouses, houseOf } from './houses.js';
 import { validatePlace } from './place.js';
@@ -67,7 +68,23 @@ export function computeTransits(
   const { place } = options;
   if (place) validatePlace(place);
 
-  const context = initEphemeris(options.ephemerisPath);
+  // Lo zodiaco lo detta il tema, e non è un'opzione: un transitante tropicale
+  // su un tema siderale darebbe aspetti sbagliati di tutto l'ayanamsa — più di
+  // ventiquattro gradi — senza che niente lo segnali.
+  //
+  // Attenzione a una cosa che sembra ovvia e non lo è. Gli aspetti *dentro* un
+  // tema non cambiano da uno zodiaco all'altro: un aspetto è una differenza
+  // fra due longitudini prese nello stesso istante, e l'ayanamsa le sposta
+  // entrambe. Un transito no. I suoi due lati stanno in due epoche diverse, e
+  // l'ayanamsa fra quelle due epoche è cresciuto — cinquantun secondi d'arco
+  // l'anno, cioè quasi un grado su una nascita del 1968 vista dal 2026. I
+  // transiti siderali cadono quindi in istanti diversi dai tropicali, e non è
+  // un errore di arrotondamento: è la precessione, ed è la ragione per cui un
+  // ritorno di Saturno siderale non è quello tropicale.
+  const context = zodiacContext(initEphemeris(options.ephemerisPath), {
+    zodiac: natal.zodiac,
+    ...(natal.ayanamsa ? { ayanamsa: natal.ayanamsa.id } : {}),
+  });
   const { time, warnings: timeWarnings } = resolveTime(moment);
   const bodyIds = options.bodies ?? DEFAULT_TRANSIT_BODIES;
   const { bodies, warnings: bodyWarnings } = computeBodies(time.julianDayUT, bodyIds, context);
@@ -100,6 +117,14 @@ export function computeTransits(
     input: moment,
     time,
     ephemerisMode: context.mode,
+    zodiac: natal.zodiac,
+    // L'ayanamsa dell'istante del transito, non quello del tema: cresce di
+    // circa cinquantuno secondi d'arco l'anno, e su una nascita di mezzo
+    // secolo fa la differenza sfiora il grado. È con questo che i transitanti
+    // sono stati calcolati, quindi è questo che va riportato.
+    ...(natal.ayanamsa
+      ? { ayanamsa: ayanamsaAt(time.julianDayUT, context, natal.ayanamsa.id) }
+      : {}),
     transiting,
     houses: [],
     aspects: [],

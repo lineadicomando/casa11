@@ -3,6 +3,7 @@ import { formatDegrees, formatZodiacal } from './math.js';
 import type {
   Angles,
   Aspect,
+  AyanamsaInfo,
   BodyId,
   CelestialBody,
   Distribution,
@@ -21,6 +22,7 @@ import type {
   TransitingBody,
   TransitingPointId,
   TransitPassage,
+  Zodiac,
 } from './types.js';
 
 /**
@@ -41,7 +43,7 @@ export function formatChartCompact(chart: NatalChart): string {
 
   lines.push(`TEMA NATALE — ${when} — ${place}`);
   lines.push(
-    `Case: ${chart.houseSystem} | Effemeridi: ${chart.ephemerisMode} | UT: ${time.utc}`,
+    `Case: ${chart.houseSystem} | ${zodiacLine(chart)} | Effemeridi: ${chart.ephemerisMode} | UT: ${time.utc}`,
   );
   lines.push(
     `Tempo siderale locale: ${chart.siderealTime.formatted}` +
@@ -83,7 +85,7 @@ export function formatSkyCompact(sky: SkyChart): string {
 
   const lines = [
     `CIELO — ${when}`,
-    `Effemeridi: ${sky.ephemerisMode} | UT: ${time.utc}`,
+    `${zodiacLine(sky)} | Effemeridi: ${sky.ephemerisMode} | UT: ${time.utc}`,
   ];
 
   if (sky.place) {
@@ -129,7 +131,7 @@ export function formatTransitsCompact(natal: NatalChart, transits: TransitChart)
   lines.push(`TRANSITI — ${when}`);
   lines.push(`Tema natale: ${birth} — ${formatPlace(natal.input)}`);
   lines.push(
-    `Case natali: ${natal.houseSystem} | Effemeridi: ${transits.ephemerisMode} | UT: ${time.utc}`,
+    `Case natali: ${natal.houseSystem} | ${zodiacLine(transits)} | Effemeridi: ${transits.ephemerisMode} | UT: ${time.utc}`,
   );
   if (transits.place) {
     const siderale = transits.siderealTime ? ` | TSL: ${transits.siderealTime.formatted}` : '';
@@ -463,6 +465,20 @@ function distributionLines(distribution: Distribution): string[] {
         .join('  ');
       return `${nome.padEnd(8)} ${elementi.padEnd(38)} | ${modalita}`;
     });
+}
+
+/**
+ * Da dove sono contati i gradi, detto sempre e non solo quando è insolito.
+ *
+ * Un tema siderale che tacesse si leggerebbe come tropicale, e sbaglierebbe di
+ * quasi un segno; ma anche il tropicale lo dichiara, perché un'assenza non è
+ * un'affermazione — chi non trova la riga non sa se sia tropicale o se sia
+ * stata dimenticata. Con l'ayanamsa in chiaro, chi segue un'altra scuola rifà
+ * il conto invece di doverci credere.
+ */
+function zodiacLine(chart: { zodiac: Zodiac; ayanamsa?: AyanamsaInfo }): string {
+  if (!chart.ayanamsa) return `Zodiaco: ${chart.zodiac}`;
+  return `Zodiaco: ${chart.zodiac} (${chart.ayanamsa.name} ${formatDegrees(chart.ayanamsa.degrees)})`;
 }
 
 function warningLines(warnings: readonly string[]): string[] {

@@ -47,6 +47,53 @@ export type HouseSystem =
   | 'topocentrico'
   | 'alcabizio';
 
+/**
+ * Da dove si comincia a contare i segni.
+ *
+ * `tropicale` parte dal punto vernale, `siderale` dalle stelle fisse. Fra i
+ * due corrono oggi più di ventiquattro gradi: quasi un segno, quindi non è una
+ * sfumatura ma un altro tema. Vedi `ayanamsa.ts`.
+ */
+export type Zodiac = 'tropicale' | 'siderale';
+
+/** Le convenzioni siderali esposte dal motore. */
+export type AyanamsaId =
+  | 'lahiri'
+  | 'true-chitra'
+  | 'krishnamurti'
+  | 'raman'
+  | 'yukteshwar'
+  | 'fagan-bradley';
+
+/**
+ * L'ayanamsa usato e quanto valeva in quell'istante.
+ *
+ * Il valore viaggia col risultato e non resta implicito: è la differenza fra
+ * un tema che si può ricontrollare e uno di cui bisogna fidarsi. Chi segue
+ * un'altra scuola sottrae la differenza invece di rifare tutto.
+ */
+export interface AyanamsaInfo {
+  id: AyanamsaId;
+  /** Il nome con cui la convenzione si trova sui libri. */
+  name: string;
+  /** Scarto fra longitudine tropicale e siderale, in gradi decimali. */
+  degrees: number;
+}
+
+/**
+ * Lo zodiaco in cui esprimere le longitudini.
+ *
+ * Un'opzione e non un motore a parte: cambiare zodiaco è cambiare l'origine da
+ * cui si contano i gradi, non il modo di calcolarli. Le portano tutte le
+ * funzioni che riportano un segno.
+ */
+export interface ZodiacOptions {
+  /** Default: `tropicale`. */
+  zodiac?: Zodiac;
+  /** Vale solo nello zodiaco siderale. Default: `lahiri`. */
+  ayanamsa?: AyanamsaId;
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'
@@ -108,7 +155,7 @@ export interface BirthData extends LocalMoment, Place {
   time?: string;
 }
 
-export interface ChartOptions {
+export interface ChartOptions extends ZodiacOptions {
   /** Sistema di domificazione. Default: `placidus`. */
   houseSystem?: HouseSystem;
   /** Includi gli aspetti minori (semisestile, quinconce, semiquadrato, sesquiquadrato). */
@@ -247,6 +294,17 @@ export interface NatalChart {
   time: ResolvedTime;
   houseSystem: HouseSystem;
   ephemerisMode: EphemerisMode;
+  /**
+   * Lo zodiaco in cui sono espresse tutte le longitudini, e con esse ogni
+   * segno riportato qui dentro.
+   *
+   * Sta nel risultato e non solo fra le opzioni, per la stessa ragione di
+   * `houseSystem`: senza, «Sole in Pesci» è un'affermazione che non si può
+   * verificare, perché non si sa da dove siano stati contati i gradi.
+   */
+  zodiac: Zodiac;
+  /** L'ayanamsa usato e quanto valeva. Assente nello zodiaco tropicale. */
+  ayanamsa?: AyanamsaInfo;
   bodies: CelestialBody[];
   /** Vuoto se l'ora di nascita è ignota. */
   houses: House[];
@@ -283,7 +341,7 @@ export interface NatalChart {
 /** L'istante di cui si vuole il cielo, in ora locale. */
 export type SkyMoment = LocalMoment;
 
-export interface SkyOptions {
+export interface SkyOptions extends ZodiacOptions {
   /** Luogo di osservazione. Se assente: niente assi, niente case. */
   place?: Place;
   /** Sistema di domificazione. Default: `placidus`. Vale solo con un luogo. */
@@ -309,6 +367,17 @@ export interface SkyChart {
   place?: Place;
   time: ResolvedTime;
   ephemerisMode: EphemerisMode;
+  /**
+   * Lo zodiaco in cui sono espresse tutte le longitudini, e con esse ogni
+   * segno riportato qui dentro.
+   *
+   * Sta nel risultato e non solo fra le opzioni, per la stessa ragione di
+   * `houseSystem`: senza, «Sole in Pesci» è un'affermazione che non si può
+   * verificare, perché non si sa da dove siano stati contati i gradi.
+   */
+  zodiac: Zodiac;
+  /** L'ayanamsa usato e quanto valeva. Assente nello zodiaco tropicale. */
+  ayanamsa?: AyanamsaInfo;
   bodies: CelestialBody[];
   /** Vuoto senza luogo o senza ora: in un giorno le cuspidi fanno un giro intero. */
   houses: House[];
@@ -571,7 +640,7 @@ export interface SkyPassage {
   window?: { start: string; end: string };
 }
 
-export interface SkyEventOptions {
+export interface SkyEventOptions extends ZodiacOptions {
   /** Corpi da seguire. Default: `DEFAULT_PASSAGE_BODIES`, cioè senza la Luna. */
   bodies?: BodyId[];
   /** Percorso della cartella con i file `.se1`. */
@@ -643,6 +712,17 @@ export interface TransitChart {
   input: TransitMoment;
   time: ResolvedTime;
   ephemerisMode: EphemerisMode;
+  /**
+   * Lo zodiaco in cui sono espresse tutte le longitudini, e con esse ogni
+   * segno riportato qui dentro.
+   *
+   * Sta nel risultato e non solo fra le opzioni, per la stessa ragione di
+   * `houseSystem`: senza, «Sole in Pesci» è un'affermazione che non si può
+   * verificare, perché non si sa da dove siano stati contati i gradi.
+   */
+  zodiac: Zodiac;
+  /** L'ayanamsa usato e quanto valeva. Assente nello zodiaco tropicale. */
+  ayanamsa?: AyanamsaInfo;
   /**
    * Posizioni all'istante del transito. `house` è la casa **natale** in cui il
    * corpo cade, ed è assente se il tema di nascita non ha case.

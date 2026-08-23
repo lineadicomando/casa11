@@ -11,6 +11,7 @@
  */
 
 import { DEFAULT_PASSAGE_BODIES, MEAN_DAILY_MOTION, ZODIAC_SIGNS } from './constants.js';
+import { zodiacContext } from './ayanamsa.js';
 import { computeBodies, initEphemeris, type EphemerisContext } from './ephemeris.js';
 import { degreeInSign, normalize360, signOf, signedDifference } from './math.js';
 import { bisect, julianDayToISO, resolveRange, stepFor } from './roots.js';
@@ -32,7 +33,7 @@ export function findSignIngresses(
   range: PassageRange,
   options: SkyEventOptions = {},
 ): { ingresses: SignIngress[]; warnings: string[] } {
-  const context = initEphemeris(options.ephemerisPath);
+  const context = zodiacContext(initEphemeris(options.ephemerisPath), options);
   const warnings: string[] = [...context.warnings];
   const { start, end } = resolveRange(range);
 
@@ -87,7 +88,7 @@ export function findStations(
   range: PassageRange,
   options: SkyEventOptions = {},
 ): { stations: Station[]; warnings: string[] } {
-  const context = initEphemeris(options.ephemerisPath);
+  const context = zodiacContext(initEphemeris(options.ephemerisPath), options);
   const warnings: string[] = [...context.warnings];
   const { start, end } = resolveRange(range);
 

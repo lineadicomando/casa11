@@ -10,6 +10,7 @@ import {
 } from '@undicesimacasa/ruota';
 import { ruotaPng } from '@undicesimacasa/ruota/png';
 import { letturaDaIncollare, type OpzioniLettura } from '@undicesimacasa/lettura';
+import { AYANAMSAS } from './ayanamsa.js';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
 import {
@@ -43,6 +44,7 @@ import type {
   SkyPassageOptions,
   TransitMoment,
   TransitOptions,
+  ZodiacOptions,
 } from './types.js';
 
 const USAGE = `
@@ -62,6 +64,10 @@ Opzioni
   --houses <sistema>    placidus (default), koch, segni-interi, equale,
                         regiomontano, campano, porfirio, topocentrico, alcabizio
   --minor               Includi anche gli aspetti minori
+  --zodiaco <nome>      tropicale (default) oppure siderale. Fra i due corrono
+                        più di ventiquattro gradi: quasi un segno intero
+  --ayanamsa <nome>     Con --zodiaco siderale: lahiri (default), true-chitra,
+                        krishnamurti, raman, yukteshwar, fagan-bradley
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
@@ -121,6 +127,52 @@ Elezione
   --senza-vuoti         Scarta le ore che un vuoto di corso attraversa
 `.trimStart();
 
+/**
+ * Lo zodiaco richiesto, o `null` se non è valido — nel qual caso il messaggio
+ * è già stato scritto e a chi chiama resta solo da uscire con 2.
+ *
+ * Un valore non riconosciuto viene rifiutato invece che ricondotto al
+ * predefinito: un refuso su `--ayanamsa` produrrebbe altrimenti un tema
+ * siderale corretto ma di un'altra scuola, che non si distingue a occhio da
+ * quello chiesto.
+ */
+function zodiacoDa(values: {
+  zodiaco?: string | undefined;
+  ayanamsa?: string | undefined;
+}): ZodiacOptions | null {
+  const options: ZodiacOptions = {};
+
+  if (values.zodiaco !== undefined) {
+    if (values.zodiaco !== 'tropicale' && values.zodiaco !== 'siderale') {
+      process.stderr.write(
+        'Valore di --zodiaco non riconosciuto: atteso "tropicale" oppure "siderale".\n',
+      );
+      return null;
+    }
+    options.zodiac = values.zodiaco;
+  }
+
+  if (values.ayanamsa !== undefined) {
+    const definition = AYANAMSAS.find((ayanamsa) => ayanamsa.id === values.ayanamsa);
+    if (!definition) {
+      process.stderr.write(
+        `Ayanamsa "${values.ayanamsa}" non riconosciuto. Ammessi: ` +
+          `${AYANAMSAS.map((a) => a.id).join(', ')}.\n`,
+      );
+      return null;
+    }
+    if (options.zodiac !== 'siderale') {
+      // Accettarlo in silenzio sullo zodiaco tropicale vuol dire consegnare un
+      // tema in cui l'ayanamsa scelto non compare da nessuna parte.
+      process.stderr.write('--ayanamsa richiede --zodiaco siderale.\n');
+      return null;
+    }
+    options.ayanamsa = definition.id;
+  }
+
+  return options;
+}
+
 function main(argv: string[]): number {
   const { values } = parseArgs({
     args: argv,
@@ -132,6 +184,8 @@ function main(argv: string[]): number {
       tz: { type: 'string' },
       houses: { type: 'string' },
       minor: { type: 'boolean', default: false },
+      zodiaco: { type: 'string' },
+      ayanamsa: { type: 'string' },
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       lettura: { type: 'boolean', default: false },
@@ -232,7 +286,10 @@ function main(argv: string[]): number {
   };
   if (values.time) birth.time = values.time;
 
-  const options: ChartOptions = { minorAspects: values.minor };
+  const zodiaco = zodiacoDa(values);
+  if (zodiaco === null) return 2;
+
+  const options: ChartOptions = { minorAspects: values.minor, ...zodiaco };
   if (values.houses) options.houseSystem = values.houses as HouseSystem;
   if (values.ephe) options.ephemerisPath = values.ephe;
   if (values.fortuna) {
@@ -404,6 +461,8 @@ function printSky(values: {
   lon?: string | undefined;
   houses?: string | undefined;
   ephe?: string | undefined;
+  zodiaco?: string | undefined;
+  ayanamsa?: string | undefined;
   svg?: string | undefined;
   png?: string | undefined;
   tema?: string | undefined;
@@ -424,7 +483,10 @@ function printSky(values: {
 
   const moment: SkyMoment = momentFrom(values, values.tz ?? systemTimezone());
 
-  const options: SkyOptions = { minorAspects: values.minor };
+  const zodiaco = zodiacoDa(values);
+  if (zodiaco === null) return 2;
+
+  const options: SkyOptions = { minorAspects: values.minor, ...zodiaco };
   if (values.houses) options.houseSystem = values.houses as HouseSystem;
   if (values.ephe) options.ephemerisPath = values.ephe;
   if (values.lat && values.lon) {
@@ -489,13 +551,18 @@ function printSkyEvents(values: {
   to?: string | undefined;
   tz?: string | undefined;
   ephe?: string | undefined;
+  zodiaco?: string | undefined;
+  ayanamsa?: string | undefined;
   moon: boolean;
   json: boolean;
 }): number {
   const timezone = values.tz ?? systemTimezone();
   const range = passageRange({ from: values.from, to: values.to }, timezone);
 
-  const options: SkyEventOptions = {};
+  const zodiaco = zodiacoDa(values);
+  if (zodiaco === null) return 2;
+
+  const options: SkyEventOptions = { ...zodiaco };
   if (values.ephe) options.ephemerisPath = values.ephe;
   if (values.moon) options.bodies = [...DEFAULT_PASSAGE_BODIES, 'luna'];
 

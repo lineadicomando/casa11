@@ -1,4 +1,5 @@
 import { computeAspects } from './aspects.js';
+import { ayanamsaAt, DEFAULT_AYANAMSA, zodiacContext } from './ayanamsa.js';
 import { computeDistribution } from './distribution.js';
 import { DEFAULT_BODIES } from './constants.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
@@ -31,7 +32,8 @@ export function computeSky(moment: SkyMoment, options: SkyOptions = {}): SkyChar
   const { place } = options;
   if (place) validatePlace(place);
 
-  const context = initEphemeris(options.ephemerisPath);
+  const zodiac = options.zodiac ?? 'tropicale';
+  const context = zodiacContext(initEphemeris(options.ephemerisPath), options);
   const { time, warnings: timeWarnings } = resolveTime(moment);
   const { bodies, warnings: bodyWarnings } = computeBodies(
     time.julianDayUT,
@@ -52,12 +54,17 @@ export function computeSky(moment: SkyMoment, options: SkyOptions = {}): SkyChar
     input: moment,
     time,
     ephemerisMode: context.mode,
+    zodiac,
     bodies,
     houses: [],
     aspects: computeAspects(bodies, { minorAspects: options.minorAspects ?? false }),
     distribution: computeDistribution({ bodies }),
     warnings,
   };
+
+  if (zodiac === 'siderale') {
+    sky.ayanamsa = ayanamsaAt(time.julianDayUT, context, options.ayanamsa ?? DEFAULT_AYANAMSA);
+  }
 
   /**
    * Conta e restituisce.

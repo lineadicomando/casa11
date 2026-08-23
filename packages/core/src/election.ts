@@ -86,6 +86,13 @@ export function findElectionHours(
   place: Place,
   options: ElectionOptions = {},
 ): ElectionResult {
+  // Il calendario elettivo resta tropicale, e non per dimenticanza. Le ore
+  // planetarie non hanno zodiaco — sono divisioni dell'arco diurno — e le due
+  // cose che un segno ce l'hanno, l'Ascendente dell'ora e il vuoto di corso,
+  // appartengono a una tradizione ellenistica e medievale che nel siderale non
+  // si trasporta: il vuoto di corso siderale non è una tecnica di nessuno. Il
+  // corrispettivo indiano è il panchanga, che è un altro calcolo, non questo
+  // con un'origine spostata.
   const context = initEphemeris(options.ephemerisPath);
   const warnings: string[] = [...context.warnings];
   const { start, end } = resolveRange(range);

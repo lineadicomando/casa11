@@ -1,4 +1,5 @@
 import { computeAspects } from './aspects.js';
+import { ayanamsaAt, DEFAULT_AYANAMSA, zodiacContext } from './ayanamsa.js';
 import { DEFAULT_BODIES } from './constants.js';
 import { computeDistribution } from './distribution.js';
 import { computeBodies, initEphemeris } from './ephemeris.js';
@@ -33,7 +34,10 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
   const houseSystem = options.houseSystem ?? 'placidus';
   const bodyIds = options.bodies ?? DEFAULT_BODIES;
 
-  const context = initEphemeris(options.ephemerisPath);
+  const zodiac = options.zodiac ?? 'tropicale';
+  // Il contesto siderale è una copia: quello in cache resta tropicale, e il
+  // tema dopo questo non eredita i suoi flag.
+  const context = zodiacContext(initEphemeris(options.ephemerisPath), options);
   const { time, warnings: timeWarnings } = resolveTime(birth);
   const { bodies, warnings: bodyWarnings } = computeBodies(time.julianDayUT, bodyIds, context);
 
@@ -51,6 +55,7 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
     time,
     houseSystem,
     ephemerisMode: context.mode,
+    zodiac,
     bodies,
     houses: [],
     siderealTime: localSiderealTime(time.julianDayUT, birth.longitude),
@@ -59,6 +64,14 @@ export function computeNatalChart(birth: BirthData, options: ChartOptions = {}):
     distribution: computeDistribution({ bodies }),
     warnings,
   };
+
+  if (zodiac === 'siderale') {
+    chart.ayanamsa = ayanamsaAt(
+      time.julianDayUT,
+      context,
+      options.ayanamsa ?? DEFAULT_AYANAMSA,
+    );
+  }
 
   // Senza ora di nascita le case sono prive di significato: la cuspide
   // dell'Ascendente ruota di 360° nell'arco della giornata.

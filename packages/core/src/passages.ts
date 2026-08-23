@@ -1,4 +1,5 @@
 import { ASPECTS, DEFAULT_PASSAGE_BODIES, MEAN_DAILY_MOTION, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from './constants.js';
+import { zodiacContext } from './ayanamsa.js';
 import { computeBodies, initEphemeris, type EphemerisContext } from './ephemeris.js';
 import { signedDifference } from './math.js';
 import {
@@ -42,7 +43,11 @@ export function findTransitPassages(
   range: PassageRange,
   options: PassageOptions = {},
 ): { passages: TransitPassage[]; warnings: string[] } {
-  const context = initEphemeris(options.ephemerisPath);
+  // Come nei transiti: lo zodiaco è quello del tema bersagliato.
+  const context = zodiacContext(initEphemeris(options.ephemerisPath), {
+    zodiac: natal.zodiac,
+    ...(natal.ayanamsa ? { ayanamsa: natal.ayanamsa.id } : {}),
+  });
   const warnings: string[] = [...context.warnings];
 
   const { start, end } = resolveRange(range);
