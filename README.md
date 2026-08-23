@@ -25,9 +25,9 @@ Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 |---|---|
 | `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
-| `packages/ruota` | il disegno: geometria, glifi, colori, SVG e PNG |
+| `packages/ruota` | il disegno: la ruota e il quadro vedico, geometria, glifi, colori, SVG e PNG |
 | `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo: un documento per sistema astrologico |
-| `packages/mcp` | server MCP: nove tool e un prompt di lettura, trasporto stdio |
+| `packages/mcp` | server MCP: dieci tool e un prompt di lettura, trasporto stdio |
 | `apps/web` | SvelteKit: interfaccia e API REST, tutti gli endpoint in GET |
 | `apps/desktop` | Electron: la web app in una finestra |
 
@@ -54,7 +54,7 @@ npx casa11 --date 1968-03-12 --time 14:30 \
 npx casa11 --help        # tutte le opzioni
 ```
 
-**Applicazione web.** Cinque sezioni e dieci endpoint, tutti in GET perché un
+**Applicazione web.** Cinque sezioni e undici endpoint, tutti in GET perché un
 tema è una funzione pura dei suoi parametri:
 
 ```sh
@@ -62,7 +62,7 @@ npm run dev -w @undicesimacasa/web      # http://localhost:5173
 npm run build && npm start -w @undicesimacasa/web   # http://localhost:3000
 ```
 
-**Server MCP.** Nove tool su stdio: non è un servizio da avviare, è un processo
+**Server MCP.** Dieci tool su stdio: non è un servizio da avviare, è un processo
 che il client lancia. Accanto ai tool c'è il prompt `lettura_del_tema`, che
 consegna il tema insieme alle istruzioni per interpretarlo — un prompt e non un
 tool perché lo sceglie chi usa il client, non il modello.

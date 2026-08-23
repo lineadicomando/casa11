@@ -18,6 +18,7 @@ import {
   formatTransitsCompact,
   type BirthData,
   computeJyotisha,
+  computeVarga,
   formatJyotishaCompact,
   type AyanamsaId,
   type ChartOptions,
@@ -38,8 +39,13 @@ import {
   type TransitOptions,
 } from '@undicesimacasa/core';
 import { GeoError, getLocation, searchLocations, type Location } from '@undicesimacasa/geo';
-import { paletteDi, type OpzioniDisegno, type WheelChart } from '@undicesimacasa/ruota';
-import { ruotaPng } from '@undicesimacasa/ruota/png';
+import {
+  paletteDi,
+  type OpzioniDisegno,
+  type StileQuadro,
+  type WheelChart,
+} from '@undicesimacasa/ruota';
+import { quadroPng, ruotaPng } from '@undicesimacasa/ruota/png';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
@@ -1265,6 +1271,120 @@ function descriviDisegno(
       : '';
 
   return `Ruota del tema natale — ${chart.input.date}${quando}${dove}.${senzaCase}`;
+}
+
+export function registerDrawJyotishaChart(server: McpServer, context: ToolContext = {}): void {
+  server.registerTool(
+    'draw_jyotisha_chart',
+    {
+      title: 'Disegna un quadro vedico',
+      description:
+        "Disegna il quadro di un tema vedico e ne restituisce l'immagine. Sta a " +
+        'compute_jyotisha_chart come draw_chart_wheel sta a compute_natal_chart: si chiama ' +
+        'dopo e non al posto suo, perché **un disegno non contiene le avvertenze del ' +
+        'calcolo** né i gradi. ' +
+        'Il Jyotisha non si disegna in una ruota ma in un quadrato, e in due forme: nel ' +
+        'SUD i segni stanno fermi e le case si spostano, nel NORD il contrario. Dicono la ' +
+        'stessa cosa in due disposizioni diverse — è presentazione, non dottrina — quindi ' +
+        'non sceglierne una per conto tuo se chi scrive non la nomina. ' +
+        'Disegna un varga alla volta: senza indicarne uno esce la carta rashi (d1), che è ' +
+        'quella che si guarda per prima. ' +
+        "Lo stile del nord richiede l'ora di nascita: le sue caselle sono case, e senza " +
+        "lagna non c'è una prima casa da mettere in alto.",
+      inputSchema: {
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .describe('Data di nascita locale, formato YYYY-MM-DD.'),
+        time: z
+          .string()
+          .regex(/^\d{2}:\d{2}(:\d{2})?$/)
+          .optional()
+          .describe("Ora di nascita locale. Ometti se ignota: allora solo stile=sud."),
+        location_id: z
+          .number()
+          .int()
+          .optional()
+          .describe('Identificatore GeoNames restituito da search_location.'),
+        latitude: z.number().min(-90).max(90).optional().describe('Latitudine, positiva a Nord.'),
+        longitude: z.number().min(-180).max(180).optional().describe('Longitudine, positiva a Est.'),
+        timezone: z.string().optional().describe('Fuso orario IANA. Obbligatorio senza location_id.'),
+        ayanamsa: z
+          .enum(AYANAMSAS)
+          .optional()
+          .describe('La convenzione siderale. Default: lahiri. Non cambiarla se non te lo chiedono.'),
+        stile: z
+          .enum(['sud', 'nord'])
+          .optional()
+          .describe(
+            'La forma del quadro. sud (default): segni fissi, case mobili — si disegna ' +
+              "sempre. nord: case fisse, segni mobili — vuole l'ora di nascita.",
+          ),
+        varga: z
+          .enum(VARGA_IDS)
+          .optional()
+          .describe('Quale carta disegnare. Default: d1, la carta rashi.'),
+        theme: z.enum(['chiaro', 'scuro']).optional().describe('Colori. Default: chiaro.'),
+        width: z
+          .number()
+          .int()
+          .min(200)
+          .max(4000)
+          .optional()
+          .describe(`Larghezza in punti. Default: ${LARGHEZZA_MCP}.`),
+      },
+    },
+    async (args) => {
+      try {
+        const place = resolvePlace(args, context);
+        if ('error' in place) return fail(place.error);
+
+        const birth: BirthData = {
+          date: args.date,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          timezone: place.timezone,
+        };
+        if (args.time !== undefined) birth.time = args.time;
+
+        const options: ChartOptions = { zodiac: 'siderale', houseSystem: 'segni-interi' };
+        if (args.ayanamsa) options.ayanamsa = args.ayanamsa as AyanamsaId;
+        if (context.ephemerisPath) options.ephemerisPath = context.ephemerisPath;
+
+        const id = (args.varga ?? 'd1') as VargaId;
+        const varga = computeVarga(computeNatalChart(birth, options), id);
+        const stile = (args.stile ?? 'sud') as StileQuadro;
+
+        // Il rifiuto prima del disegno: la geometria solleverebbe lo stesso,
+        // ma con un messaggio che parla di poligoni invece che di che cosa fare.
+        if (stile === 'nord' && !varga.ascendant) {
+          return fail(
+            "Lo stile del nord ha le case fisse, e senza ora di nascita non c'è un lagna da " +
+              'mettere in prima casa. Usa stile=sud, dove a essere fissi sono i segni.',
+          );
+        }
+
+        const png = quadroPng(varga, {
+          stile,
+          palette: paletteDi(args.theme ?? 'chiaro'),
+          larghezza: args.width ?? LARGHEZZA_MCP,
+        });
+
+        const dove = place.label ? ` — ${place.label}` : '';
+        const quale = varga.name === 'Rashi' ? 'Carta rashi' : `${varga.name} (${id.toUpperCase()})`;
+        const forma = stile === 'nord' ? 'nord-indiano' : 'sud-indiano';
+
+        return immagine(
+          png,
+          `${quale} in stile ${forma} — ${args.date}${dove}. ` +
+            'I nove graha nei dodici segni; i gradi e le avvertenze stanno in ' +
+            'compute_jyotisha_chart, e un disegno non li porta.',
+        );
+      } catch (error) {
+        return fail(describeError(error));
+      }
+    },
+  );
 }
 
 export function registerFindTransitPassages(server: McpServer, context: ToolContext = {}): void {

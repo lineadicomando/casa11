@@ -7,6 +7,7 @@ import {
   registerComputeSky,
   registerComputeTransits,
   registerDrawChartWheel,
+  registerDrawJyotishaChart,
   registerFindElectionHours,
   registerFindSkyEvents,
   registerFindTransitPassages,
@@ -45,6 +46,8 @@ export function createServer(context: ToolContext = {}): McpServer {
         'non contiene le avvertenze del calcolo. ' +
         "Per l'astrologia indiana c'è compute_jyotisha_chart, che non è compute_natal_chart con " +
         "un'opzione: zodiaco siderale, case a segni interi, nakshatra, dasha e drishti. " +
+        'Il Jyotisha si disegna quadrato e non in una ruota: per mostrarlo c\'è ' +
+        'draw_jyotisha_chart, e non draw_chart_wheel. ' +
         "Il server restituisce solo dati astronomici: l'interpretazione, se richiesta, spetta a te. " +
         "Se chi scrive vuole una lettura e non i numeri, c'è il prompt lettura_del_tema, che " +
         'consegna il tema insieme alle istruzioni per interpretarlo.',
@@ -55,6 +58,7 @@ export function createServer(context: ToolContext = {}): McpServer {
   registerComputeNatalChart(server, context);
   registerComputeJyotishaChart(server, context);
   registerDrawChartWheel(server, context);
+  registerDrawJyotishaChart(server, context);
   registerComputeSky(server, context);
   registerComputeTransits(server, context);
   registerFindTransitPassages(server, context);

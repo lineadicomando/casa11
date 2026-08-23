@@ -101,7 +101,7 @@ function imageOf(
 }
 
 describe('superficie MCP', () => {
-  it('espone i nove tool con descrizione e schema', async () => {
+  it('espone i dieci tool con descrizione e schema', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((tool) => tool.name);
 
@@ -114,6 +114,14 @@ describe('superficie MCP', () => {
     expect(names).toContain('find_sky_events');
     expect(names).toContain('find_election_hours');
     expect(names).toContain('compute_jyotisha_chart');
+    expect(names).toContain('draw_jyotisha_chart');
+
+    const quadroTool = tools.find((tool) => tool.name === 'draw_jyotisha_chart');
+    // Deve dire che si chiama dopo i dati e non al posto loro, come la ruota.
+    expect(quadroTool?.description).toMatch(/compute_jyotisha_chart/);
+    expect(quadroTool?.description).toMatch(/avvertenze/i);
+    // E che fra i due stili non deve scegliere lui: è presentazione, non dottrina.
+    expect(quadroTool?.description).toMatch(/non sceglierne una per conto tuo/);
 
     const jyotishaTool = tools.find((tool) => tool.name === 'compute_jyotisha_chart');
     // La descrizione deve dire che non è compute_natal_chart con un'opzione:
@@ -249,6 +257,71 @@ describe('superficie MCP', () => {
     });
 
     expect(result.isError).toBe(true);
+  });
+
+  it('disegna il quadro vedico, in entrambi gli stili', async () => {
+    const argomenti = { date: '1968-03-12', time: '14:30', location_id: ROMA_ID, width: 400 };
+
+    for (const stile of ['sud', 'nord']) {
+      const result = await client.callTool({
+        name: 'draw_jyotisha_chart',
+        arguments: { ...argomenti, stile },
+      });
+      const png = imageOf(result);
+
+      expect(png?.mimeType).toBe('image/png');
+      expect(Buffer.from(png?.data ?? '', 'base64').readUInt32BE(16)).toBe(400);
+      // La didascalia dice quale carta e quale forma: due quadri di due
+      // persone diverse si somigliano abbastanza da confondersi.
+      expect(textOf(result)).toContain(stile === 'nord' ? 'nord-indiano' : 'sud-indiano');
+    }
+  });
+
+  it('disegna il varga chiesto, e la carta rashi se non se ne chiede uno', async () => {
+    const rashi = textOf(
+      await client.callTool({
+        name: 'draw_jyotisha_chart',
+        arguments: { date: '1968-03-12', time: '14:30', location_id: ROMA_ID, width: 300 },
+      }),
+    );
+    const navamsa = textOf(
+      await client.callTool({
+        name: 'draw_jyotisha_chart',
+        arguments: {
+          date: '1968-03-12',
+          time: '14:30',
+          location_id: ROMA_ID,
+          varga: 'd9',
+          width: 300,
+        },
+      }),
+    );
+
+    expect(rashi).toContain('Carta rashi');
+    expect(navamsa).toContain('Navamsa (D9)');
+  });
+
+  it('rifiuta lo stile del nord senza ora di nascita, dicendo che cosa fare', async () => {
+    // Le sue caselle sono case: una prima casa messa a caso sarebbe
+    // indistinguibile da quella giusta.
+    const result = await client.callTool({
+      name: 'draw_jyotisha_chart',
+      arguments: { date: '1968-03-12', location_id: ROMA_ID, stile: 'nord' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toContain('stile=sud');
+  });
+
+  it('lo stile del sud si disegna anche senza ora', async () => {
+    const png = imageOf(
+      await client.callTool({
+        name: 'draw_jyotisha_chart',
+        arguments: { date: '1968-03-12', location_id: ROMA_ID, stile: 'sud', width: 300 },
+      }),
+    );
+
+    expect(png?.mimeType).toBe('image/png');
   });
 
   it('espone il prompt di lettura, che non è un tool', async () => {

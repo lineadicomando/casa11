@@ -1,5 +1,12 @@
-import { ruotaSvg, type OpzioniDisegno, type WheelChart } from '@undicesimacasa/ruota';
-import { ruotaPng } from '@undicesimacasa/ruota/png';
+import {
+  quadroSvg,
+  ruotaSvg,
+  type OpzioniDisegno,
+  type OpzioniQuadro,
+  type SquareChart,
+  type WheelChart,
+} from '@undicesimacasa/ruota';
+import { quadroPng, ruotaPng } from '@undicesimacasa/ruota/png';
 import type { WheelOptions } from './wheel';
 
 /**
@@ -27,6 +34,32 @@ export function disegnoResponse(
   }
 
   return new Response(ruotaSvg(chart, disegno), {
+    headers: { 'content-type': 'image/svg+xml; charset=utf-8' },
+  });
+}
+
+/**
+ * Il quadro vedico come risposta HTTP.
+ *
+ * Sta accanto alla ruota e non in un file suo per la ragione scritta sopra:
+ * questo è **l'unico punto** in cui l'applicazione importa il modulo nativo
+ * del PNG, e vale la pena che resti uno.
+ */
+export function quadroResponse(
+  chart: SquareChart,
+  { formato, palette, larghezza }: WheelOptions,
+  extra: Omit<OpzioniQuadro, 'palette'> = {},
+): Response {
+  const disegno: OpzioniQuadro = { ...extra, palette };
+
+  if (formato === 'png') {
+    const png = quadroPng(chart, { ...disegno, ...(larghezza ? { larghezza } : {}) });
+    return new Response(new Uint8Array(png), {
+      headers: { 'content-type': 'image/png' },
+    });
+  }
+
+  return new Response(quadroSvg(chart, disegno), {
     headers: { 'content-type': 'image/svg+xml; charset=utf-8' },
   });
 }
