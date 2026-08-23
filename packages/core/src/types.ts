@@ -149,6 +149,129 @@ export interface NakshatraPosition {
   degree: number;
 }
 
+/** Le due metà del mese lunare: crescente e calante. */
+export type Paksha = 'shukla' | 'krishna';
+
+/**
+ * Il tithi: il giorno lunare, cioè dodici gradi di distanza fra Luna e Sole.
+ *
+ * Non dura un giorno solare. La Luna si allontana dal Sole di dodici gradi in
+ * poco più di ventidue ore quando corre e in quasi ventisette quando è lenta,
+ * quindi un tithi può cominciare e finire nello stesso giorno civile oppure
+ * saltarne uno.
+ */
+export interface Tithi {
+  /** Posizione nel mese lunare, 1-30. */
+  index: number;
+  /** Il nome in sanscrito. */
+  name: string;
+  paksha: Paksha;
+  /** Posizione dentro il paksha, 1-15. */
+  numberInPaksha: number;
+  /** Quanto del tithi è già percorso, in gradi [0, 12). */
+  degree: number;
+}
+
+/** Il karana: mezzo tithi, sei gradi di allontanamento. Sessanta in un mese. */
+export interface Karana {
+  /** Posizione nel mese lunare, 1-60. */
+  index: number;
+  name: string;
+  /**
+   * `false` per i quattro fissi, che nel mese compaiono una volta sola:
+   * Kimstughna apre, Shakuni, Chatushpada e Naga chiudono. Gli altri sette
+   * girano otto volte.
+   */
+  movable: boolean;
+  /** Quanto del karana è già percorso, in gradi [0, 6). */
+  degree: number;
+}
+
+/**
+ * Lo yoga del panchanga: la **somma** delle due longitudini divisa in
+ * ventisette.
+ *
+ * Non ha niente a che vedere con gli yoga combinatori di un tema, che sono
+ * configurazioni fra pianeti. Qui è una delle cinque parti del calendario, e
+ * la sua è l'unica formula che usi la somma invece della differenza — il che
+ * la rende dipendente dall'ayanamsa il doppio delle altre.
+ */
+export interface PanchangaYoga {
+  /** Posizione nei ventisette, 1-27. */
+  index: number;
+  name: string;
+  /** Quanto dello yoga è già percorso, in gradi [0, 13.333). */
+  degree: number;
+}
+
+/**
+ * La vara: il giorno della settimana, che comincia **all'alba** e non a
+ * mezzanotte.
+ *
+ * È la sola delle cinque parti che chieda un luogo, ed è la ragione per cui il
+ * panchanga ne vuole uno. Fra mezzanotte e l'alba di lunedì regge ancora la
+ * domenica — la stessa regola che governa le ore planetarie in `election.ts`.
+ */
+export interface Vara {
+  /** Posizione nella settimana, 1-7, a partire da Ravivara (domenica). */
+  index: number;
+  name: string;
+  /** Il graha che la regge. */
+  lord: BodyId;
+  /** L'alba da cui comincia, in UTC, ISO 8601. */
+  sunrise: string;
+  /** La stessa alba nel fuso richiesto. */
+  local: string;
+}
+
+export interface PanchangaOptions {
+  /**
+   * La convenzione siderale. Default: `lahiri`.
+   *
+   * Lo zodiaco non è un'opzione: il panchanga è siderale per definizione, e
+   * offrire una scelta che ha una risposta sola sarebbe una domanda finta.
+   */
+  ayanamsa?: AyanamsaId;
+  /** Percorso della cartella con i file `.se1`. */
+  ephemerisPath?: string;
+}
+
+/**
+ * Il panchanga: le cinque parti in cui il calendario indiano divide un
+ * istante.
+ *
+ * Tutto discende da due sole longitudini, e per questo stanno nel risultato:
+ * chi vuole ricontrollare non deve fidarsi. Tithi e karana vengono dalla loro
+ * **differenza**, e sono perciò indipendenti dall'ayanamsa — la scelta della
+ * scuola non li tocca. Nakshatra e yoga no: il primo dipende da dove cade la
+ * Luna, il secondo dalla somma, che l'ayanamsa sposta due volte.
+ */
+export interface Panchanga {
+  input: LocalMoment;
+  place: Place;
+  time: ResolvedTime;
+  ephemerisMode: EphemerisMode;
+  /** Sempre siderale: il panchanga non esiste altrimenti. */
+  zodiac: Zodiac;
+  ayanamsa: AyanamsaInfo;
+  /** Longitudine siderale del Sole, da cui si può rifare ogni conto. */
+  sun: number;
+  /** Longitudine siderale della Luna. */
+  moon: number;
+  tithi: Tithi;
+  /** Assente alle latitudini polari, dove per settimane non c'è un'alba. */
+  vara?: Vara;
+  /** Il nakshatra della Luna, che è quello che si intende senza dire altro. */
+  nakshatra: NakshatraPosition;
+  yoga: PanchangaYoga;
+  karana: Karana;
+  /**
+   * Avvertimenti non bloccanti: ora non indicata, alba non trovata, ripiego
+   * sulle effemeridi Moshier.
+   */
+  warnings: string[];
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'

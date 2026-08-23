@@ -13,6 +13,7 @@ import type {
   House,
   NatalChart,
   NatalPointId,
+  Panchanga,
   PassageRange,
   Place,
   SignIngress,
@@ -511,6 +512,42 @@ export function formatNakshatraCompact(chart: NatalChart): string {
         `sig. ${grahaName(nakshatra.lord, nakshatra.lord)}`,
     );
   }
+
+  return lines.join('\n');
+}
+
+/**
+ * Il panchanga in cinque righe, più le due longitudini da cui discende.
+ *
+ * Le longitudini non sono un di più: sono ciò che rende il resto
+ * ricontrollabile senza fidarsi, come `counted` per la distribuzione. Da Sole
+ * e Luna si rifanno tutte e cinque le parti con un'aritmetica che sta in tre
+ * righe.
+ */
+export function formatPanchangaCompact(panchanga: Panchanga): string {
+  const { input, time, tithi, vara, nakshatra, yoga, karana } = panchanga;
+
+  const quando = time.timeKnown
+    ? `${input.date} ${input.time} (${input.timezone})`
+    : `${input.date} (ora non indicata, mezzogiorno locale)`;
+
+  const lines = [
+    `PANCHANGA — ${quando} — ${formatPlace(panchanga.place)}`,
+    `Ayanamsa: ${panchanga.ayanamsa.name} ${formatDegrees(panchanga.ayanamsa.degrees)} | ` +
+      `Effemeridi: ${panchanga.ephemerisMode} | UT: ${time.utc}`,
+    `Sole ${formatZodiacal(panchanga.sun)} | Luna ${formatZodiacal(panchanga.moon)}`,
+    '',
+    `Tithi     ${tithi.name} (${tithi.paksha}, ${tithi.numberInPaksha}º) — ${tithi.index}/30`,
+    vara
+      ? `Vara      ${vara.name}, retto da ${grahaName(vara.lord, vara.lord)} — alba ${vara.local.slice(11, 16)}`
+      : 'Vara      non calcolabile: qui il Sole non sorge',
+    `Nakshatra ${nakshatra.name}, pada ${nakshatra.pada} — ${nakshatra.index}/27, ` +
+      `signore ${grahaName(nakshatra.lord, nakshatra.lord)}`,
+    `Yoga      ${yoga.name} — ${yoga.index}/27`,
+    `Karana    ${karana.name} — ${karana.index}/60${karana.movable ? '' : ', fisso'}`,
+  ];
+
+  lines.push(...warningLines(panchanga.warnings));
 
   return lines.join('\n');
 }

@@ -17,6 +17,7 @@ import {
   formatChartCompact,
   formatElectionCompact,
   formatNakshatraCompact,
+  formatPanchangaCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
@@ -24,6 +25,7 @@ import {
   formatTransitsCompact,
 } from './format.js';
 import { findElectionHours } from './election.js';
+import { computePanchanga } from './panchanga.js';
 import { findTransitPassages } from './passages.js';
 import { findSignIngresses, findStations } from './sky-events.js';
 import { findSkyPassages } from './sky-passages.js';
@@ -37,6 +39,7 @@ import type {
   ElectionOptions,
   HouseSystem,
   PassageOptions,
+  PanchangaOptions,
   PassageRange,
   Place,
   SkyMoment,
@@ -121,6 +124,14 @@ Cielo
                         con --from, --to e --moon come sopra
   --sky --events        Ingressi nei segni e stazioni, con --from e --to
 
+Panchanga
+  --panchanga           Le cinque parti del calendario indiano — tithi, vara,
+                        nakshatra, yoga, karana — di un istante in un luogo.
+                        Nessuna nascita, ma --lat e --lon sono obbligatorie: la
+                        vara comincia all'alba. Siderale per definizione
+  --on --at --tz        L'istante. Se omessi, adesso
+  --ayanamsa <nome>     La convenzione siderale. Default lahiri
+
 Elezione
   --elezione            Ore planetarie, Ascendente e vuoti di corso della Luna
                         in un luogo. Nessuna nascita, ma --lat e --lon sono
@@ -191,6 +202,7 @@ function main(argv: string[]): number {
       zodiaco: { type: 'string' },
       ayanamsa: { type: 'string' },
       nakshatra: { type: 'boolean', default: false },
+      panchanga: { type: 'boolean', default: false },
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       lettura: { type: 'boolean', default: false },
@@ -255,6 +267,9 @@ function main(argv: string[]): number {
   // L'elezione, come il cielo, non riguarda nessuna nascita: si risponde prima
   // di chiedere una data di nascita che non servirebbe.
   if (values.elezione) return printElection(values);
+
+  // Il panchanga nemmeno: è la qualità di un istante in un luogo.
+  if (values.panchanga) return printPanchanga(values);
 
   // Il cielo si calcola prima di controllare i dati di nascita: è la sola
   // domanda del programma che non ne ha bisogno.
@@ -557,6 +572,71 @@ function printSkyPassages(values: {
  * la Luna da escludere per rumore — anche se resta fuori dai predefiniti,
  * dove cambierebbe segno ogni due giorni e mezzo.
  */
+/**
+ * Le cinque parti del calendario indiano per un istante in un luogo.
+ *
+ * Il luogo è obbligatorio come nell'elezione, e per la stessa ragione: la vara
+ * comincia all'alba, e un'alba vuole un orizzonte.
+ */
+function printPanchanga(values: {
+  on?: string | undefined;
+  at?: string | undefined;
+  tz?: string | undefined;
+  lat?: string | undefined;
+  lon?: string | undefined;
+  ayanamsa?: string | undefined;
+  zodiaco?: string | undefined;
+  ephe?: string | undefined;
+  json: boolean;
+}): number {
+  if (!values.lat || !values.lon) {
+    process.stderr.write(
+      '--panchanga richiede --lat e --lon: la vara comincia con il Sole che sorge,\n' +
+        "e senza un orizzonte non c'è un'alba.\n",
+    );
+    return 2;
+  }
+
+  if (values.zodiaco && values.zodiaco !== 'siderale') {
+    // Non si ripiega in silenzio: chi ha scritto tropicale ha in mente
+    // un'altra cosa, e va detto che quella cosa non esiste.
+    process.stderr.write(
+      'Il panchanga è siderale per definizione: --zodiaco tropicale non si applica.\n',
+    );
+    return 2;
+  }
+
+  const zodiaco = zodiacoDa({ zodiaco: 'siderale', ...(values.ayanamsa ? { ayanamsa: values.ayanamsa } : {}) });
+  if (zodiaco === null) return 2;
+
+  const timezone = values.tz ?? systemTimezone();
+  const adesso = currentMoment(timezone);
+  const moment: SkyMoment = {
+    date: values.on ?? adesso.date,
+    timezone,
+    ...(values.at ?? (values.on ? undefined : adesso.time)
+      ? { time: values.at ?? adesso.time }
+      : {}),
+  };
+
+  const options: PanchangaOptions = {};
+  if (zodiaco.ayanamsa) options.ayanamsa = zodiaco.ayanamsa;
+  if (values.ephe) options.ephemerisPath = values.ephe;
+
+  const panchanga = computePanchanga(
+    moment,
+    { latitude: Number(values.lat), longitude: Number(values.lon) },
+    options,
+  );
+
+  process.stdout.write(
+    values.json
+      ? `${JSON.stringify(panchanga, null, 2)}\n`
+      : `${formatPanchangaCompact(panchanga)}\n`,
+  );
+  return 0;
+}
+
 function printSkyEvents(values: {
   from?: string | undefined;
   to?: string | undefined;

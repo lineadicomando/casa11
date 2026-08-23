@@ -12,7 +12,8 @@ export { findTransitPassages } from './passages.js';
 export { findSkyPassages } from './sky-passages.js';
 export { findSignIngresses, findStations } from './sky-events.js';
 export { findElectionHours, MAX_ELECTION_DAYS } from './election.js';
-export { riseOrSet } from './rise.js';
+export { riseOrSet, type RiseOptions } from './rise.js';
+export { computePanchanga, karanaOf, tithiOf, yogaOf } from './panchanga.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeDistribution, type DistributionInput } from './distribution.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
@@ -47,6 +48,7 @@ export {
   formatChartCompact,
   formatElectionCompact,
   formatNakshatraCompact,
+  formatPanchangaCompact,
   formatPassagesCompact,
   formatSkyCompact,
   formatSkyEventsCompact,
@@ -108,12 +110,17 @@ export type {
   EphemerisMode,
   House,
   HouseSystem,
+  Karana,
   LocalMoment,
   Modality,
   NakshatraId,
   NakshatraPosition,
   NatalChart,
   NatalPointId,
+  Paksha,
+  Panchanga,
+  PanchangaOptions,
+  PanchangaYoga,
   PassageOptions,
   PassageRange,
   Place,
@@ -130,6 +137,7 @@ export type {
   SkyPassageOptions,
   SignIngress,
   Station,
+  Tithi,
   TransitAspect,
   TransitChart,
   TransitingBody,
@@ -137,6 +145,7 @@ export type {
   TransitMoment,
   TransitPassage,
   TransitOptions,
+  Vara,
   VoidOfCourse,
   Zodiac,
   ZodiacOptions,
