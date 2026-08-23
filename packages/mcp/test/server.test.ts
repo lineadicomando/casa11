@@ -78,6 +78,19 @@ function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
     .join('\n');
 }
 
+/** La resa compatta senza il blocco finale delle avvertenze. */
+function senzaAvvertenze(compact: string): string {
+  const inizio = compact.indexOf('\nAVVERTENZE');
+  return inizio === -1 ? compact : compact.slice(0, inizio);
+}
+
+/** Lo stesso JSON senza il campo `warnings`, riimpaginato come lo serve il tool. */
+function senzaJsonWarnings(json: string): string {
+  const parsed = JSON.parse(json) as { warnings?: unknown };
+  delete parsed.warnings;
+  return JSON.stringify(parsed, null, 2);
+}
+
 /** Il primo blocco immagine del risultato, se c'è. */
 function imageOf(
   result: Awaited<ReturnType<Client['callTool']>>,
@@ -254,7 +267,12 @@ describe('compute_natal_chart', () => {
       }),
     );
 
-    expect(compact.length).toBeLessThan(json.length / 4);
+    // Al netto delle avvertenze, che sono lo stesso testo nelle due rese e
+    // quindi pesano sul compatto molto più che sul JSON. Quante ne compaiano
+    // dipende dalla macchina — su un clone senza effemeridi ce n'è una in più
+    // per il ripiego su Moshier — e la proprietà da dimostrare qui è come il
+    // motore impagina un tema, non quale effemeride abbia sottomano.
+    expect(senzaAvvertenze(compact).length).toBeLessThan(senzaJsonWarnings(json).length / 4);
   });
 
   it('accetta la formula alternativa della Parte di Fortuna', async () => {

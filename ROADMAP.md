@@ -16,7 +16,7 @@ nega ogni `window.open` e gira gli `http(s)` al browser di sistema. Copre una
 strada sola. La navigazione di primo livello non passa di lì, e i link esterni
 dell'interfaccia non hanno `target="_blank"`:
 
-- `apps/web/src/routes/+layout.svelte`, righe 44-45 — `astro.com`, `geonames.org`
+- `apps/web/src/routes/+layout.svelte`, righe 59-60 — `astro.com`, `geonames.org`
 - `apps/web/src/routes/(informativa)/privacy/+page.svelte`, riga 254 — `garanteprivacy.it`
 
 In un browser è il comportamento giusto. Dentro Electron, cliccarne uno porta la
@@ -97,34 +97,6 @@ default lì è l'unica cosa che possa rompere qualcosa in silenzio, cioè
 scaricando le dipendenze senza cache invece di fallire.
 
 Verifica: il push stesso. Il giro deve restare verde e l'annotazione sparire.
-
-## 4. `npm test` su un clone pulito fallisce
-
-Trovato mentre si scriveva il workflow, e aggirato lì dentro senza risolverlo.
-
-Nascondendo `packages/core/ephe`, tre test falliscono:
-
-- `packages/core/test/sky.test.ts`, righe 29 e 70 — `expect(sky.warnings).toHaveLength(0)` e `toHaveLength(2)`
-- `packages/mcp/test/server.test.ts` — «il formato compatto costa molti meno token del JSON»: 3139 contro un limite di 3025
-
-La causa è una sola. Senza effemeridi il motore ripiega su Moshier — comportamento
-voluto e documentato in `CLAUDE.md` — e aggiunge un'avvertenza; i primi due test
-contano le avvertenze una a una, il terzo misura una lunghezza che quella riga in
-più fa sforare.
-
-Le effemeridi non sono versionate e il `README` le dichiara **opzionali**. Ne
-segue che `git clone && npm install && npm test` fallisce, e chi contribuisce
-senza sapere del download vede tre errori rossi che non sanno spiegarsi.
-
-Il workflow scarica le effemeridi, ed è la scelta giusta lì — è la configurazione
-che gira in produzione, e i test devono provare quella. Ma cura il sintomo.
-
-Il rimedio: i due test in `sky.test.ts` filtrino l'avvertenza del ripiego invece
-di assumerne l'assenza, e quello in `server.test.ts` misuri al netto delle
-avvertenze. La proprietà che vogliono dimostrare non c'entra niente con quale
-effemeride sia in uso.
-
-Verifica: spostare via `packages/core/ephe`, lanciare `npm test`, rimetterla.
 
 ## Esaminato, e lasciato stare
 

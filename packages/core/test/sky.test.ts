@@ -14,6 +14,19 @@ function longitudes(bodies: readonly { id: string; longitude: number }[]): Recor
   return Object.fromEntries(bodies.map((body) => [body.id, body.longitude]));
 }
 
+/**
+ * Le avvertenze che riguardano la domanda posta, senza quella su quali
+ * effemeridi siano in uso.
+ *
+ * Il ripiego su Moshier dipende da un file scaricabile e facoltativo, non da
+ * come il cielo è stato chiesto: contarlo legherebbe questi test a com'è fatta
+ * la macchina che li esegue, e su un clone appena fatto — dove le effemeridi
+ * non ci sono ancora — li farebbe fallire senza che niente sia rotto.
+ */
+function avvertenzeDelCielo(warnings: readonly string[]): string[] {
+  return warnings.filter((warning) => !warning.includes('effemeridi Moshier'));
+}
+
 describe('computeSky', () => {
   it('calcola corpi e aspetti anche senza luogo', () => {
     const sky = computeSky(ISTANTE);
@@ -26,7 +39,7 @@ describe('computeSky', () => {
     expect(sky.place).toBeUndefined();
 
     // Nessuna avvertenza: il luogo mancante è una scelta, non un'anomalia.
-    expect(sky.warnings).toHaveLength(0);
+    expect(avvertenzeDelCielo(sky.warnings)).toHaveLength(0);
   });
 
   it('dà le stesse posizioni da Roma e da Tokyo, ma case diverse', () => {
@@ -67,9 +80,10 @@ describe('computeSky', () => {
     // Il tempo siderale resta: è un dato del momento, non una cuspide inventata.
     expect(sky.siderealTime).toBeDefined();
 
-    expect(sky.warnings).toHaveLength(2);
-    expect(sky.warnings[0]).toContain('mezzogiorno locale');
-    expect(sky.warnings[1]).toContain('Assi e case non calcolati');
+    const avvertenze = avvertenzeDelCielo(sky.warnings);
+    expect(avvertenze).toHaveLength(2);
+    expect(avvertenze[0]).toContain('mezzogiorno locale');
+    expect(avvertenze[1]).toContain('Assi e case non calcolati');
   });
 
   it('coincide con il tema natale calcolato per lo stesso istante e luogo', () => {
