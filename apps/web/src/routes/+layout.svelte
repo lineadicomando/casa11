@@ -92,6 +92,7 @@
       località <a href="https://www.geonames.org/">GeoNames</a> (CC BY 4.0)
     </p>
     <p>
+      <a href="/metodo">Metodo</a> ·
       <a href="/privacy">Privacy e cookie</a> ·
       {#if REPOSITORY_URL}
         <a href={REPOSITORY_URL}>codice sorgente</a>

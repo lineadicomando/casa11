@@ -14,9 +14,10 @@ import { SECTIONS } from '$lib/navigation';
  *
  * Le cinque sezioni vengono da `SECTIONS`, che è già dichiarato «un elenco
  * solo»: una sezione nuova entra nella sitemap senza che nessuno se ne ricordi.
- * L'informativa non è una sezione — non sta nel menù e non sta nel manifesto —
- * ma è una pagina pubblica con del testo dentro, ed è l'unica del sito che si
- * possa cercare per quello che dice.
+ * Il metodo e l'informativa non sono sezioni — non stanno nel menù e non stanno
+ * nel manifesto — ma sono le due pagine del sito fatte di prosa, e le uniche
+ * che si possano cercare per quello che dicono invece che per quello che
+ * calcolano.
  *
  * Non c'è nient'altro da elencare, e in particolare non ci sono i temi: un
  * tema non è una pagina, è una query su una pagina che c'è già. Elencarne
@@ -25,6 +26,7 @@ import { SECTIONS } from '$lib/navigation';
  */
 export const PAGINE_PUBBLICHE: readonly string[] = [
   ...SECTIONS.map((section) => section.href),
+  '/metodo',
   '/privacy',
 ];
 

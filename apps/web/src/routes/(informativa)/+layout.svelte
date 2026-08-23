@@ -31,6 +31,17 @@
     margin: 2.25rem 0 0.5rem;
   }
 
+  /* Il terzo livello, che serve dove un capitolo ha delle parti — l'astrologia
+     indiana ne ha cinque. Nel serif come gli altri due, ma della misura del
+     testo: a distinguerlo basta lo stacco sopra, che è la metà di quello di un
+     `h2` perché una parte non apre un capitolo, lo divide. */
+  .prosa :global(h3) {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 400;
+    margin: 1.5rem 0 0.4rem;
+  }
+
   .prosa :global(p),
   .prosa :global(li) {
     margin: 0 0 0.8rem;

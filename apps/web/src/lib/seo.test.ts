@@ -11,7 +11,8 @@ describe('PAGINE_PUBBLICHE', () => {
     }
   });
 
-  it('contiene l\'informativa, che sezione non è', () => {
+  it('contiene le pagine di prosa, che sezioni non sono', () => {
+    expect(PAGINE_PUBBLICHE).toContain('/metodo');
     expect(PAGINE_PUBBLICHE).toContain('/privacy');
   });
 
