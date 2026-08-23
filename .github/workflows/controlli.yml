@@ -1,6 +1,10 @@
 # I due comandi che questo progetto lancia a mano prima di ogni commit, lanciati
 # da qualcun altro. Non c'è un passo di `build`: `typecheck` compila già ruota,
-# core e geo per davvero — se non compilano, fallisce lì.
+# lettura, core e geo per davvero — se non compilano, fallisce lì.
+#
+# In più l'immagine, che nessuno dei due tocca: si costruisce a parte e ha una
+# sua lista di pacchetti da tenere allineata. I due lavori sono indipendenti e
+# girano insieme.
 
 name: Controlli
 
@@ -56,3 +60,73 @@ jobs:
       - run: npm test
 
       - run: npm run typecheck
+
+  # Il Dockerfile ha una lista di workspace scritta a mano — i manifesti da
+  # copiare, l'ordine di compilazione, i `dist` da portare nel runtime — e
+  # niente la lega a `workspaces` in package.json. Un pacchetto nuovo la
+  # sfalsa senza che nessun test se ne accorga: `npm test` e `typecheck`
+  # girano sui sorgenti, non sull'immagine. Questo lavoro la costruisce e ci
+  # parla, che è il solo modo di saperlo.
+  immagine:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # `load` la lascia nel demone locale, che è tutto il punto: non si
+      # pubblica niente, si avvia qui sotto. La cache è a strati come quella
+      # del Dockerfile, quindi finché i package.json non cambiano l'`npm ci`
+      # dentro l'immagine non si rifà.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          load: true
+          tags: undicesimacasa:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: L'applicazione web risponde
+        shell: bash
+        run: |
+          docker run -d --name web -p 3000:3000 undicesimacasa:ci
+          for _ in $(seq 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:3000/; then exit 0; fi
+            sleep 1
+          done
+          echo "::error::la pagina non risponde dopo trenta secondi"
+          exit 1
+
+      - name: Il tema arriva dall'API
+        shell: bash
+        run: |
+          # Luogo per coordinate e non per `locationId`: il database delle
+          # località sta su volume e qui non c'è, ma il calcolo non ne dipende.
+          tema=$(curl -fsS "http://127.0.0.1:3000/api/chart?date=1968-03-12&time=14:30&latitude=45.07&longitude=7.69&timezone=Europe/Rome")
+          echo "$tema" | jq -e '.chart.bodies | length >= 10' > /dev/null
+          # Le effemeridi sono scaricate in fase di build e trovate via
+          # SE_EPHE_PATH. Senza, il motore ripiega su Moshier e il tema esce
+          # lo stesso: è `ephemerisMode` l'unico posto in cui la differenza si
+          # vede, e quindi l'unico modo di accorgersi che non sono nell'immagine.
+          echo "$tema" | jq -e '.chart.ephemerisMode == "swisseph"' > /dev/null
+
+      - name: Il server MCP elenca i suoi tool
+        shell: bash
+        run: |
+          # Trasporto stdio: le richieste entrano dal processo, una per riga, e
+          # il server esce quando lo standard input si chiude. Vale come prova
+          # che i `dist` dei pacchetti siano davvero nell'immagine — la web app
+          # è impacchettata da Vite e non li guarda, il server MCP li importa.
+          risposte=$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | timeout 60 docker run --rm -i undicesimacasa:ci node packages/mcp/dist/stdio.js)
+          echo "$risposte" | jq -se '[.[] | select(.id == 2)][0].result.tools | length >= 1' > /dev/null
+
+      # Quando qualcosa qui sopra è andato storto, il perché sta quasi sempre
+      # nel contenitore e non nel passo che è fallito.
+      - name: Registro del contenitore
+        if: failure()
+        run: docker logs web
