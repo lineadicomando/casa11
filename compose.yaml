@@ -69,12 +69,12 @@ services:
     environment:
       GEONAMES_DB_PATH: /data/geonames.db
     # `dev` di SvelteKit compila i sorgenti dell'app, non quelli dei pacchetti
-    # del monorepo: core e geo vanno costruiti una volta all'avvio, altrimenti
+    # del monorepo: vanno costruiti una volta all'avvio, altrimenti
     # l'importazione di `dist` fallisce su un checkout pulito.
     command:
       - sh
       - -c
-      - npm run build -w @undicesimacasa/core -w @undicesimacasa/geo && npm run dev -w @undicesimacasa/web -- --host 0.0.0.0 --port 5173
+      - npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo && npm run dev -w @undicesimacasa/web -- --host 0.0.0.0 --port 5173
     ports:
       - "${DEV_PORT:-5173}:5173"
     volumes:
@@ -86,7 +86,9 @@ services:
       - /app/node_modules
       - /app/packages/core/node_modules
       - /app/packages/geo/node_modules
+      - /app/packages/lettura/node_modules
       - /app/packages/mcp/node_modules
+      - /app/packages/ruota/node_modules
       - /app/apps/web/node_modules
 
 volumes:

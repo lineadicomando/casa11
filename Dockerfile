@@ -16,6 +16,7 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 COPY packages/core/package.json packages/core/
 COPY packages/geo/package.json packages/geo/
+COPY packages/lettura/package.json packages/lettura/
 COPY packages/mcp/package.json packages/mcp/
 COPY packages/ruota/package.json packages/ruota/
 COPY apps/web/package.json apps/web/
@@ -54,7 +55,7 @@ COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/ apps/
 
-RUN npm run build -w @undicesimacasa/ruota -w @undicesimacasa/core -w @undicesimacasa/geo \
+RUN npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo \
   && npm run build -w @undicesimacasa/mcp \
   && npm run build -w @undicesimacasa/web
 
@@ -104,6 +105,8 @@ COPY --from=build /app/packages/geo/dist  packages/geo/dist/
 COPY --from=build /app/packages/geo/schema.sql packages/geo/
 COPY --from=build /app/packages/geo/scripts packages/geo/scripts/
 COPY --from=build /app/packages/geo/package.json packages/geo/
+COPY --from=build /app/packages/lettura/dist packages/lettura/dist/
+COPY --from=build /app/packages/lettura/package.json packages/lettura/
 COPY --from=build /app/packages/mcp/dist  packages/mcp/dist/
 COPY --from=build /app/packages/mcp/package.json packages/mcp/
 COPY --from=build /app/packages/ruota/dist packages/ruota/dist/
