@@ -305,9 +305,14 @@
 
   /* Un blocco a sé, non la prima di tre righe uguali: le attribuzioni che
      seguono sono un'altra cosa, e senza lo stacco l'avvertenza si legge come
-     la prima voce del loro elenco. */
+     la prima voce del loro elenco.
+
+     Larga quanto il guscio e in corpo più piccolo delle attribuzioni: è una
+     nota a piè di pagina, e va letta come tale — chi la cerca la trova, chi
+     legge il resto non ci inciampa. Il corpo resta sopra i 12px, che è il
+     minimo perché una riga lunga come questa si legga ancora. */
   .avvertenza {
-    max-width: 46rem;
     margin-bottom: 0.9rem;
+    font-size: 0.78rem;
   }
 </style>
