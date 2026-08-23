@@ -158,6 +158,69 @@ Verifica per tutti i lotti: `packages/core/test/varga.test.ts` ha già la forma
 — confini noti calcolati a mano per un segno pari e uno dispari, più la prova
 che la regola viaggi col risultato.
 
+## 5. La prosa che può invecchiare senza dirlo
+
+**Bassa priorità.** Nessuna delle due rompe niente: producono testo che dice il
+falso, e nessun test le vede. Stanno qui perché è il genere di cosa che si
+ritrova per caso due anni dopo, e allora non si sa più quale delle due versioni
+fosse quella giusta.
+
+### La precisione di Moshier, dichiarata due volte e in due modi
+
+`packages/core/src/ephemeris.ts`, riga 20, dice «0,1 secondi d'arco per i
+pianeti maggiori». `README.md`, riga 44, dice «~0,4 secondi d'arco sui pianeti
+principali». Sono la stessa affermazione sullo stesso ripiego, e differiscono di
+un fattore quattro.
+
+Una delle due è sbagliata e non si sa quale: il numero non viene da una misura
+fatta qui, ma dalla documentazione di Swiss Ephemeris, dove la cifra dipende da
+quali corpi e da quale epoca si guardano — Moshier degrada allontanandosi dal
+presente, e i pianeti esterni non si comportano come i lunari.
+
+La via per chiuderla non è scegliere il numero che suona meglio: è
+**misurarlo**. Il motore sa calcolare in tutt'e due i modi, e `initEphemeris`
+espone la modalità; bastano gli stessi corpi allo stesso istante nelle due
+modalità e la differenza in secondi d'arco, su qualche data sparsa nell'arco
+1800-2400. Diventa un test, e il numero diventa verificabile invece che
+riportato.
+
+Finché non è deciso, `apps/web/src/routes/(informativa)/metodo/+page.svelte`,
+riga 77, dice «una frazione di secondo d'arco» senza cifra — di proposito, e va
+aggiornata insieme alle altre due.
+
+Verifica: un test in `packages/core/test/` che confronti le due modalità e
+fallisca se lo scarto esce dall'ordine di grandezza dichiarato. A quel punto le
+tre righe di prosa possono portare la stessa cifra.
+
+### La pagina del metodo non è legata a `constants.ts`
+
+`apps/web/src/routes/(informativa)/metodo/+page.svelte` ricopia in prosa valori
+che vivono nel motore: le nove orbite e i nove aspetti da `ASPECTS` in
+`packages/core/src/constants.ts` (tabella a riga 194), i nove sistemi di case da
+`HOUSE_SYSTEM_CODES`, il bonus dei luminari, le orbite dei transiti da
+`TRANSIT_ORBS`, i sei ayanamsa da `AYANAMSAS` in `ayanamsa.ts`, i sei varga da
+`VARGAS` in `varga.ts` (riga 344).
+
+Cambiando un'orbita, la pagina resta vecchia in silenzio. Non c'è nessun test
+che colleghi le due cose, ed è la scelta scritta nel commento in testa al file:
+legare la pagina ai valori vorrebbe dire generarla, e una tabella generata non
+può dire *perché* le orbite dei transiti sono strette — che è l'unica ragione
+per cui la pagina esiste.
+
+La forma che risolve senza generare la prosa esiste, ed è quella che il progetto
+usa già altrove: **un test che fallisce a voce alta quando i due divergono**, sul
+modello di `packages/ruota/test/tipi.test.ts`, che verifica che i tipi
+ridichiarati combacino con quelli di `core` senza importarli. Qui vorrebbe dire
+leggere il file `.svelte` e cercarci i valori di `ASPECTS` — nove righe di
+tabella, non tutta la pagina — e fallire se un'orbita non compare più.
+
+Un test così è brutto e va tenuto stretto: se comincia a cercare frasi invece
+che numeri diventa un impedimento a riscrivere la prosa, che è il contrario di
+quello che serve. Da fare solo per i valori tabellari, e solo se la pagina
+sopravvive abbastanza da giustificarlo.
+
+Verifica: cambiare un'orbita in `ASPECTS` e vedere il test cadere.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:
