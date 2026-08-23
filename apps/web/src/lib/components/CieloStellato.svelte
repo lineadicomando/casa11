@@ -23,8 +23,8 @@
   } from '$lib/color-scheme';
 
   /**
-   * Il fondale: un `canvas` fisso dietro tutta la pagina, che si accende
-   * facendo un giro intero del pulsante dell'aspetto.
+   * Il fondale: un `canvas` fisso dietro tutta la pagina, che il pulsante
+   * della stella nella testata accende e spegne.
    *
    * Un `canvas` e non un SVG animato: le stelle sono qualche centinaio e
    * cambiano trasparenza a ogni fotogramma, e altrettanti nodi del documento da

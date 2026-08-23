@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   COSTELLAZIONI,
-  GIRO,
-  RESPIRO,
   avvolgi,
-  contaScatti,
   disponiFigure,
   luce,
   quanteStelle,
@@ -12,7 +9,6 @@ import {
   sorteggio,
   tinta,
 } from './cielo';
-import { COLOR_SCHEMES } from './color-scheme';
 
 describe('COSTELLAZIONI', () => {
   it('unisce stelle che esistono', () => {
@@ -176,25 +172,5 @@ describe('tinta', () => {
     // silenzio: la stella smetterebbe di comparire senza dire perché.
     expect(tinta([1, 2, 3], 1.4)).toBe('rgba(1, 2, 3, 1.000)');
     expect(tinta([1, 2, 3], -0.2)).toBe('rgba(1, 2, 3, 0.000)');
-  });
-});
-
-describe('contaScatti', () => {
-  it('conta un giro di clic ravvicinati', () => {
-    let scatti = 0;
-    let ultimo: number | null = null;
-    for (const ora of [1000, 1300, 1600]) {
-      scatti = contaScatti(scatti, ultimo, ora);
-      ultimo = ora;
-    }
-    expect(scatti).toBe(GIRO);
-  });
-
-  it('ricomincia se fra un clic e l’altro si è pensato ad altro', () => {
-    expect(contaScatti(2, 1000, 1000 + RESPIRO + 1)).toBe(1);
-  });
-
-  it('vale quanto il ciclo del pulsante, non tre per sempre', () => {
-    expect(GIRO).toBe(COLOR_SCHEMES.length);
   });
 });

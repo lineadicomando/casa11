@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import { cielo } from '$lib/cielo.svelte';
   import CieloStellato from '$lib/components/CieloStellato.svelte';
+  import CieloToggle from '$lib/components/CieloToggle.svelte';
   import ColorSchemeToggle from '$lib/components/ColorSchemeToggle.svelte';
   import Marchio from '$lib/components/Marchio.svelte';
   import { isActive, SECTIONS } from '$lib/navigation';
@@ -43,10 +44,11 @@
   <header>
     <a class="marchio" href="/"><Marchio /></a>
 
-    <!-- Dove si può andare e com'è la luce, sulla stessa riga: il pulsante si
-         guadagna la fine di quella invece di prendersene una tutta sua, che
-         sopra i 90rem sarebbe una riga vuota con dentro un cerchio — là il
-         marchio se n'è andato nel margine e non gli fa più compagnia. -->
+    <!-- Dove si può andare e come si vede la pagina, sulla stessa riga: i
+         pulsanti si guadagnano la fine di quella invece di prendersi una riga
+         tutta loro, che sopra i 90rem sarebbe una riga vuota con dentro due
+         glifi — là il marchio se n'è andato nel margine e non gli fa più
+         compagnia. -->
     <div class="barra">
       <nav aria-label="Sezioni">
         <ul>
@@ -61,7 +63,10 @@
         </ul>
       </nav>
 
-      <ColorSchemeToggle {cielo} />
+      <div class="comandi">
+        <CieloToggle {cielo} />
+        <ColorSchemeToggle />
+      </div>
     </div>
   </header>
 
@@ -231,9 +236,9 @@
     }
   }
 
-  /* Le voci a sinistra, il pulsante a destra. Lo stacco dal marchio sta qui e
+  /* Le voci a sinistra, i pulsanti a destra. Lo stacco dal marchio sta qui e
      non sull'elenco: messo là, il margine uscirebbe dal `nav` per accollamento
-     e l'allineamento centrale lo troverebbe a metà strada, col pulsante più in
+     e l'allineamento centrale lo troverebbe a metà strada, coi pulsanti più in
      basso delle voci di quei 0,7rem. */
   .barra {
     display: flex;
@@ -242,6 +247,14 @@
     justify-content: space-between;
     gap: 0.5rem 1.5rem;
     margin-top: 0.7rem;
+  }
+
+  /* I due pulsanti stanno appaiati e non si separano mai: se la barra va a
+     capo, ci vanno insieme. */
+  .comandi {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
 
   nav ul {

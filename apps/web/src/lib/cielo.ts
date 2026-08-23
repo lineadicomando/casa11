@@ -1,6 +1,6 @@
 /**
- * Il cielo che compare dietro la pagina quando si fa il giro intero del
- * pulsante dell'aspetto.
+ * Il cielo che compare dietro la pagina quando si preme il pulsante della
+ * stella, nella testata.
  *
  * **Non è astronomia, ed è deliberato.** Le costellazioni qui dentro hanno la
  * forma giusta e nient'altro: nessuna coordinata vera, nessuna stagione,
@@ -15,8 +15,6 @@
  * scorre e la scheda che passa in secondo piano stanno in
  * `CieloStellato.svelte`.
  */
-
-import { COLOR_SCHEMES } from './color-scheme';
 
 /** Un punto qualunque, in pixel o in frazioni a seconda di chi lo tiene. */
 export interface Punto {
@@ -400,37 +398,4 @@ export const TAVOLOZZE: Record<'light' | 'dark', Tavolozza> = {
 export function tinta(colore: Colore, alfa: number): string {
   const a = Math.min(1, Math.max(0, alfa));
   return `rgba(${colore[0]}, ${colore[1]}, ${colore[2]}, ${a.toFixed(3)})`;
-}
-
-/**
- * Quanti clic fanno un giro del pulsante dell'aspetto.
- *
- * Non è tre per scelta: è la lunghezza del ciclo. Chi lo preme tante volte
- * quante sono le luci torna esattamente da dove era partito — la pagina ha lo
- * stesso aspetto di prima, e proprio lì compare qualcos'altro. Se un giorno gli
- * aspetti diventassero quattro, l'easter egg si aspetterebbe quattro clic senza
- * che nessuno debba ricordarsi di venirlo a cambiare.
- */
-export const GIRO = COLOR_SCHEMES.length;
-
-/**
- * Quanto può passare fra un clic e il successivo perché contino come un gesto
- * solo.
- *
- * Senza questo limite basterebbe cambiare aspetto tre volte in mezza giornata
- * per ritrovarsi il cielo addosso senza capire da dove sia arrivato. Un secondo
- * e due decimi è largo per chi arriva da tastiera e stretto abbastanza da non
- * raccogliere due ripensamenti lontani.
- */
-export const RESPIRO = 1200;
-
-/**
- * A che punto del giro siamo, dopo un clic arrivato all'istante `ora`.
- *
- * Riparte da uno appena il gesto si interrompe: un clic isolato non è il primo
- * di una serie finché non ne arriva un altro subito dopo.
- */
-export function contaScatti(scatti: number, ultimo: number | null, ora: number): number {
-  if (ultimo === null || ora - ultimo > RESPIRO) return 1;
-  return scatti + 1;
 }
