@@ -12,6 +12,13 @@
          miniatura della pagina. Lo rasterizza `scripts/build-icons.mjs` dal
          favicon, prima di ogni build. -->
     <link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
+    <!-- Il manifesto è una rotta prerenderizzata e non un file in `static/`:
+         le scorciatoie che dichiara sono le sezioni del menù, e quell'elenco
+         esiste una volta sola in `lib/navigation.ts`. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- iOS legge il manifesto solo dalla 17.4: sotto, questa è l'unica cosa
+         che gli dica di aprire il sito senza la barra degli indirizzi. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <!--
       Il colore della barra del browser su mobile, che va scelto due volte
       perché la pagina ha due fondi: dichiararne uno solo lascia una striscia
