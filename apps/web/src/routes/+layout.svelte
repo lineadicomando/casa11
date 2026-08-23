@@ -73,13 +73,14 @@
     <!-- Prima delle attribuzioni, e con più aria sotto: le altre due righe
          dicono da dove vengono i dati e a quali condizioni, questa dice che
          cosa il sito è. Non disclama il calcolo — che è esatto, ed è l'unica
-         cosa che il motore prometta — ma quello che se ne fa. È la stessa
-         distinzione che le istruzioni di `@undicesimacasa/lettura` chiedono al modello,
-         detta qui a chi legge: due destinatari, due testi. -->
+         cosa che il motore prometta — ma l'uso che se ne fa, e nomina i
+         mestieri che nessuna lettura rimpiazza. Il limite è lo stesso che le
+         istruzioni di `@undicesimacasa/lettura` impongono al modello, detto
+         qui a chi legge: due destinatari, due testi. -->
     <p class="avvertenza">
-      Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio
-      simbolico, offerta come spunto di riflessione e intrattenimento. Non sostituisce
-      il parere di un professionista in materia medica, psicologica, legale o finanziaria.
+      Questo sito è uno spazio dedicato alla ricerca interiore e all'arricchimento
+      personale e in nessun caso sostituisce il parere di professionisti per
+      questioni mediche, legali, finanziarie o altro.
     </p>
     <p>
       Dati astronomici <a href="https://www.astro.com/swisseph/">Swiss Ephemeris</a> ·

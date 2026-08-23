@@ -146,7 +146,6 @@ domicili, aspetti che non sono orbite e un impianto temporale che in occidente
 non ha corrispettivo: le istruzioni tropicali applicate a quei dati non danno
 un errore, danno un ibrido plausibile.
 
-Il calcolo è astronomico e verificabile; l'interpretazione è un linguaggio
-simbolico, offerta come spunto di riflessione e intrattenimento. Non sostituisce
-il parere di un professionista in materia medica, psicologica, legale o
-finanziaria.
+Questo sito è uno spazio dedicato alla ricerca interiore e all'arricchimento
+personale e in nessun caso sostituisce il parere di professionisti per questioni
+mediche, legali, finanziarie o altro.
