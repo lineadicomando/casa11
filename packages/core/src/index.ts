@@ -22,6 +22,7 @@ export {
   VIMSHOTTARI_YEARS,
 } from './dasha.js';
 export { computeVarga, findVarga, VARGAS, vargaSignOf } from './varga.js';
+export { computeDrishti, housesSeenBy } from './drishti.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeDistribution, type DistributionInput } from './distribution.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
@@ -55,6 +56,7 @@ export {
 export {
   formatChartCompact,
   formatDashaCompact,
+  formatDrishtiCompact,
   formatElectionCompact,
   formatNakshatraCompact,
   formatPanchangaCompact,
@@ -116,6 +118,10 @@ export type {
   DashaYear,
   Distribution,
   DistributionGroup,
+  Drishti,
+  DrishtiChart,
+  DrishtiOptions,
+  DrishtiTarget,
   ElectionOptions,
   ElectionResult,
   Element,
@@ -129,6 +135,7 @@ export type {
   NakshatraPosition,
   NatalChart,
   NatalPointId,
+  NodeDrishti,
   Paksha,
   Panchanga,
   PanchangaOptions,

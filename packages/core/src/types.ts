@@ -384,6 +384,63 @@ export interface VargaChart {
   ascendant?: ZodiacSign;
 }
 
+/**
+ * Se e come i nodi gettino drishti.
+ *
+ * `nessuna` è la forma classica: Parashara la drishti la dà ai sette, e quella
+ * dei nodi è aggiunta più tarda. `gioviana` dà a Rahu e Ketu la quinta, la
+ * settima e la nona, come Giove. È una divergenza fra scuole, quindi si dichiara
+ * invece di sceglierla in silenzio.
+ */
+export type NodeDrishti = 'nessuna' | 'gioviana';
+
+/** Chi può ricevere uno sguardo: un graha, oppure il lagna. */
+export type DrishtiTarget = BodyId | 'lagna';
+
+/**
+ * Uno sguardo fra due punti del tema.
+ *
+ * **I due lati non si scambiano.** Le case si contano sempre in avanti nello
+ * zodiaco, quindi che `from` guardi `to` non implica il contrario: Saturno in
+ * Ariete guarda i Gemelli come terza casa, ma dai Gemelli l'Ariete è
+ * l'undicesimo, e l'undicesima non la guarda nessuno.
+ */
+export interface Drishti {
+  from: BodyId;
+  fromName: string;
+  to: DrishtiTarget;
+  toName: string;
+  /**
+   * A quante case di distanza, contando il segno di chi guarda come prima.
+   * La settima è di tutti; la terza e la decima di Saturno, la quarta e
+   * l'ottava di Marte, la quinta e la nona di Giove.
+   */
+  house: number;
+}
+
+export interface DrishtiOptions {
+  /** Default: `nessuna`, che è la forma classica. */
+  nodes?: NodeDrishti;
+}
+
+/**
+ * Gli sguardi di un tema, sui graha e sui segni.
+ *
+ * I segni ci sono tutti, anche quelli disabitati: una drishti che cade su una
+ * casa vuota è un dato che questo sistema usa, e tenerla fuori sarebbe il
+ * motore che decide che cosa conti.
+ */
+export interface DrishtiChart {
+  /** La convenzione applicata ai nodi, che viaggia col risultato. */
+  nodes: NodeDrishti;
+  /** Gli sguardi che trovano qualcuno: un graha o il lagna. */
+  aspects: Drishti[];
+  /** I segni bersagliati da ciascun graha, occupati o no. */
+  signs: { from: BodyId; fromName: string; house: number; sign: ZodiacSign }[];
+  /** Avvertimenti non bloccanti: tema senza ora, e quindi senza lagna. */
+  warnings: string[];
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'

@@ -16,6 +16,7 @@ import { ChartError } from './errors.js';
 import {
   formatChartCompact,
   formatDashaCompact,
+  formatDrishtiCompact,
   formatElectionCompact,
   formatNakshatraCompact,
   formatPanchangaCompact,
@@ -30,6 +31,7 @@ import { findElectionHours } from './election.js';
 import { computePanchanga } from './panchanga.js';
 import { computeVimshottari } from './dasha.js';
 import { computeVarga, VARGAS } from './varga.js';
+import { computeDrishti } from './drishti.js';
 import { findTransitPassages } from './passages.js';
 import { findSignIngresses, findStations } from './sky-events.js';
 import { findSkyPassages } from './sky-passages.js';
@@ -94,6 +96,10 @@ Opzioni
   --varga <lista>       Carte divisionali, separate da virgola: d1, d3, d9, d10,
                         d12, d30. Ciascuna stampa la regola che l'ha prodotta.
                         Richiede --zodiaco siderale
+  --drishti             Gli sguardi fra i graha, contati a segni interi e con un
+                        verso: chi guarda chi non è reciproco
+  --drishti-nodi <n>    nessuna (default, forma classica) oppure gioviana, che dà
+                        a Rahu e Ketu la quinta, la settima e la nona
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
@@ -281,6 +287,8 @@ function main(argv: string[]): number {
       panchanga: { type: 'boolean', default: false },
       dasha: { type: 'boolean', default: false },
       varga: { type: 'string' },
+      drishti: { type: 'boolean', default: false },
+      'drishti-nodi': { type: 'string' },
       livelli: { type: 'string' },
       'anno-dasha': { type: 'string' },
       fortuna: { type: 'string' },
@@ -467,7 +475,22 @@ function main(argv: string[]): number {
       varga = carte.map((carta) => `\n${formatVargaCompact(carta)}\n`).join('');
     }
 
-    process.stdout.write(`${formatChartCompact(chart)}\n${nakshatra}${dasha}${varga}`);
+    let drishti = '';
+    if (values.drishti) {
+      const nodi = values['drishti-nodi'] ?? 'nessuna';
+      if (nodi !== 'nessuna' && nodi !== 'gioviana') {
+        process.stderr.write('--drishti-nodi vuole "nessuna" oppure "gioviana".\n');
+        return 2;
+      }
+      drishti = `\n${formatDrishtiCompact(computeDrishti(chart, { nodes: nodi }))}\n`;
+    } else if (values['drishti-nodi']) {
+      process.stderr.write('--drishti-nodi richiede --drishti.\n');
+      return 2;
+    }
+
+    process.stdout.write(
+      `${formatChartCompact(chart)}\n${nakshatra}${dasha}${varga}${drishti}`,
+    );
     return 0;
   }
 

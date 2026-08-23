@@ -10,6 +10,7 @@ import type {
   Distribution,
   DashaPeriod,
   DistributionGroup,
+  DrishtiChart,
   ElectionResult,
   House,
   NatalChart,
@@ -629,6 +630,42 @@ export function formatVargaCompact(varga: VargaChart): string {
   for (const position of varga.positions) {
     lines.push(`${position.name.padEnd(11)} ${position.sign}`);
   }
+
+  return lines.join('\n');
+}
+
+/**
+ * Gli sguardi di un tema: chi guarda chi, e su quali segni cadono.
+ *
+ * Le due tabelle non sono una il riassunto dell'altra. La prima dice i
+ * contatti fra graha; la seconda dove lo sguardo arriva, **anche dove non
+ * trova nessuno**, che in questo sistema è un dato e non un'assenza.
+ *
+ * La freccia è nel verso giusto e non si scambia: le case si contano in avanti,
+ * quindi che uno guardi l'altro non implica il contrario.
+ */
+export function formatDrishtiCompact(drishti: DrishtiChart): string {
+  const lines = [
+    'DRISHTI',
+    `Nodi: ${drishti.nodes === 'gioviana' ? 'quinta, settima e nona come Giove' : 'nessuno sguardo (forma classica)'}`,
+    '',
+  ];
+
+  if (drishti.aspects.length === 0) {
+    lines.push('(nessuno sguardo trova un graha o il lagna)');
+  }
+  for (const aspect of drishti.aspects) {
+    lines.push(
+      `${aspect.fromName.padEnd(11)} → ${aspect.toName.padEnd(11)} ${aspect.house}ª casa`,
+    );
+  }
+
+  lines.push('', 'SEGNI GUARDATI');
+  for (const cast of drishti.signs) {
+    lines.push(`${cast.fromName.padEnd(11)} ${cast.house}ª  ${cast.sign}`);
+  }
+
+  lines.push(...warningLines(drishti.warnings));
 
   return lines.join('\n');
 }
