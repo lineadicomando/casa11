@@ -350,6 +350,40 @@ export interface VimshottariDasha {
   warnings: string[];
 }
 
+/**
+ * I varga calcolati.
+ *
+ * Sei dei sedici classici, scelti per uso e non per completezza: gli altri
+ * stanno in `ROADMAP.md`, divisi in lotti per forma della regola.
+ */
+export type VargaId = 'd1' | 'd3' | 'd9' | 'd10' | 'd12' | 'd30';
+
+/**
+ * Una carta divisionale: gli stessi corpi in segni diversi.
+ *
+ * Porta con sé **la regola che l'ha prodotta**. Fra le sedici divisioni le
+ * scuole divergono su più d'una, e un segno consegnato senza la regola non si
+ * può ricontrollare: chi ne segue un'altra deve vederlo subito, invece di
+ * scoprirlo confrontando i numeri con un altro programma.
+ */
+export interface VargaChart {
+  varga: VargaId;
+  /** Il nome sanscrito. */
+  name: string;
+  /**
+   * Il numero che dà il nome al varga, **non sempre un conto di parti uguali**.
+   * Il trimsamsa si chiama D-30 ma divide il segno in cinque tratti disuguali:
+   * quanto e come si divida lo dice `rule`, che è l'unica a poterlo dire per
+   * tutti.
+   */
+  divisions: number;
+  /** La regola in una riga. */
+  rule: string;
+  positions: { id: BodyId; name: string; sign: ZodiacSign }[];
+  /** Il segno del lagna. Assente se il tema non ha un Ascendente. */
+  ascendant?: ZodiacSign;
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'

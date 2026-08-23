@@ -25,6 +25,7 @@ import type {
   TransitingBody,
   TransitingPointId,
   TransitPassage,
+  VargaChart,
   VimshottariDasha,
   Zodiac,
 } from './types.js';
@@ -604,6 +605,32 @@ function formatDashaYears(years: number): string {
   if (Math.abs(years - tondo) < 0.05) return `${tondo} ${tondo === 1 ? 'anno' : 'anni'}`;
   if (years < 0.95) return `${Math.round(years * 12)} mesi`;
   return `${years.toFixed(1)} anni`;
+}
+
+/**
+ * Una carta divisionale: una riga per corpo, e la regola in testa.
+ *
+ * La regola non è un commento ma parte del dato. Un D-9 senza la sua regola è
+ * un elenco di segni di cui non si può dire se sia quello che si voleva:
+ * fra le sedici divisioni le scuole divergono, e chi ne segue un'altra deve
+ * poterlo vedere prima di confrontare i numeri.
+ */
+export function formatVargaCompact(varga: VargaChart): string {
+  // Nell'intestazione niente «N parti per segno»: nel trimsamsa sarebbe falso,
+  // e la riga sotto lo smentirebbe. Quanto e come si divida lo dice la regola,
+  // che è l'unica a poterlo dire per tutti.
+  const lines = [
+    `${varga.name.toUpperCase()} (${varga.varga.toUpperCase()})`,
+    `Regola: ${varga.rule}`,
+    '',
+  ];
+
+  if (varga.ascendant) lines.push(`${'Lagna'.padEnd(11)} ${varga.ascendant}`);
+  for (const position of varga.positions) {
+    lines.push(`${position.name.padEnd(11)} ${position.sign}`);
+  }
+
+  return lines.join('\n');
 }
 
 function warningLines(warnings: readonly string[]): string[] {

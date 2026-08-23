@@ -24,10 +24,12 @@ import {
   formatSkyEventsCompact,
   formatSkyPassagesCompact,
   formatTransitsCompact,
+  formatVargaCompact,
 } from './format.js';
 import { findElectionHours } from './election.js';
 import { computePanchanga } from './panchanga.js';
 import { computeVimshottari } from './dasha.js';
+import { computeVarga, VARGAS } from './varga.js';
 import { findTransitPassages } from './passages.js';
 import { findSignIngresses, findStations } from './sky-events.js';
 import { findSkyPassages } from './sky-passages.js';
@@ -51,6 +53,8 @@ import type {
   SkyPassageOptions,
   TransitMoment,
   TransitOptions,
+  VargaChart,
+  VargaId,
   VimshottariDasha,
   VimshottariOptions,
   ZodiacOptions,
@@ -87,6 +91,9 @@ Opzioni
                         antardasha. Tre sono settecentoventinove righe
   --anno-dasha <nome>   solare (default, 365,25 giorni) oppure savana (360). Le
                         scuole divergono, e su ottant'anni è più di un anno
+  --varga <lista>       Carte divisionali, separate da virgola: d1, d3, d9, d10,
+                        d12, d30. Ciascuna stampa la regola che l'ha prodotta.
+                        Richiede --zodiaco siderale
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
@@ -231,6 +238,32 @@ function catenaDa(
   return computeVimshottari(chart, options);
 }
 
+/** Le carte divisionali chieste, o `null` se una non esiste. */
+function vargaDa(chart: NatalChart, lista: string): VargaChart[] | null {
+  const chiesti = lista
+    .split(',')
+    .map((voce) => voce.trim().toLowerCase())
+    .filter((voce) => voce.length > 0);
+
+  if (chiesti.length === 0) {
+    process.stderr.write(`--varga è vuoto: elenca i varga separati da virgola.\n`);
+    return null;
+  }
+
+  const carte: VargaChart[] = [];
+  for (const id of chiesti) {
+    if (!VARGAS.some((varga) => varga.id === id)) {
+      process.stderr.write(
+        `Varga "${id}" non disponibile. Calcolati: ${VARGAS.map((v) => v.id).join(', ')}.\n`,
+      );
+      return null;
+    }
+    carte.push(computeVarga(chart, id as VargaId));
+  }
+
+  return carte;
+}
+
 function main(argv: string[]): number {
   const { values } = parseArgs({
     args: argv,
@@ -247,6 +280,7 @@ function main(argv: string[]): number {
       nakshatra: { type: 'boolean', default: false },
       panchanga: { type: 'boolean', default: false },
       dasha: { type: 'boolean', default: false },
+      varga: { type: 'string' },
       livelli: { type: 'string' },
       'anno-dasha': { type: 'string' },
       fortuna: { type: 'string' },
@@ -426,7 +460,14 @@ function main(argv: string[]): number {
       dasha = `\n${formatDashaCompact(catena)}\n`;
     }
 
-    process.stdout.write(`${formatChartCompact(chart)}\n${nakshatra}${dasha}`);
+    let varga = '';
+    if (values.varga !== undefined) {
+      const carte = vargaDa(chart, values.varga);
+      if (carte === null) return 2;
+      varga = carte.map((carta) => `\n${formatVargaCompact(carta)}\n`).join('');
+    }
+
+    process.stdout.write(`${formatChartCompact(chart)}\n${nakshatra}${dasha}${varga}`);
     return 0;
   }
 

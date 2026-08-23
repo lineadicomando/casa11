@@ -98,6 +98,66 @@ scaricando le dipendenze senza cache invece di fallire.
 
 Verifica: il push stesso. Il giro deve restare verde e l'annotazione sparire.
 
+## 4. I dieci varga che mancano
+
+Calcolati: D-1, D-3, D-9, D-10, D-12, D-30, in `packages/core/src/varga.ts`.
+Sono i più usati, ed è la ragione per cui vengono per primi — non la
+completezza. Dei sedici classici ne restano dieci.
+
+**Non vanno fatti in un colpo solo.** Ogni varga è una regola a sé, e le regole
+divergono fra scuole più che nel resto del Jyotisha: farne dieci in un
+passaggio significa copiarne otto senza verificarle. I lotti che seguono
+raggruppano per **forma della regola**, così che dentro ciascuno si verifichi
+una volta il meccanismo e poi si applichi.
+
+Per tutti vale la procedura già collaudata: la regola in una riga dentro
+`VARGAS`, che viaggia nel risultato ed è ciò che rende il segno
+ricontrollabile; le prove ai confini dei segni pari e dispari; l'aggiunta a
+`VargaId` in `types.ts` e all'elenco di `--varga` nell'aiuto della CLI.
+
+### Lotto A — quelli che si biforcano su pari e dispari
+
+**D-2 Hora, D-4 Chaturthamsa, D-7 Saptamsa.** Stessa forma del D-10 già
+fatto: si guarda se il segno è pari o dispari e si parte da due punti diversi.
+Il D-2 divide in due (Sole e Luna); il D-4 in quattro, sui kendra; il D-7 in
+sette, dal segno stesso nei dispari e dal settimo nei pari.
+
+Da decidere una cosa sola, ed è il D-2: alcune scuole assegnano le due metà ai
+segni del Leone e del Cancro, altre parlano di «hora del Sole» e «hora della
+Luna» senza un segno. `VargaChart.positions` porta un `ZodiacSign`, quindi la
+seconda convenzione non ci sta dentro senza cambiare il tipo. Va deciso prima
+di scrivere, non dopo.
+
+### Lotto B — i multipli con partenza fissa
+
+**D-16 Shodashamsa, D-20 Vimshamsa, D-24 Chaturvimshamsa, D-27
+Nakshatramsa.** Qui la partenza non dipende dal segno di arrivo ma da un segno
+fisso deciso dalla natura del segno di partenza — cardinale, fisso o mobile per
+alcuni; pari o dispari per altri. Il meccanismo è quello del D-9, applicato a
+divisioni più fini.
+
+Il D-27 è il più utile del lotto e anche il più semplice: ventisette parti da
+1°6'40", cioè un pada di nakshatra, e si parte sempre dall'Ariete. Si può fare
+per primo e da solo.
+
+### Lotto C — i fini, che vogliono un'ora di nascita esatta
+
+**D-40 Khavedamsa, D-45 Akshavedamsa, D-60 Shashtiamsa.**
+
+Il D-60 è, in Parashara, il più importante di tutti, e insieme quello che il
+motore può garantire di meno: una divisione dura **30 primi d'arco**, che
+l'Ascendente percorre in due minuti di orologio. Un'ora di nascita arrotondata
+al quarto d'ora produce un D-60 sbagliato, e non se ne accorge nessuno.
+
+Questo lotto vuole quindi una cosa che gli altri non chiedono: **un'avvertenza
+propria**, sul modello di quella delle dasha in `dasha.ts`, che dica quanti
+minuti di scarto valgano una divisione. Senza, sarebbe il caso peggiore di
+tutti — un dato che sembra preciso perché ha molte cifre.
+
+Verifica per tutti i lotti: `packages/core/test/varga.test.ts` ha già la forma
+— confini noti calcolati a mano per un segno pari e uno dispari, più la prova
+che la regola viaggi col risultato.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:

@@ -21,6 +21,7 @@ export {
   VIMSHOTTARI_TOTAL,
   VIMSHOTTARI_YEARS,
 } from './dasha.js';
+export { computeVarga, findVarga, VARGAS, vargaSignOf } from './varga.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeDistribution, type DistributionInput } from './distribution.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
@@ -62,6 +63,7 @@ export {
   formatSkyEventsCompact,
   formatSkyPassagesCompact,
   formatTransitsCompact,
+  formatVargaCompact,
 } from './format.js';
 export { ChartError, type ChartErrorCode } from './errors.js';
 
@@ -156,6 +158,8 @@ export type {
   TransitPassage,
   TransitOptions,
   Vara,
+  VargaChart,
+  VargaId,
   VimshottariDasha,
   VimshottariOptions,
   VoidOfCourse,
