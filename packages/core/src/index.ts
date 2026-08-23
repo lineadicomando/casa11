@@ -14,6 +14,13 @@ export { findSignIngresses, findStations } from './sky-events.js';
 export { findElectionHours, MAX_ELECTION_DAYS } from './election.js';
 export { riseOrSet, type RiseOptions } from './rise.js';
 export { computePanchanga, karanaOf, tithiOf, yogaOf } from './panchanga.js';
+export {
+  computeVimshottari,
+  DASHA_DAYS_PER_YEAR,
+  dashaAt,
+  VIMSHOTTARI_TOTAL,
+  VIMSHOTTARI_YEARS,
+} from './dasha.js';
 export { computeAspects, computeCrossAspects, type AspectOptions } from './aspects.js';
 export { computeDistribution, type DistributionInput } from './distribution.js';
 export { computeHouses, houseOf, type HouseResult } from './houses.js';
@@ -46,6 +53,7 @@ export {
 } from './nakshatra.js';
 export {
   formatChartCompact,
+  formatDashaCompact,
   formatElectionCompact,
   formatNakshatraCompact,
   formatPanchangaCompact,
@@ -102,6 +110,8 @@ export type {
   CelestialBody,
   ChartOptions,
   ChartPoint,
+  DashaPeriod,
+  DashaYear,
   Distribution,
   DistributionGroup,
   ElectionOptions,
@@ -146,6 +156,8 @@ export type {
   TransitPassage,
   TransitOptions,
   Vara,
+  VimshottariDasha,
+  VimshottariOptions,
   VoidOfCourse,
   Zodiac,
   ZodiacOptions,

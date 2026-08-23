@@ -272,6 +272,84 @@ export interface Panchanga {
   warnings: string[];
 }
 
+/**
+ * Quanti giorni valga un anno di dasha.
+ *
+ * Le scuole non concordano, e lo scarto non è trascurabile: su un mahadasha di
+ * diciotto anni sono più di tre mesi, e cresce lungo la catena. `solare` è la
+ * convenzione dei panchanga moderni e della maggior parte del software;
+ * `savana` è l'anno tradizionale di trecentosessanta giorni, con cui i conti
+ * tornano tondi.
+ */
+export type DashaYear = 'solare' | 'savana';
+
+/**
+ * Un periodo della catena vimshottari.
+ *
+ * Il livello dice di quale ordine sia: 1 mahadasha, 2 antardasha, 3
+ * pratyantardasha. La struttura è annidata perché è annidato il sistema — ogni
+ * periodo si divide nei nove secondo le stesse proporzioni.
+ */
+export interface DashaPeriod {
+  /** Il graha che regge il periodo. `nodo-nord` è Rahu, `nodo-sud` è Ketu. */
+  lord: BodyId;
+  level: 1 | 2 | 3;
+  /** Inizio in UTC, ISO 8601. */
+  start: string;
+  /** Fine in UTC: coincide con l'inizio del periodo successivo. */
+  end: string;
+  /** Gli stessi due istanti nel fuso della nascita. */
+  local: { start: string; end: string };
+  /** Durata in anni della convenzione scelta. */
+  years: number;
+  /** I sotto-periodi, se ne sono stati chiesti. */
+  periods?: DashaPeriod[];
+}
+
+export interface VimshottariOptions {
+  /**
+   * Quanti ordini di periodo calcolare. Default 2.
+   *
+   * Un livello sono nove periodi, due sono ottantuno, tre settecentoventinove.
+   * Il terzo si chiede quando serve: a un agente riempie il contesto, e a chi
+   * legge un elenco di settecento righe non è un elenco.
+   */
+  levels?: 1 | 2 | 3;
+  /** La lunghezza dell'anno. Default: `solare`. */
+  yearLength?: DashaYear;
+}
+
+/**
+ * La catena vimshottari a partire da una nascita.
+ *
+ * *Vimshottari* vuol dire centoventi, e tanti sono gli anni del ciclo intero.
+ * Dove cominci lo dice il nakshatra della Luna alla nascita, e quanto ne resti
+ * lo dice il punto esatto in cui la Luna si trovava dentro quel nakshatra: è
+ * l'unico calcolo del motore in cui un secondo d'arco vale ore di calendario.
+ */
+export interface VimshottariDasha {
+  /** Il nakshatra della Luna alla nascita: l'origine di tutta la catena. */
+  nakshatra: NakshatraPosition;
+  /**
+   * Quanto restava del primo mahadasha alla nascita, in anni.
+   *
+   * È il numero che si riporta per primo in ogni lettura, e quello con cui si
+   * verifica a colpo d'occhio che il conto sia stato fatto giusto.
+   */
+  balance: number;
+  yearLength: DashaYear;
+  /** Quanti giorni valga un anno, secondo la convenzione scelta. */
+  daysPerYear: number;
+  levels: 1 | 2 | 3;
+  /** I nove mahadasha, dal primo in corso alla nascita. */
+  periods: DashaPeriod[];
+  /**
+   * Avvertimenti non bloccanti: ora di nascita ignota, ripiego sulle
+   * effemeridi Moshier.
+   */
+  warnings: string[];
+}
+
 export type AspectId =
   | 'congiunzione'
   | 'opposizione'

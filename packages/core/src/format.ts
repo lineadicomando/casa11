@@ -8,6 +8,7 @@ import type {
   BodyId,
   CelestialBody,
   Distribution,
+  DashaPeriod,
   DistributionGroup,
   ElectionResult,
   House,
@@ -24,6 +25,7 @@ import type {
   TransitingBody,
   TransitingPointId,
   TransitPassage,
+  VimshottariDasha,
   Zodiac,
 } from './types.js';
 
@@ -550,6 +552,58 @@ export function formatPanchangaCompact(panchanga: Panchanga): string {
   lines.push(...warningLines(panchanga.warnings));
 
   return lines.join('\n');
+}
+
+/**
+ * La catena delle dasha, un periodo per riga e i sotto-periodi rientrati.
+ *
+ * Il saldo alla nascita in testa: è il numero che si riporta per primo in ogni
+ * lettura, e quello con cui si verifica a colpo d'occhio che il conto torni.
+ *
+ * Le date sono locali. Un periodo di Saturno che comincia il 12 novembre è un
+ * fatto del calendario di chi lo vive, non un istante UTC — quello resta nel
+ * JSON per chi deve rifare i conti.
+ */
+export function formatDashaCompact(dasha: VimshottariDasha): string {
+  const lines = [
+    `DASHA VIMSHOTTARI — Luna in ${dasha.nakshatra.name} pada ${dasha.nakshatra.pada}, ` +
+      `signore ${grahaName(dasha.nakshatra.lord, dasha.nakshatra.lord)}`,
+    `Saldo alla nascita: ${dasha.balance.toFixed(2)} anni | ` +
+      `anno ${dasha.yearLength} (${dasha.daysPerYear} giorni) | ` +
+      `${dasha.levels} ${dasha.levels === 1 ? 'ordine' : 'ordini'}`,
+    '',
+  ];
+
+  const righe = (periods: readonly DashaPeriod[], rientro: string): void => {
+    for (const period of periods) {
+      lines.push(
+        `${rientro}${grahaName(period.lord, period.lord).padEnd(11 - rientro.length)} ` +
+          `${period.local.start.slice(0, 10)} → ${period.local.end.slice(0, 10)}  ` +
+          `${formatDashaYears(period.years)}`,
+      );
+      if (period.periods) righe(period.periods, `${rientro}  `);
+    }
+  };
+
+  righe(dasha.periods, '');
+  lines.push(...warningLines(dasha.warnings));
+
+  return lines.join('\n');
+}
+
+/**
+ * La durata di un periodo, nell'unità in cui si legge meglio.
+ *
+ * Mesi sotto l'anno, anni sopra, e senza decimale quando è tondo: le durate dei
+ * mahadasha sono numeri interi per costruzione, e «7.0 anni» fa sembrare
+ * approssimato ciò che è esatto. La soglia sta sotto l'anno e non a un anno
+ * netto, o un periodo di undici mesi e mezzo si leggerebbe «12 mesi».
+ */
+function formatDashaYears(years: number): string {
+  const tondo = Math.round(years);
+  if (Math.abs(years - tondo) < 0.05) return `${tondo} ${tondo === 1 ? 'anno' : 'anni'}`;
+  if (years < 0.95) return `${Math.round(years * 12)} mesi`;
+  return `${years.toFixed(1)} anni`;
 }
 
 function warningLines(warnings: readonly string[]): string[] {

@@ -15,6 +15,7 @@ import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';
 import {
   formatChartCompact,
+  formatDashaCompact,
   formatElectionCompact,
   formatNakshatraCompact,
   formatPanchangaCompact,
@@ -26,6 +27,7 @@ import {
 } from './format.js';
 import { findElectionHours } from './election.js';
 import { computePanchanga } from './panchanga.js';
+import { computeVimshottari } from './dasha.js';
 import { findTransitPassages } from './passages.js';
 import { findSignIngresses, findStations } from './sky-events.js';
 import { findSkyPassages } from './sky-passages.js';
@@ -35,6 +37,7 @@ import { currentMoment, systemTimezone } from './time.js';
 import { computeTransits } from './transits.js';
 import type {
   BirthData,
+  NatalChart,
   ChartOptions,
   ElectionOptions,
   HouseSystem,
@@ -48,6 +51,8 @@ import type {
   SkyPassageOptions,
   TransitMoment,
   TransitOptions,
+  VimshottariDasha,
+  VimshottariOptions,
   ZodiacOptions,
 } from './types.js';
 
@@ -75,6 +80,13 @@ Opzioni
   --nakshatra           Aggiunge la tabella dei ventisette nakshatra con pada e
                         signore. Richiede --zodiaco siderale: un nakshatra è un
                         tratto di cielo fra stelle fisse
+  --dasha               Aggiunge la catena vimshottari: centoventi anni divisi
+                        fra i nove graha, a partire dal nakshatra della Luna.
+                        Richiede --zodiaco siderale
+  --livelli <1|2|3>     Ordini di periodo. Default 2 — nove mahadasha con i loro
+                        antardasha. Tre sono settecentoventinove righe
+  --anno-dasha <nome>   solare (default, 365,25 giorni) oppure savana (360). Le
+                        scuole divergono, e su ottant'anni è più di un anno
   --fortuna <formula>   Parte di Fortuna: settore (default, si inverte nei temi
                         notturni) oppure diurna (sempre ASC + Luna − Sole)
   --json                Stampa il JSON completo invece della tabella compatta
@@ -188,6 +200,37 @@ function zodiacoDa(values: {
   return options;
 }
 
+/**
+ * La catena vimshottari con le opzioni della riga di comando, o `null` se
+ * qualcosa non va — nel qual caso il messaggio è già stato scritto.
+ */
+function catenaDa(
+  chart: NatalChart,
+  values: { livelli?: string | undefined; 'anno-dasha'?: string | undefined },
+): VimshottariDasha | null {
+  const options: VimshottariOptions = {};
+
+  const livelli = values.livelli;
+  if (livelli !== undefined) {
+    if (livelli !== '1' && livelli !== '2' && livelli !== '3') {
+      process.stderr.write('--livelli vuole 1, 2 oppure 3.\n');
+      return null;
+    }
+    options.levels = Number(livelli) as 1 | 2 | 3;
+  }
+
+  const anno = values['anno-dasha'];
+  if (anno !== undefined) {
+    if (anno !== 'solare' && anno !== 'savana') {
+      process.stderr.write('--anno-dasha vuole "solare" oppure "savana".\n');
+      return null;
+    }
+    options.yearLength = anno;
+  }
+
+  return computeVimshottari(chart, options);
+}
+
 function main(argv: string[]): number {
   const { values } = parseArgs({
     args: argv,
@@ -203,6 +246,9 @@ function main(argv: string[]): number {
       ayanamsa: { type: 'string' },
       nakshatra: { type: 'boolean', default: false },
       panchanga: { type: 'boolean', default: false },
+      dasha: { type: 'boolean', default: false },
+      livelli: { type: 'string' },
+      'anno-dasha': { type: 'string' },
       fortuna: { type: 'string' },
       json: { type: 'boolean', default: false },
       lettura: { type: 'boolean', default: false },
@@ -372,7 +418,15 @@ function main(argv: string[]): number {
     // I nakshatra dopo il tema e non al posto suo: sono un'altra lettura dello
     // stesso cielo, non un cielo diverso.
     const nakshatra = values.nakshatra ? `\n${formatNakshatraCompact(chart)}\n` : '';
-    process.stdout.write(`${formatChartCompact(chart)}\n${nakshatra}`);
+
+    let dasha = '';
+    if (values.dasha) {
+      const catena = catenaDa(chart, values);
+      if (catena === null) return 2;
+      dasha = `\n${formatDashaCompact(catena)}\n`;
+    }
+
+    process.stdout.write(`${formatChartCompact(chart)}\n${nakshatra}${dasha}`);
     return 0;
   }
 
