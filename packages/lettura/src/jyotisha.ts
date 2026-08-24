@@ -20,7 +20,7 @@
  * viola per riempire un vuoto, e il vuoto qui è più largo perché la tabella
  * porta delle date.
  */
-export const JYOTISHA = `Questo è un tema vedico (Jyotisha) già calcolato da undicesimacasa con le
+export const JYOTISHA = `Questo è un tema vedico (Jyotisha) già calcolato da dodicisegni con le
 effemeridi Swiss Ephemeris, nello zodiaco SIDERALE. È il risultato di un
 calcolo, non la richiesta di farne uno. Non ricalcolarlo e non correggerlo — se
 un valore ti sembra sbagliato dillo invece di sistemarlo — e non aggiungere

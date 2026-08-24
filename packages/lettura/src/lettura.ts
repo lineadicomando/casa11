@@ -1,7 +1,7 @@
 /**
  * Il tema pronto da consegnare a chi lo interpreta.
  *
- * undicesimacasa calcola e non interpreta: il significato è di chi consuma.
+ * dodicisegni calcola e non interpreta: il significato è di chi consuma.
  * Questo pacchetto non tocca quella divisione, la rende praticabile — mette
  * insieme i dati già calcolati e le istruzioni per leggerli, e lascia
  * l'interpretazione fuori di qui, in un programma che sceglie chi legge.
@@ -79,7 +79,7 @@ export interface OpzioniLettura {
 export function letturaDaIncollare(tema: string, opzioni: OpzioniLettura = {}): string {
   const istruzioni = istruzioniDi(opzioni.sistema);
   const provenienza = opzioni.repository
-    ? `\n\nTema calcolato da undicesimacasa, con le effemeridi Swiss Ephemeris: ${opzioni.repository}`
+    ? `\n\nTema calcolato da dodicisegni, con le effemeridi Swiss Ephemeris: ${opzioni.repository}`
     : '';
 
   return `${istruzioni}${provenienza}\n\n${tema}\n`;

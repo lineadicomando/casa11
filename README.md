@@ -1,4 +1,4 @@
-# undicesimacasa
+# dodicisegni
 
 Generazione di temi natali: motore di calcolo astronomico, API REST e server MCP.
 

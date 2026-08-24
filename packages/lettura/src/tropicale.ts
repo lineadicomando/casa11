@@ -34,7 +34,7 @@
  * scansione di un elenco senza tornare a essere un elenco, e non danno per
  * scontato un vocabolario che chi legge non ha.
  */
-export const TROPICALE = `Questo è un tema natale già calcolato da undicesimacasa con le effemeridi Swiss
+export const TROPICALE = `Questo è un tema natale già calcolato da dodicisegni con le effemeridi Swiss
 Ephemeris: è il risultato di un calcolo, non la richiesta di farne uno. Non
 ricalcolarlo e non correggerlo — se un valore ti sembra sbagliato dillo invece
 di sistemarlo — e non aggiungere posizioni, aspetti o punti che qui sotto non

@@ -13,12 +13,11 @@
   - dentro la fascia le due luci e sei decori;
   - al centro una stella a dodici punte.
 
-  **La stella è dodici, non undici.** Il cielo si divide in dodici — segni e
-  case — e undici è solo il nome di questo progetto: un centro a undici punte
-  direbbe una cosa falsa sull'astrologia per dirne una vera sul dominio del
-  sito. È il poligono stellato {12/5}, cioè i dodici punti di una divisione del
-  cerchio uniti di cinque in cinque; un tratto solo che li tocca tutti e torna
-  al principio, che è anche il motivo per cui non si può disegnare con undici.
+  **La stella è dodici, come il nome.** Il cielo si divide in dodici — segni e
+  case — ed è la sola cosa che il sigillo affermi. È il poligono stellato
+  {12/5}, cioè i dodici punti di una divisione del cerchio uniti di cinque in
+  cinque; un tratto solo che li tocca tutti e torna al principio, e ci riesce
+  perché 5 e 12 non hanno divisori comuni.
 
   **Nella fascia si nominano solo le due luci**, ☉ in alto e ☽ in basso, sul
   verticale: sono i due corpi che chiunque riconosce senza sapere di
@@ -38,7 +37,7 @@
   che di tratto. Vedi `graphics/favicon.svg`.
 -->
 <script lang="ts">
-  let { titolo = 'XI casa' }: { titolo?: string } = $props();
+  let { titolo = 'dodicisegni' }: { titolo?: string } = $props();
 
   /**
    * Variante testuale, U+FE0E: senza, parte dei font di sistema disegna questi
@@ -122,11 +121,14 @@
     </g>
   </svg>
 
-  <!-- «undicesima casa» abbreviato: il numero è già la parola, e su due righe
-       il marchio sta nella colonna stretta del margine invece di attraversarla. -->
+  <!-- «dodicisegni» spezzato nelle sue due metà, con la prima scritta in cifre
+       romane: il numero è già una parola, e su due righe il marchio sta nella
+       colonna stretta del margine invece di attraversarla. Il romano è quello
+       con cui si numerano le case in una carta, quindi lega la scritta al
+       sigillo invece di ripetere il dominio così com'è scritto. -->
   <span class="nome" aria-hidden="true">
-    <span class="numero">XI</span>
-    <span class="casa">casa</span>
+    <span class="numero">XII</span>
+    <span class="parola">segni</span>
   </span>
 </span>
 
@@ -156,7 +158,7 @@
     flex: none;
   }
 
-  /* «XI» sta in mezzo a «casa» e non sul suo inizio: sono due righe di uno
+  /* «XII» sta in mezzo a «segni» e non sul suo inizio: sono due righe di uno
      stesso blocco, e a bandiera la più corta si legge come una riga sfuggita
      invece che come la prima delle due. Vale in tutte e due le disposizioni. */
   .nome {
@@ -172,8 +174,11 @@
     letter-spacing: 0.06em;
   }
 
-  .casa {
-    font-size: var(--marchio-casa, 0.62rem);
+  /* Il nome della proprietà non nomina la parola: chi la posa decide una
+     misura, non che cosa ci sta scritto. Al prossimo nome cambia la scritta e
+     non il foglio di stile di chi lo usa. */
+  .parola {
+    font-size: var(--marchio-parola, 0.62rem);
     text-transform: uppercase;
     /* La spaziatura si somma anche dopo l'ultima lettera: senza toglierla la
        parola sarebbe centrata tenendo conto di uno spazio che non si vede, e

@@ -31,7 +31,7 @@
 
   let { titolo, descrizione }: Props = $props();
 
-  const completo = $derived(`${titolo} — undicesimacasa`);
+  const completo = $derived(`${titolo} — ${SITE_NAME}`);
 
   /**
    * L'indirizzo senza i parametri.
@@ -93,7 +93,7 @@
   <link rel="canonical" href={indirizzo} />
 
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="undicesimacasa" />
+  <meta property="og:site_name" content={SITE_NAME} />
   <meta property="og:locale" content="it_IT" />
   <meta property="og:title" content={completo} />
   <meta property="og:description" content={descrizione} />
@@ -104,7 +104,10 @@
        trattano come piccola e ripiegano sul riquadro stretto. -->
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Il sigillo di undicesimacasa: una stella a dodici punte dentro due cerchi" />
+  <meta
+    property="og:image:alt"
+    content="Il sigillo di {SITE_NAME}: una stella a dodici punte dentro due cerchi"
+  />
 
   <!-- Il riquadro grande, adesso che c'è un'immagine da metterci: con
        `summary` la stessa immagine finirebbe in un quadratino di lato fisso,

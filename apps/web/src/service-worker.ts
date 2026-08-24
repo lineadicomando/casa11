@@ -27,6 +27,7 @@
 
 import { build, files, prerendered, version } from '$service-worker';
 import { cacheKey, isApiRequest, isCrawlerAsset } from '$lib/cache-policy';
+import { SITE_NAME } from '$lib/project';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -67,7 +68,7 @@ const CORTESIA = `<!doctype html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Senza rete — undicesimacasa</title>
+    <title>Senza rete — ${SITE_NAME}</title>
     <style>
       :root { color-scheme: light dark; }
       body {

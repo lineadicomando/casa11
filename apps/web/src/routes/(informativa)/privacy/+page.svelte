@@ -48,7 +48,7 @@
 <h2>Titolare del trattamento</h2>
 
 <p>
-  Il trattamento è svolto nell'ambito del progetto <strong>undicesimacasa</strong>,
+  Il trattamento è svolto nell'ambito del progetto <strong>dodicisegni</strong>,
   software libero distribuito sotto licenza AGPL-3.0. Per qualsiasi richiesta
   relativa ai dati personali, compreso l'esercizio dei diritti descritti più
   avanti, il recapito è

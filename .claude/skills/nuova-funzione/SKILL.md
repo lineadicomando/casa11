@@ -1,9 +1,9 @@
 ---
 name: nuova-funzione
-description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di undicesimacasa che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
+description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di dodicisegni che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
 ---
 
-# Aggiungere una funzione a undicesimacasa
+# Aggiungere una funzione a dodicisegni
 
 Il progetto ha un motore solo e **cinque superfici** che lo raccontano. Una
 funzione che si ferma a metà lascia un endpoint che nessuna interfaccia chiama,

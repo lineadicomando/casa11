@@ -1,7 +1,7 @@
 <!--
   Il tema, portato dove qualcuno lo interpreta.
 
-  undicesimacasa calcola e non interpreta — è il vincolo su cui il progetto è
+  dodicisegni calcola e non interpreta — è il vincolo su cui il progetto è
   costruito, non una funzione mancante. Questo pulsante non lo aggira: copia i
   dati appena calcolati insieme alle istruzioni per leggerli, e chi li incolla
   sceglie il programma che glieli legge. Il sito non parla con nessun modello,

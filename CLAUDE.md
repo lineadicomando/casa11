@@ -1,4 +1,4 @@
-# undicesimacasa
+# dodicisegni
 
 Calcolo di temi natali: un **motore puro** (`packages/core`) e **adattatori** che
 lo espongono su superfici diverse. Il `README.md` tiene la descrizione, la

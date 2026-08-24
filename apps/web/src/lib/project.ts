@@ -19,12 +19,13 @@ export const REPOSITORY_URL = 'https://github.com/lineadicomando/casa11';
  * Come il sito si chiama, per esteso e in breve.
  *
  * L'abbreviazione non è un vezzo: sotto un'icona installata ci stanno sette
- * caratteri, e «undicesimacasa» verrebbe troncato a metà parola. La usano il
- * manifesto — dove è `short_name` — e i dati strutturati, dove è
- * l'`alternateName` con cui il sito si può cercare.
+ * caratteri, e «dodicisegni» verrebbe troncato a metà parola. `12segni` ci sta
+ * esatta ed è anche il dominio di servizio, quindi non è una terza forma
+ * inventata qui. La usano il manifesto — dove è `short_name` — e i dati
+ * strutturati, dove è l'`alternateName` con cui il sito si può cercare.
  */
-export const SITE_NAME = 'undicesimacasa';
-export const SITE_SHORT_NAME = 'XI casa';
+export const SITE_NAME = 'dodicisegni';
+export const SITE_SHORT_NAME = '12segni';
 
 /**
  * Che cos'è il sito, in una riga.

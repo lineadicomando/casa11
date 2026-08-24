@@ -221,7 +221,7 @@
       --marchio-aria: 0.7rem;
       --marchio-sigillo: 5.5rem;
       --marchio-numero: 1.7rem;
-      --marchio-casa: 0.68rem;
+      --marchio-parola: 0.68rem;
     }
   }
 
@@ -237,7 +237,7 @@
       --marchio-aria: 0.55rem;
       --marchio-sigillo: 2.5rem;
       --marchio-numero: 1.35rem;
-      --marchio-casa: 0.62rem;
+      --marchio-parola: 0.62rem;
     }
   }
 
