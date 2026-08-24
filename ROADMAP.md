@@ -441,6 +441,99 @@ Verifica, in due casi distinti perché provano due cose diverse:
    perfezionarsi va costruito apposta — il caso 1 non lo copre, perché lì le
    perfezioni esistono e cadono solo fuori dall'arco.
 
+## 8. Il glossario, e /metodo da rivedere
+
+**Priorità media.** Viene da un esame del SEO organico, dove l'ipotesi di
+partenza era un payoff da mettere nel titolo. Il payoff non sposta niente — è
+del marchio, quindi si ripete su ogni pagina, e un titolo ripetuto è la cosa
+che i motori riscrivono per prima. Quello che sposta è il testo, e di testo qui
+ce n'è pochissimo.
+
+Il conto è in `apps/web/src/lib/seo.ts`: sette indirizzi in
+`PAGINE_PUBBLICHE`, e cinque sono strumenti — `h1` nascosto, un cappello di due
+paragrafi e sotto il modulo. Le pagine fatte di prosa sono `/metodo` e
+`/privacy`, e la seconda la cerca soltanto chi la deve controllare. Un sito con
+due pagine di testo non si posiziona su niente, per quanto bene siano scritti i
+suoi `<title>`.
+
+Il vincolo del progetto, qui, non è un impedimento: è il filtro che sceglie il
+contenuto. Che cos'è un nakshatra è un fatto verificabile; che cosa prometta
+Saturno in settima no. **Il glossario è la prosa che questo progetto può
+scrivere senza tradirsi**, ed è anche quella che intercetta le ricerche più
+precise — in italiano, su questi termini, non copre bene nessuno.
+
+### Il glossario
+
+I termini ci sono già tutti, sparsi: quelli del Jyotisha che la regola di stile
+tiene in sanscrito — `nakshatra`, `tithi`, `karana`, `yoga`, `dasha`, `varga`,
+`drishti`, `pada`, più `ayanamsa` e `panchanga` — e quelli che il motore
+occidentale calcola e nomina: Parte di Fortuna, Luna vuota di corso, ore
+planetarie, cuspidi, orbita, retrogradazione, stazione, ingresso, distribuzione
+fra elementi e modalità, i nove sistemi di case.
+
+Non c'è niente da inventare e non si deve: la fonte è scritta due volte, nei
+commenti di `packages/core` — `VoidOfCourse` in `types.ts`, `dasha.ts`,
+`varga.ts`, `constants.ts` — e nella pagina del metodo, che quasi tutti li
+spiega già.
+
+Ed è esattamente lì il rischio. **Due pagine che dicono la stessa cosa si
+tolgono i lettori a vicenda**, e un motore che deve scegliere fra le due
+sceglie male. Il taglio va deciso prima di scrivere una riga, e la forma che
+regge è questa: il glossario dice *che cos'è* il termine, in tre righe, e
+rimanda; `/metodo` dice *con quale convenzione questo sito lo calcola*. Il
+primo definisce, il secondo dichiara — che è poi la differenza fra i due
+vincoli del progetto.
+
+**Da decidere, e non è una scelta di stile.** Una pagina per termine è la forma
+che intercetta le ricerche, ma sono trenta indirizzi da poche righe l'uno, che
+è la definizione di pagina magra, e la sitemap li porterebbe tutti. Una pagina
+sola con le ancore è un indirizzo solo e trenta ricerche perse. La via di mezzo
+— una pagina per famiglia, il Jyotisha da una parte, il tempo e i moti
+dall'altra — è probabilmente quella giusta, ma va scelta guardando quanto testo
+regge davvero ogni termine, non prima.
+
+Qualunque sia la forma, le pagine nuove **non sono sezioni**: vanno aggiunte a
+mano in `PAGINE_PUBBLICHE`, come `/metodo` e `/privacy`, e
+`lib/seo.test.ts` va esteso di conseguenza. Nel menù non entrano.
+
+### La revisione di /metodo
+
+La pagina non è povera: 476 righe e diciotto sezioni, ciascuna con il suo `id`.
+Il problema è che è **una pagina sola**. Le diciotto ancore non sono diciotto
+risultati: `#dasha` non è mai un indirizzo per sé, e chi cerca «dasha
+vimshottari» trova al più la pagina intera, che parla di altre diciassette
+cose.
+
+Va quindi valutato — non è deciso — se le cinque parti dell'astrologia indiana
+(`#nakshatra`, `#dasha`, `#varga`, `#drishti`, `#panchanga`, righe 298-388)
+debbano staccarsi in pagine proprie. Contro: spezzare una pagina che si legge
+bene di seguito, e che è l'unica cosa che risponda a «perché la stessa nascita
+dà carte diverse altrove». A favore: sono già cinque capitoli con un titolo e
+un `id`, e il testo di ognuno regge da solo.
+
+Due cose invece vanno fatte comunque:
+
+- **Il titolo e la descrizione.** «Metodo» è una parola che non cerca nessuno.
+  La descrizione a `metodo/+page.svelte:24` è buona ed elenca già i termini
+  giusti; il titolo li butta via tutti.
+- **Il coordinamento con il punto 6**, che tocca questa stessa pagina in due
+  modi: la precisione di Moshier senza cifra alla riga 77, e il legame mancante
+  con `constants.ts`. Se la pagina si riscrive, i due lavori si incrociano —
+  farli in ordine sparso significa riscrivere due volte gli stessi paragrafi.
+
+### Deciso, per non ridiscuterlo
+
+- **Niente marcature FAQ.** Le domande frequenti vanno riempite di
+  affermazioni, che è la merce che questo progetto non produce: la ragione sta
+  già scritta per esteso nel commento a `strutturati` in `Meta.svelte`.
+- **I cappelli delle cinque sezioni restano come sono.** Allungarli metterebbe
+  prosa fra chi arriva e il modulo che è venuto a compilare, e il guadagno
+  sarebbe comunque il più piccolo dei tre.
+- **Il payoff nel titolo non fa parte di questo lavoro.** Quello che
+  dell'esame è rimasto in piedi — il titolo della home, che oggi spreca la
+  pagina più forte del sito, e uno `slogan` nei dati strutturati — è piccolo,
+  isolato e va per conto suo.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:
