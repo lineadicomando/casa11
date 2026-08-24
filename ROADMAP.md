@@ -7,9 +7,135 @@ ogni voce è una cosa nota, con il file, la riga e il modo di verificarla.
 In fondo c'è una lista che non è lavoro — roba esaminata e lasciata stare, per
 non ritrovarla una seconda volta e ricominciare da capo.
 
-## 1. Il guardiano della navigazione nell'app desktop
+## 1. Il nome: da undicesimacasa a dodicisegni
 
-**Da fare per primo, e comunque, indipendentemente dal punto 2.**
+**Prioritario.** Il progetto prende il nome `dodicisegni`, sul dominio
+`dodicisegni.it`; `12segni.it` è il dominio di servizio, già registrato. Nel
+marchio il numero resta romano — «XII» sopra «segni» — e il nome breve
+dell'icona installata è `12segni`, che sta nei sette caratteri che un
+lanciatore concede.
+
+**Non c'è niente da preservare.** Il progetto non è in produzione: nessuno ha
+una preferenza di tema salvata da migrare, nessun client MCP ha memorizzato un
+`undicesimacasa://`, nessuno ha l'AppImage installata sotto il vecchio `appId`.
+Ogni identificatore si cambia sul posto, e chi lo cambia non deve niente a
+nessuno. È la ragione per cui questa voce è più corta di quanto sarebbe stata
+fra un anno, ed è anche la ragione per cui conviene farla adesso.
+
+Resta in tre passi per una ragione sola e molto più piccola di quella: **la
+leggibilità del diff**. Il rinomino dello scope npm tocca quasi ogni file del
+repo ed è rumore meccanico; impastarlo con le decisioni di nome — la CLI, il
+server MCP, l'applicazione desktop — produrrebbe un commit che nessuno rilegge.
+
+### Il sigillo non va ridisegnato
+
+La stella al centro del marchio è il poligono stellato {12/5}: **dodici punte
+già oggi**, e non undici. `apps/web/src/lib/components/Marchio.svelte`, righe
+16-21, se ne scusava per esteso — il cielo si divide in dodici, e undici era
+«solo il nome di questo progetto». Col nome nuovo la scusa non serve più e il
+disegno diventa esatto: cambia soltanto la scritta sotto. Vale anche per
+`graphics/favicon.svg` e per le icone che `apps/web/scripts/build-icons.mjs`
+ne rasterizza, perché la fonte è il favicon e il favicon è la stessa stella.
+
+### Passo 1 — quello che si legge — **fatto**
+
+Il nome come parola, in ciò che una persona vede o incolla.
+`apps/web/src/lib/project.ts` (`SITE_NAME`, `SITE_SHORT_NAME`),
+`Marchio.svelte`, l'informativa privacy, i tre testi di `packages/lettura` che
+finiscono negli appunti di chi li copia, il titolo della pagina senza rete,
+`README.md`, `CLAUDE.md` e la skill `nuova-funzione`.
+
+Nello stesso passaggio `Meta.svelte` e `service-worker.ts` hanno smesso di
+ripetere il nome alla lettera e lo leggono da `SITE_NAME`, e la proprietà
+`--marchio-casa` è diventata `--marchio-parola`: chi posa il marchio decide una
+misura, non che cosa ci sta scritto.
+
+### Passo 2 — lo scope npm e i tag
+
+Meccanico e voluminoso, senza una sola decisione dentro. Va in un commit solo
+perché a metà l'albero non compila.
+
+- `@undicesimacasa/*` → `@dodicisegni/*`: sette `package.json`, ogni import di
+  ogni workspace, gli script della radice, `Dockerfile:48,58-65`,
+  `.github/workflows/controlli.yml`, `compose.yaml:82` e
+  `apps/desktop/scripts/stage.mjs:47,61,68`, che compone percorsi dentro
+  `node_modules/@undicesimacasa`.
+- Il nome del pacchetto radice (`package.json:2`), il nome del progetto compose
+  (`compose.yaml:1`) e i tag immagine (`compose.yaml:9,72`,
+  `controlli.yml:87,94,125`).
+- I nomi di comodo nei test, che non provano niente e vanno per compagnia: i
+  prefissi di `mkdtempSync` in `packages/mcp/test/server.test.ts:25`,
+  `packages/geo/test/search.test.ts:98` e
+  `packages/core/test/ephemeris.test.ts:9`, la URL finta in
+  `packages/lettura/test/lettura.test.ts:68` e il sito finto in
+  `apps/web/src/lib/cache-policy.test.ts:4`.
+
+Verifica: `npm install` (rifà i collegamenti in `node_modules`, che con lo scope
+nuovo sono altri file), poi
+`npm run typecheck && npm test && npm run build`, poi il giro Docker con i
+profili espliciti.
+
+### Passo 3 — gli identificatori con un nome da scegliere
+
+Pochi, e ciascuno vuole una decisione prima di una riga di codice. Nessuno di
+questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
+
+- **La CLI `casa11` diventa `dodicisegni`** — deciso, e la ragione è che il
+  nome vecchio era già un terzo nome, né `undicesimacasa` né altro, e un
+  progetto che si chiama in tre modi si spiega tre volte. `12segni` si sarebbe
+  digitato meglio, ma il nome breve ha una sola giustificazione — i sette
+  caratteri sotto un'icona — e sulla riga di comando quella giustificazione non
+  c'è. Da cambiare: `packages/core/package.json:16`, l'aiuto in
+  `packages/core/src/cli.ts:70-75,751`, le citazioni in `README.md:26,52,54`,
+  `CLAUDE.md:14` e `packages/ruota/src/types.ts:9`.
+- **Il server MCP.** `SERVER_NAME` in `packages/mcp/src/server.ts:18`, la riga
+  di avvio in `stdio.ts:21`, il binario `undicesimacasa-mcp` in
+  `packages/mcp/package.json:16`, la chiave in `.mcp.json` e l'esempio nel
+  `README.md:80-82`, e lo schema di URI `undicesimacasa://riferimento/…`
+  (`server.ts:83,104`), che `packages/mcp/test/server.test.ts:191-196` verifica.
+- **L'applicazione desktop.** `appId`, `productName` ed `executableName` in
+  `apps/desktop/electron-builder.yml:3-6`, il `serviceName` e i titoli in
+  `apps/desktop/src/main.ts:77,153,172,207,216`, la descrizione in
+  `apps/desktop/package.json:5`. L'`appId` diventa `it.dodicisegni.desktop`.
+- **La chiave del tema** `undicesimacasa:color-scheme`, in
+  `apps/web/src/lib/color-scheme.ts:22` e ripetuta alla lettera nello script in
+  linea di `apps/web/src/app.html:39` — che non può importare la costante,
+  perché gira prima di tutto il resto per non far lampeggiare la pagina. Le due
+  copie vanno cambiate insieme, e con loro la prosa in
+  `privacy/+page.svelte:170`, che il valore lo cita.
+- **Il nome della cache** `casa11-${version}` in `service-worker.ts:38`, e la
+  prosa che lo cita in `privacy/+page.svelte:178`. Le cache di nome vecchio le
+  butta `activate` da sé (righe 112-117).
+- **Il repository resta `lineadicomando/casa11`** — deciso, per ora. Il
+  rinomino su GitHub è un'azione fuori dal repo, e `REPOSITORY_URL` in
+  `apps/web/src/lib/project.ts:16` non va toccata finché quella non è fatta:
+  quell'indirizzo è insieme il recapito che l'informativa privacy dichiara e
+  l'offerta del sorgente che l'AGPL articolo 13 impone, quindi un collegamento
+  rotto lì non è un refuso ma una violazione di licenza. **L'ordine è
+  obbligato: prima si rinomina su GitHub, poi si cambia la costante** — mai il
+  contrario, e neanche insieme.
+
+  Il costo di aspettare è piccolo: nei due posti dove il collegamento compare —
+  il piè di pagina e l'informativa — il testo dice «codice sorgente» e «il
+  repository pubblico del progetto», quindi il nome vecchio sta nell'indirizzo
+  e non sulla pagina. Si vede passandoci sopra, non leggendo. Da chiudere prima
+  di mettere il sito in rete, non necessariamente prima dei passi 2 e 3.
+
+### Deciso, per non ridiscuterlo
+
+- **Niente riscrittura della storia di git**, e nessun rinomino della cartella
+  locale `it-undicesimacasa`: la prima è pericolosa, il secondo non è codice.
+- **Il dominio non entra nel codice.** Nessun file lo scrive oggi: `Meta.svelte`
+  compone gli indirizzi da `page.url.origin`, e in produzione è `ORIGIN` a
+  dirlo. Il cambio di dominio è configurazione, non un passo di questo lavoro.
+- **`12segni` non è un secondo marchio.** È il dominio di servizio e il nome
+  breve sotto l'icona, dove sette caratteri sono il tetto. Nella prosa il nome
+  è uno solo.
+
+## 2. Il guardiano della navigazione nell'app desktop
+
+**Da fare per primo fra i punti che toccano il comportamento, e comunque
+indipendentemente dal punto 3.**
 
 `creaFinestra` in `apps/desktop/src/main.ts` installa `setWindowOpenHandler`:
 nega ogni `window.open` e gira gli `http(s)` al browser di sistema. Copre una
@@ -42,7 +168,7 @@ Serve `npm run build && npm start -w @undicesimacasa/desktop`, cliccare
 «Swiss Ephemeris» nel piè di pagina, e vedere che si apre il browser di sistema
 mentre la finestra resta dov'è.
 
-## 2. Electron da 38 a 43
+## 3. Electron da 38 a 43
 
 `apps/desktop/package.json` fissa `electron` a `38.8.6`, esatta. `npm audit`
 riporta diciannove avvisi su quella versione, più uno su `extract-zip@2.0.1`,
@@ -74,10 +200,10 @@ l'AppImage prodotto e percorrere le due strade che il processo principale
 governa — l'importazione del database al primo avvio, e il calcolo di un tema.
 I test non toccano niente di tutto questo.
 
-Da fare dopo il punto 1, così il guardiano è già al suo posto quando si cambia
+Da fare dopo il punto 2, così il guardiano è già al suo posto quando si cambia
 il motore sotto.
 
-## 3. Le azioni di GitHub su Node 24
+## 4. Le azioni di GitHub su Node 24
 
 `.github/workflows/controlli.yml` usa `actions/checkout@v4`,
 `actions/setup-node@v4` e `actions/cache@v4`. Tutte e tre dichiarano `node20`, e
@@ -98,7 +224,7 @@ scaricando le dipendenze senza cache invece di fallire.
 
 Verifica: il push stesso. Il giro deve restare verde e l'annotazione sparire.
 
-## 4. I dieci varga che mancano
+## 5. I dieci varga che mancano
 
 Calcolati: D-1, D-3, D-9, D-10, D-12, D-30, in `packages/core/src/varga.ts`.
 Sono i più usati, ed è la ragione per cui vengono per primi — non la
@@ -158,7 +284,7 @@ Verifica per tutti i lotti: `packages/core/test/varga.test.ts` ha già la forma
 — confini noti calcolati a mano per un segno pari e uno dispari, più la prova
 che la regola viaggi col risultato.
 
-## 5. La prosa che può invecchiare senza dirlo
+## 6. La prosa che può invecchiare senza dirlo
 
 **Bassa priorità.** Nessuna delle due rompe niente: producono testo che dice il
 falso, e nessun test le vede. Stanno qui perché è il genere di cosa che si
@@ -221,7 +347,7 @@ sopravvive abbastanza da giustificarlo.
 
 Verifica: cambiare un'orbita in `ASPECTS` e vedere il test cadere.
 
-## 6. La domanda che manca ai transiti: che cosa è attivo in un arco
+## 7. La domanda che manca ai transiti: che cosa è attivo in un arco
 
 Oggi ci sono due tool e nessuno dei due risponde a «che cosa è in orbita fra il
 1° e il 30 settembre». `compute_transits` fotografa **un istante**;
