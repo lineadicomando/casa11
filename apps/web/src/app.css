@@ -436,7 +436,7 @@ tbody tr.evidenziato {
 .cappello {
   max-width: 42rem;
   margin: 0 0 1.6rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--testo-tenue);
 }
 
@@ -454,13 +454,39 @@ tbody tr.evidenziato {
    di lettura vera. */
 @media (min-width: 60rem) {
   .cappello {
+    position: relative;
     max-width: none;
     display: grid;
     /* `minmax(0, 1fr)` e non `1fr`: senza il minimo a zero una parola lunga —
        «vimshottari», «Chitrapaksha» — allarga la sua colonna oltre la metà e
        le due smettono di essere pari. */
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 2.5rem;
+    gap: 0 1.6rem;
+  }
+
+  /* La linea fra le due colonne.
+
+     Il vuoto da solo divideva già, ma gli serviva essere largo: 2,5rem di
+     stacco perché la fine di una riga non si leggesse attaccata all'inizio
+     della riga accanto. Una linea fa lo stesso lavoro con meno spazio — è
+     quello che si guadagna riducendo il salto a 1,6rem — e dice che le
+     colonne sono due e non un testo che va a capo per caso.
+
+     Sta su uno pseudo-elemento del contenitore e non come bordo di un
+     paragrafo perché deve essere più corta delle colonne e centrata fra
+     loro: un bordo sarebbe alto quanto la sua colonna, e le due qui non
+     misurano quasi mai uguale. Il colore è quello dei bordi dell'interfaccia,
+     lo stesso divisore verticale di `DistributionTable`: separa, non si
+     legge. */
+  .cappello::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 70%;
+    background: var(--linea);
+    transform: translate(-50%, -50%);
   }
 
   /* Affiancati non si accollano: lo stacco fra i due paragrafi è la colonna
