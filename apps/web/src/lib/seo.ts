@@ -8,6 +8,33 @@
  */
 
 import { SECTIONS } from '$lib/navigation';
+import { SITE_NAME } from '$lib/project';
+
+/**
+ * Quanti caratteri di titolo un motore di ricerca mostra prima di troncare.
+ *
+ * È un numero approssimato per forza: il taglio è in pixel — una sessantina
+ * di caratteri della larghezza media dell'alfabeto latino — e una parola di
+ * sole maiuscole finisce prima. Vale come tetto da non avvicinare, non come
+ * misura da riempire.
+ */
+export const TITOLO_MASSIMO = 60;
+
+/**
+ * Il titolo di una pagina: quello della sezione, poi il nome del sito.
+ *
+ * In quest'ordine e non nell'altro, perché è la prima metà quella che
+ * sopravvive al troncamento, e la parola che distingue questa pagina dalle
+ * altre sei sta lì. Il nome del sito in coda serve a chi legge un elenco di
+ * risultati e vuole sapere da dove vengono.
+ *
+ * Sta qui e non dentro `components/Meta.svelte` per la ragione di sempre in
+ * questo file: è la parte che si può provare. Un titolo troppo lungo non si
+ * vede rileggendo il componente — si vede contando, e a contare è un test.
+ */
+export function titoloCompleto(titolo: string): string {
+  return `${titolo} — ${SITE_NAME}`;
+}
 
 /**
  * Le pagine che ha senso indicizzare, in ordine.

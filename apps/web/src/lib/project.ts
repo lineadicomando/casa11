@@ -28,6 +28,27 @@ export const SITE_NAME = 'dodicisegni';
 export const SITE_SHORT_NAME = '12segni';
 
 /**
+ * Che cosa il sito calcola, in tre parole.
+ *
+ * Non è un motto: è l'elenco delle cose che ci sono, nell'ordine in cui uno
+ * le cerca. Un payoff vero — una promessa, un tono — qui non avrebbe niente da
+ * promettere, perché il motore non interpreta e chi arrivasse cercando un
+ * significato tornerebbe indietro subito.
+ *
+ * Serve in due posti, e in tutt'e due perché è **corta**: è il titolo della
+ * pagina d'ingresso, dove «Tema natale» da solo sprecava la pagina più forte
+ * del sito e dove oltre una sessantina di caratteri un motore di ricerca
+ * tronca; ed è lo `slogan` dei dati strutturati, che è il campo dove una cosa
+ * del genere va dichiarata. Chi la allunga rompe il primo dei due usi, e
+ * `lib/seo.test.ts` lo dice.
+ *
+ * Sulle altre sezioni non compare: un titolo uguale su ogni pagina è la cosa
+ * che i motori riscrivono per prima, e toglierebbe peso alla parola che
+ * distingue la sezione.
+ */
+export const SITE_TAGLINE = 'Tema natale, transiti e ore planetarie';
+
+/**
  * Che cos'è il sito, in una riga.
  *
  * Sta qui perché la dicono in due — il manifesto a chi installa

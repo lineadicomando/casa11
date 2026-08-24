@@ -14,6 +14,7 @@
   import { houseSystemOrDefault } from '$lib/house-systems';
   import { ayanamsaOrDefault, zodiacOrDefault } from '$lib/zodiacs';
   import { birthStore } from '$lib/birth-store.svelte';
+  import { SITE_TAGLINE } from '$lib/project';
   import AngleTable from '$lib/components/AngleTable.svelte';
   import AspectTable from '$lib/components/AspectTable.svelte';
   import BirthForm from '$lib/components/BirthForm.svelte';
@@ -163,7 +164,17 @@
   });
 </script>
 
-<Meta titolo="Tema natale" descrizione="Posizioni planetarie, case e aspetti di un tema di nascita, calcolati con le effemeridi Swiss Ephemeris." />
+<!-- L'unica sezione che non si intitola col proprio nome. «Tema natale» è
+     quello che questa pagina fa, ma è anche l'ingresso del sito: chi lo cerca
+     per nome, o senza sapere come si chiama, arriva qui, e un titolo che
+     nomini una cosa sola delle tre nasconde le altre due. `SITE_TAGLINE` le
+     dice tutte e sta nel troncamento — vedi `lib/project.ts`. L'`h1` qui
+     sotto resta «Tema natale»: quello è il titolo della sezione, e sotto ci
+     sta il modulo di una sola. -->
+<Meta
+  titolo={SITE_TAGLINE}
+  descrizione="Posizioni planetarie, case e aspetti di un tema di nascita, calcolati con le effemeridi Swiss Ephemeris."
+/>
 
 <!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
      Resta però scritto: chi naviga per intestazioni deve poter partire da una. -->

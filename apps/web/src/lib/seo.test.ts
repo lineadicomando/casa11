@@ -1,8 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { SECTIONS } from './navigation';
-import { PAGINE_PUBBLICHE, robotsTxt, sitemapXml } from './seo';
+import { SITE_NAME, SITE_TAGLINE } from './project';
+import { PAGINE_PUBBLICHE, robotsTxt, sitemapXml, TITOLO_MASSIMO, titoloCompleto } from './seo';
 
 const ORIGINE = 'https://esempio.it';
+
+describe('titoloCompleto', () => {
+  it('mette la sezione prima e il sito dopo', () => {
+    expect(titoloCompleto('Transiti')).toBe(`Transiti — ${SITE_NAME}`);
+  });
+
+  it('tiene ogni sezione dentro il troncamento', () => {
+    for (const section of SECTIONS) {
+      expect(titoloCompleto(section.label).length).toBeLessThanOrEqual(TITOLO_MASSIMO);
+    }
+  });
+
+  // La pagina d'ingresso non si intitola col nome della sezione ma con
+  // `SITE_TAGLINE`, che è la più lunga di tutte: se qualcuno la allunga
+  // ancora, il titolo della home viene tagliato a metà nei risultati di
+  // ricerca e nessuno se ne accorge guardando il sito.
+  it('tiene la pagina d\'ingresso dentro il troncamento', () => {
+    expect(titoloCompleto(SITE_TAGLINE).length).toBeLessThanOrEqual(TITOLO_MASSIMO);
+  });
+});
 
 describe('PAGINE_PUBBLICHE', () => {
   it('contiene tutte le sezioni del menù', () => {

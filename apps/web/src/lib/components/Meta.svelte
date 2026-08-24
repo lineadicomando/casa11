@@ -20,10 +20,16 @@
     SITE_DESCRIPTION,
     SITE_NAME,
     SITE_SHORT_NAME,
+    SITE_TAGLINE,
   } from '$lib/project';
+  import { titoloCompleto } from '$lib/seo';
 
   interface Props {
-    /** Il titolo della sezione, senza il nome del sito: lo aggiunge qui. */
+    /**
+     * Il titolo della sezione, senza il nome del sito: lo aggiunge
+     * `titoloCompleto`. La pagina d'ingresso è l'eccezione e passa
+     * `SITE_TAGLINE`, perché lì la sezione e il sito sono la stessa cosa.
+     */
     titolo: string;
     /** Una riga sola, la stessa che sta sotto il titolo nella pagina. */
     descrizione: string;
@@ -31,7 +37,7 @@
 
   let { titolo, descrizione }: Props = $props();
 
-  const completo = $derived(`${titolo} — ${SITE_NAME}`);
+  const completo = $derived(titoloCompleto(titolo));
 
   /**
    * L'indirizzo senza i parametri.
@@ -72,6 +78,11 @@
       '@type': 'WebSite',
       name: SITE_NAME,
       alternateName: SITE_SHORT_NAME,
+      // Il campo che schema.org tiene apposta per il motto di una cosa. Non
+      // produce nessun risultato ricco e non è un fattore di posizionamento:
+      // è la sede corretta di una frase che il sito dice comunque di sé, e
+      // che senza di questo starebbe scritta solo dentro un `<title>`.
+      slogan: SITE_TAGLINE,
       url: `${page.url.origin}/`,
       description: SITE_DESCRIPTION,
       inLanguage: 'it-IT',
