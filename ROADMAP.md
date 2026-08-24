@@ -11,9 +11,10 @@ non ritrovarla una seconda volta e ricominciare da capo.
 
 **Prioritario.** Il progetto prende il nome `dodicisegni`, sul dominio
 `dodicisegni.it`; `12segni.it` è il dominio di servizio, già registrato. Nel
-marchio il numero resta romano — «XII» sopra «segni» — e il nome breve
-dell'icona installata è `12segni`, che sta nei sette caratteri che un
-lanciatore concede.
+marchio il numero è in cifre — «12» sopra «segni» — perché «XII» si legge
+anche «dodicesima» e il nome dice dodici segni, non il dodicesimo di qualcosa;
+il nome breve dell'icona installata è `12segni`, che sta nei sette caratteri
+che un lanciatore concede.
 
 **Non c'è niente da preservare.** Il progetto non è in produzione: nessuno ha
 una preferenza di tema salvata da migrare, nessun client MCP ha memorizzato un

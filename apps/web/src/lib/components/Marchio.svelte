@@ -19,19 +19,35 @@
   cinque; un tratto solo che li tocca tutti e torna al principio, e ci riesce
   perché 5 e 12 non hanno divisori comuni.
 
-  **Nella fascia si nominano solo le due luci**, ☉ in alto e ☽ in basso, sul
-  verticale: sono i due corpi che chiunque riconosce senza sapere di
+  **Nella fascia si nominano solo le due luci**, ☽ a est e ☉ a ovest, cioè
+  sull'orizzonte: sono i due corpi che chiunque riconosce senza sapere di
   astrologia, e restano riconoscibili anche a quaranta punti d'altezza,
   che è quanto il sigillo misura in testata. Sono glifi che il progetto già usa — stanno in
   `packages/ruota/src/glyphs.ts` — e qui non sono ridisegnati ma scritti.
+
+  **Est è a sinistra**, come in ogni carta: chi guarda sta al centro rivolto a
+  sud, e a sud rivolti l'oriente cade a sinistra. Il Sole tramonta a destra
+  mentre la Luna sorge a sinistra, cioè i due luminari opposti sull'orizzonte —
+  il plenilunio al tramonto, che è la scena che più gente al mondo ha guardato.
+
+  **Il Sole non può stare dall'altra parte**, e la ragione non è simbolica. La
+  falce di ☽ ha la gobba a destra: è la luna crescente, gobba a ponente. In
+  cielo la parte illuminata guarda sempre il Sole, perché è una sfera e la luce
+  viene da lì. Col Sole a sinistra la falce risulterebbe illuminata dal lato
+  opposto alla sua sorgente — una scena che non esiste, e che si vede prima di
+  saperla spiegare. Specchiare il glifo non è una via d'uscita: ☾ è l'ultimo
+  quarto, non il simbolo della Luna. Finché le luci stavano sulla verticale la
+  questione non si poneva, perché lì l'illuminazione della falce è ortogonale
+  alla posizione del Sole e non può contraddirla.
 
   Le altre sei posizioni non portano altri glifi. Un anello di otto simboli
   diversi chiede di essere letto, e a questa misura non si lascia leggere: si
   guarda una fila di macchie e si prova a distinguerle. Al loro posto vanno sei
   stelline a quattro punte, che non dicono niente e non pretendono niente —
   tengono il ritmo di otto attorno alla fascia e lasciano il centro al segno che
-  conta. Le due sull'orizzontale sono più grandi delle quattro sulle diagonali:
-  gli assi del cerchio si vedono, come si vedono in una ruota.
+  conta. Le due sulla verticale sono più grandi delle quattro sulle diagonali:
+  gli assi del cerchio si vedono, come si vedono in una ruota, e le luci si
+  sono prese l'orizzontale.
 
   Il favicon è lo stesso segno ridotto all'osso — solo la stella, piena invece
   che di tratto. Vedi `graphics/favicon.svg`.
@@ -47,25 +63,27 @@
   const TESTO = '︎';
 
   /**
-   * Le due luci, in cima e in fondo al cerchio di raggio 41,5 dentro una
-   * griglia di 100 — cioè in mezzo alla fascia.
+   * Le due luci ai capi dell'orizzonte, sul cerchio di raggio 41,5 dentro una
+   * griglia di 100 — cioè in mezzo alla fascia. La Luna a est, che nel disegno
+   * di una carta è a sinistra, e il Sole a ovest: l'ordine sta scritto per
+   * esteso nel commento in cima, e non si inverte.
    */
   const LUCI = [
-    { glifo: `☉${TESTO}`, x: 50, y: 8.5 },
-    { glifo: `☽${TESTO}`, x: 50, y: 91.5 },
+    { glifo: `☽${TESTO}`, x: 8.5, y: 50 },
+    { glifo: `☉${TESTO}`, x: 91.5, y: 50 },
   ];
 
   /**
    * I sei decori, sullo stesso cerchio delle luci: quattro sulle diagonali e
-   * due sull'orizzontale, più grandi. Con le due luci fanno otto posizioni a
+   * due sulla verticale, più grandi. Con le due luci fanno otto posizioni a
    * 45 gradi l'una dall'altra.
    */
   const DECORI = [
+    { x: 50.0, y: 8.5, r: 4.1 },
     { x: 79.345, y: 20.655, r: 3.1 },
-    { x: 91.5, y: 50.0, r: 4.1 },
     { x: 79.345, y: 79.345, r: 3.1 },
+    { x: 50.0, y: 91.5, r: 4.1 },
     { x: 20.655, y: 79.345, r: 3.1 },
-    { x: 8.5, y: 50.0, r: 4.1 },
     { x: 20.655, y: 20.655, r: 3.1 },
   ];
 
@@ -121,13 +139,18 @@
     </g>
   </svg>
 
-  <!-- «dodicisegni» spezzato nelle sue due metà, con la prima scritta in cifre
-       romane: il numero è già una parola, e su due righe il marchio sta nella
-       colonna stretta del margine invece di attraversarla. Il romano è quello
-       con cui si numerano le case in una carta, quindi lega la scritta al
-       sigillo invece di ripetere il dominio così com'è scritto. -->
+  <!-- «dodicisegni» spezzato nelle sue due metà, con la prima scritta in cifre:
+       il numero è già una parola, e su due righe il marchio sta nella colonna
+       stretta del margine invece di attraversarla.
+
+       **Cifre arabe e non romane.** «XII» in italiano si legge tanto «dodici»
+       quanto «dodicesima» — è il numero con cui si contano le case in una
+       carta, e lì vuol dire la dodicesima — mentre il nome dice dodici segni,
+       non il dodicesimo di qualcosa. Il romano legava la scritta al sigillo al
+       prezzo di quell'equivoco. «12» dice un numero e basta, e a questa misura
+       si vede prima della parola che gli sta sotto. -->
   <span class="nome" aria-hidden="true">
-    <span class="numero">XII</span>
+    <span class="numero">12</span>
     <span class="parola">segni</span>
   </span>
 </span>
@@ -153,12 +176,12 @@
      si schiaccerebbe da solo quando la riga che lo contiene si stringe. */
   .sigillo {
     display: block;
-    height: var(--marchio-sigillo, 2.5rem);
+    height: var(--marchio-sigillo, 3rem);
     width: auto;
     flex: none;
   }
 
-  /* «XII» sta in mezzo a «segni» e non sul suo inizio: sono due righe di uno
+  /* «12» sta in mezzo a «segni» e non sul suo inizio: sono due righe di uno
      stesso blocco, e a bandiera la più corta si legge come una riga sfuggita
      invece che come la prima delle due. Vale in tutte e due le disposizioni. */
   .nome {
@@ -169,9 +192,34 @@
     line-height: 1;
   }
 
+  /*
+   * **Il numero è grande quanto serve a pareggiare la parola**, non quanto
+   * sarebbe naturale per una riga di testo: a corpo pari le due cifre stanno
+   * in poco più di metà di «SEGNI» spaziato, e le due righe fanno un cuneo. A
+   * questo corpo fanno un rettangolo, e il rettangolo è la ragione di tutto il
+   * resto — il sigillo è un cerchio, cioè ciò che gira e torna, e il nome
+   * sotto è la figura ferma che lo regge. Sono anche le due geometrie che il
+   * progetto disegna davvero: la ruota per l'occidentale, il quadro per il
+   * Jyotisha.
+   *
+   * Il pareggio si fa a occhio e non con un calcolo, perché la larghezza della
+   * parola dipende dal serif che il sistema presta: le misure qui sotto sono
+   * giuste per la catena di `--serif` e restano vicine col resto.
+   */
   .numero {
-    font-size: var(--marchio-numero, 1.35rem);
-    letter-spacing: 0.06em;
+    font-size: var(--marchio-numero, 2rem);
+    /* Cifre alte come le maiuscole. Parte dei serif di sistema — Georgia per
+       prima, che è la nostra — disegna i numeri in stile antico, cioè
+       all'altezza della x, e «12» verrebbe più basso del romano che sostituisce
+       proprio dove deve farsi vedere. Dove la variante non c'è la richiesta
+       cade da sé e restano le cifre del font. */
+    font-variant-numeric: lining-nums;
+    /* Poca, e non quanta ne ha la parola: serve ad aprire le due cifre, non a
+       separarle. Oltre un quinto di quadratone «12» si legge «1» e «2». */
+    letter-spacing: 0.18em;
+    /* Come per la parola qui sotto: la spaziatura si somma anche dopo l'ultima
+       cifra, e su due sole cifre lo scarto dal centro si vede. */
+    margin-right: -0.18em;
   }
 
   /* Il nome della proprietà non nomina la parola: chi la posa decide una

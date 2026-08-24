@@ -220,7 +220,7 @@
       --marchio-verso: column;
       --marchio-aria: 0.7rem;
       --marchio-sigillo: 5.5rem;
-      --marchio-numero: 1.7rem;
+      --marchio-numero: 2.6rem;
       --marchio-parola: 0.68rem;
     }
   }
@@ -235,8 +235,8 @@
 
       --marchio-verso: row;
       --marchio-aria: 0.55rem;
-      --marchio-sigillo: 2.5rem;
-      --marchio-numero: 1.35rem;
+      --marchio-sigillo: 3rem;
+      --marchio-numero: 2rem;
       --marchio-parola: 0.62rem;
     }
   }
