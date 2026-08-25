@@ -1,6 +1,6 @@
 ---
 name: nuova-funzione
-description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di dodicisegni che deve arrivare agli utenti o agli agenti — nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
+description: Usare quando si AGGIUNGE o si ESTENDE una funzione di calcolo di dodicisegni che deve arrivare agli utenti o agli agenti: nuovo calcolo in core, nuovo endpoint /api, nuovo tool MCP, nuova sezione dell'interfaccia, nuova opzione della CLI. Elenca le superfici da attraversare (core, CLI, web, MCP, README) e come spezzarle in commit. Trigger: nuovo calcolo, nuovo endpoint, nuovo tool MCP, nuova sezione, esporre agli agenti, nuova opzione CLI.
 ---
 
 # Aggiungere una funzione a dodicisegni
@@ -16,7 +16,7 @@ tutte le superfici pertinenti sono allineate.
 packages/core/src/<funzione>.ts     il calcolo
   ├── types.ts                      i tipi del risultato
   ├── index.ts                      l'export pubblico
-  ├── format.ts                     formatXxxCompact — la resa densa per gli agenti
+  ├── format.ts                     formatXxxCompact, la resa densa per gli agenti
   ├── cli.ts                        le opzioni di dodicisegni
   └── test/<funzione>.test.ts       obbligatorio
 
@@ -83,5 +83,5 @@ Italiano, indicativo presente terza persona, nessun prefisso convenzionale.
   è di chi consuma.
 - **Nel client di `apps/web` si importano solo tipi da `core`.** Un import di
   valore trascina le effemeridi nel bundle del browser.
-- Se il risultato può crescere senza limite (un arco di date), serve un tetto —
+- Se il risultato può crescere senza limite (un arco di date), serve un tetto:
   `MAX_RANGE_DAYS` in `tools.ts` e `lib/server/range.ts` sono il precedente.

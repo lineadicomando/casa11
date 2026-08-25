@@ -58,7 +58,7 @@ export function registerLetturaDelTema(server: McpServer, context: ToolContext =
           .string()
           .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato atteso: HH:mm.')
           .optional()
-          .describe("Ora di nascita locale, formato HH:mm. Ometti se ignota — non indovinarla."),
+          .describe("Ora di nascita locale, formato HH:mm. Ometti se ignota: non indovinarla."),
         location_id: z
           .string()
           .optional()
@@ -76,7 +76,7 @@ export function registerLetturaDelTema(server: McpServer, context: ToolContext =
             `Sistema astrologico della lettura. Ammessi: ${SISTEMI.join(', ')}. ` +
               `Default: ${SISTEMA_PREDEFINITO}, che è l'astrologia occidentale. ` +
               'jyotisha è quella indiana: zodiaco siderale, case a segni interi, e ' +
-              'in più nakshatra, dasha, navamsa e drishti. Non sceglierlo tu — ' +
+              'in più nakshatra, dasha, navamsa e drishti. Non sceglierlo tu: ' +
               'chiedilo solo se chi scrive lo domanda.',
           ),
       },

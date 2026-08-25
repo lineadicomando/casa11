@@ -67,7 +67,7 @@ import type {
 } from './types.js';
 
 const USAGE = `
-dodicisegni — calcolo del tema natale da riga di comando
+dodicisegni: calcolo del tema natale da riga di comando
 
   dodicisegni --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
   dodicisegni --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome \\
@@ -93,7 +93,7 @@ Opzioni
   --dasha               Aggiunge la catena vimshottari: centoventi anni divisi
                         fra i nove graha, a partire dal nakshatra della Luna.
                         Richiede --zodiaco siderale
-  --livelli <1|2|3>     Ordini di periodo. Default 2 — nove mahadasha con i loro
+  --livelli <1|2|3>     Ordini di periodo. Default 2: nove mahadasha con i loro
                         antardasha. Tre sono settecentoventinove righe
   --anno-dasha <nome>   solare (default, 365,25 giorni) oppure savana (360). Le
                         scuole divergono, e su ottant'anni è più di un anno
@@ -161,8 +161,8 @@ Cielo
   --sky --events        Ingressi nei segni e stazioni, con --from e --to
 
 Panchanga
-  --panchanga           Le cinque parti del calendario indiano — tithi, vara,
-                        nakshatra, yoga, karana — di un istante in un luogo.
+  --panchanga           Le cinque parti del calendario indiano (tithi, vara,
+                        nakshatra, yoga, karana) di un istante in un luogo.
                         Nessuna nascita, ma --lat e --lon sono obbligatorie: la
                         vara comincia all'alba. Siderale per definizione
   --on --at --tz        L'istante. Se omessi, adesso

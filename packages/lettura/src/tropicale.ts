@@ -36,20 +36,20 @@
  */
 export const TROPICALE = `Questo è un tema natale già calcolato da dodicisegni con le effemeridi Swiss
 Ephemeris: è il risultato di un calcolo, non la richiesta di farne uno. Non
-ricalcolarlo e non correggerlo — se un valore ti sembra sbagliato dillo invece
-di sistemarlo — e non aggiungere posizioni, aspetti o punti che qui sotto non
+ricalcolarlo e non correggerlo (se un valore ti sembra sbagliato dillo invece
+di sistemarlo), e non aggiungere posizioni, aspetti o punti che qui sotto non
 compaiano: se una tecnica ti servirebbe e il dato manca, dillo e fermati lì.
 
 COME SCRIVERE
 
-La gerarchia tecnica — struttura d'insieme, poi Sole, Luna e Ascendente, poi
-governatori, case e aspetti stretti — è l'ordine in cui GUARDI, non l'ordine in
+La gerarchia tecnica (struttura d'insieme, poi Sole, Luna e Ascendente, poi
+governatori, case e aspetti stretti) è l'ordine in cui GUARDI, non l'ordine in
 cui scrivi. Ricopiarla dà un manuale: corretto e morto, un inventario di
 posizioni in cui la persona non si riconosce.
 
 Scrivi da un centro. Cerca le due o tre forze che organizzano questo tema e la
 tensione principale fra loro: quella è la tesi, e il resto le sta intorno come
-prova. I dati sostengono ciò che dici, non aprono i paragrafi — «ti ritiri
+prova. I dati sostengono ciò che dici, non aprono i paragrafi: «ti ritiri
 proprio quando ti sei esposto, e ogni volta ti sorprende: la Luna in dodicesima
 opposta a Marte» invece di «Luna in dodicesima: tendenza al ritiro».
 
@@ -82,8 +82,8 @@ manca, come si compensa ciò che manca. Un elemento assente pesa quanto uno
 dominante.
 
 Indole e qualità da sviluppare. Che cosa è già maturo e che cosa è promessa non
-ancora spesa. Distingui una qualità dalla sua caricatura — ciò che dà fermezza
-dà anche rigidità — e dì a quali condizioni l'una scivola nell'altra. Domicilio,
+ancora spesa. Distingui una qualità dalla sua caricatura (ciò che dà fermezza
+dà anche rigidità) e dì a quali condizioni l'una scivola nell'altra. Domicilio,
 esaltazione, esilio e caduta li ricavi dal segno, e non sono un voto: dicono
 quanto una funzione lavori agevolata o controvento. Due pianeti personali di
 tempra opposta sono un attrito da nominare anche senza un aspetto fra loro.
@@ -95,8 +95,8 @@ somigli a una composizione e non suggerire di sacrificarne una. La tensione è i
 motore del tema, non il suo guasto.
 
 La missione di vita, intesa come lavoro su di sé e non come destino assegnato.
-Asse dei Nodi — il Sud è ciò che si sa già fare e che diventa rifugio, il Nord
-la direzione poco familiare — poi Saturno come compito, la dodicesima casa, la
+Asse dei Nodi (il Sud è ciò che si sa già fare e che diventa rifugio, il Nord
+la direzione poco familiare), poi Saturno come compito, la dodicesima casa, la
 Parte di Fortuna, il settore diurno o notturno, Plutone dove c'è da rifondare,
 Nettuno e Chirone se rilevanti. Un movimento, mai un traguardo o un debito da
 pagare. Un tema non vuole nulla: a volere è la persona.
@@ -110,9 +110,9 @@ promettere successo, non escludere strade, non dire quanto si guadagnerà.
 
 I legami, da valorizzare o da elaborare. Discendente e settima casa, Venere e
 Luna per il modo di legarsi e di aver bisogno, Marte per il modo di desiderare e
-di litigare, quinta e ottava se occupate. Descrivi dinamiche ricorrenti — che
+di litigare, quinta e ottava se occupate. Descrivi dinamiche ricorrenti (che
 cosa si tende a chiedere, che cosa si tende a non dire, dove si scambia
-intensità per vicinanza — e offri qualcosa di praticabile su ciò che dipende da
+intensità per vicinanza) e offri qualcosa di praticabile su ciò che dipende da
 chi legge. Non giudicare i partner, non dedurre l'orientamento affettivo dal
 tema, non dire con quali segni si è compatibili: un rapporto si legge su due
 temi, e il secondo non ce l'hai.
@@ -135,6 +135,6 @@ linguaggio simbolico.
 Ogni affermazione deve poggiare su un dato presente qui sotto. Se in testa alla
 tabella c'è «ora ignota», case e assi non ci sono: niente Ascendente, niente
 Medio Cielo, niente case, e lascia perdere le attività affini, che si reggono
-sul Medio Cielo — la Luna, poi, ha un margine di quasi un segno. Le righe sotto
+sul Medio Cielo; la Luna, poi, ha un margine di quasi un segno. Le righe sotto
 AVVERTENZE dicono che cosa il calcolo non ha potuto fare per intero: riferisci
 quelle che cambiano la fiducia nel risultato.`;

@@ -89,8 +89,8 @@
   <h3>Prompt per un'AI</h3>
 
   <p>
-    Copia un <strong>prompt già pronto</strong> — questo tema più le istruzioni
-    per interpretarlo — da incollare in ChatGPT, Claude o un altro assistente:
+    Copia un <strong>prompt già pronto</strong> (questo tema più le istruzioni
+    per interpretarlo) da incollare in ChatGPT, Claude o un altro assistente:
     la lettura la scrive lui, sulle posizioni calcolate qui. Questa pagina non
     parla con nessuna AI: il prompt finisce negli appunti, e dove vada poi lo
     decidi tu.
@@ -108,7 +108,7 @@
 
   {#if ripiego}
     <p class="suggerimento">
-      Gli appunti non si sono lasciati scrivere — succede fuori da una connessione
+      Gli appunti non si sono lasciati scrivere: succede fuori da una connessione
       cifrata. Il testo è qui: selezionalo e copialo a mano.
     </p>
     <textarea readonly rows="8" aria-label="Il tema e le istruzioni, da copiare">{ripiego}</textarea>

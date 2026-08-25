@@ -3,7 +3,7 @@
 Generazione di temi natali: motore di calcolo astronomico, API REST e server MCP.
 
 Il progetto è diviso in un **motore puro** e in **adattatori** che lo espongono
-su superfici diverse — un'interfaccia web per le persone, una riga di comando,
+su superfici diverse: un'interfaccia web per le persone, una riga di comando,
 un server MCP per gli agenti. Il calcolo è deterministico e **non contiene
 interpretazioni**: quelle restano a carico di chi consuma i dati.
 
@@ -41,7 +41,7 @@ npm test
 ```
 
 Le effemeridi sono facoltative: senza i file `.se1` il motore ripiega su
-Moshier — ~0,4 secondi d'arco sui pianeti principali, niente Chirone — e lo
+Moshier (~0,4 secondi d'arco sui pianeti principali, niente Chirone) e lo
 dichiara in `warnings`.
 
 ## Le superfici
@@ -62,8 +62,8 @@ npm run dev -w @dodicisegni/web      # http://localhost:5173
 npm run build && npm start -w @dodicisegni/web   # http://localhost:3000
 ```
 
-Si installa come applicazione — manifesto, icone e un service worker che tiene
-il guscio sul dispositivo — e senza collegamento si apre e si sfoglia. Non
+Si installa come applicazione (manifesto, icone e un service worker che tiene
+il guscio sul dispositivo) e senza collegamento si apre e si sfoglia. Non
 calcola: il motore sta sul server, e a rete assente l'interfaccia lo dice
 invece di far finta. Nessuna notifica, né la richiesta di poterne mandare. Il
 service worker si registra solo sulla build, e non dentro Electron: il perché è
@@ -71,7 +71,7 @@ in `apps/web/src/routes/+layout.svelte`.
 
 **Server MCP.** Dieci tool su stdio: non è un servizio da avviare, è un processo
 che il client lancia. Accanto ai tool c'è il prompt `lettura_del_tema`, che
-consegna il tema insieme alle istruzioni per interpretarlo — un prompt e non un
+consegna il tema insieme alle istruzioni per interpretarlo: un prompt e non un
 tool perché lo sceglie chi usa il client, non il modello.
 
 ```json
@@ -108,7 +108,7 @@ docker compose --profile dev up dev                  # Vite, :5173
 docker compose --profile mcp run --rm -T mcp         # server MCP su stdio
 ```
 
-Dove viva il dataset lo decide `GEONAMES_DATA` in `.env` — vedi
+Dove viva il dataset lo decide `GEONAMES_DATA` in `.env`; vedi
 `.env.example`: un nome è un volume Docker, un percorso che inizi per `.` o `/`
 è un bind mount.
 
@@ -128,7 +128,7 @@ di un motore di ricerca. Si dichiara una volta:
 ORIGIN=https://esempio.it node apps/web/build/index.js
 ```
 
-Con Docker sta in `.env`; in sviluppo e dentro Electron non serve — là
+Con Docker sta in `.env`; in sviluppo e dentro Electron non serve: là
 l'indirizzo è quello del loopback e il sito non è indicizzato da nessuno.
 
 **`REPOSITORY_URL`** in `apps/web/src/lib/project.ts` va cambiato con
@@ -156,22 +156,22 @@ npm run build
 Il motore non interpreta, ed è un vincolo, non una funzione mancante. Quello che
 produce sono **predicati verificabili**: affermazioni che chiunque può
 ricalcolare dagli stessi dati di partenza, seguendo la convenzione che il motore
-dichiara accanto al risultato. Dove le scuole divergono — la formula della Parte
-di Fortuna, che cosa entri in un conteggio — espone i componenti e nomina la
+dichiara accanto al risultato. Dove le scuole divergono (la formula della Parte
+di Fortuna, che cosa entri in un conteggio) espone i componenti e nomina la
 convenzione, invece di sceglierne una in silenzio e presentarne l'esito come un
 fatto. Che cosa significhino, quei dati, non lo dice mai.
 
 Sotto il tema calcolato, l'interfaccia offre un pulsante che copia negli appunti
-un **prompt già pronto** — il tema in forma di tabella più le istruzioni per
-leggerlo — da incollare nell'assistente che si preferisce. Il sito non parla con
+un **prompt già pronto** (il tema in forma di tabella più le istruzioni per
+leggerlo) da incollare nell'assistente che si preferisce. Il sito non parla con
 nessun modello e non manda niente a nessuno.
 
 Quel prompt è il riferimento unico per la lettura, e vive in
-`packages/lettura` — un pacchetto a sé perché non lo vuole solo il sito: la
+`packages/lettura`, un pacchetto a sé perché non lo vuole solo il sito: la
 riga di comando lo stampa e il server MCP lo offre agli agenti.
 
 I documenti sono **uno per sistema astrologico**, non uno parametrizzato. Un
-tema vedico ha un altro centro — la Luna e il lagna, non il Sole — altri
+tema vedico ha un altro centro (la Luna e il lagna, non il Sole), altri
 domicili, aspetti che non sono orbite e un impianto temporale che in occidente
 non ha corrispettivo: le istruzioni tropicali applicate a quei dati non danno
 un errore, danno un ibrido plausibile.

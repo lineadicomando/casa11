@@ -37,8 +37,8 @@ export function createServer(context: ToolContext = {}): McpServer {
         'find_transit_passages. Senza una nascita non esistono transiti ma solo il cielo: ' +
         'per quello c\'è compute_sky, che non chiede né data di nascita né luogo, e ' +
         'find_sky_events per gli incontri, gli ingressi e le stazioni di un periodo. ' +
-        'Per scegliere QUANDO cominciare qualcosa in un luogo — ore planetarie, Ascendente ' +
-        "che sorge, Luna vuota di corso — c'è find_election_hours, che vuole il luogo e " +
+        'Per scegliere QUANDO cominciare qualcosa in un luogo (ore planetarie, Ascendente ' +
+        "che sorge, Luna vuota di corso) c'è find_election_hours, che vuole il luogo e " +
         'nessuna nascita. ' +
         'Per il presente ometti sempre la data: la data corrente la mette il server. ' +
         'Per MOSTRARE la carta invece che leggerla c\'è draw_chart_wheel, che ne restituisce ' +

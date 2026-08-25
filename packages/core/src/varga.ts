@@ -93,7 +93,7 @@ export const VARGAS: readonly VargaDefinition[] = [
     divisions: 9,
     rule:
       "Nove parti da 3°20'. Si parte dal segno stesso se è cardinale, dal nono se è fisso, " +
-      'dal quinto se è mobile — cioè, detto altrimenti, da Ariete per i segni di fuoco, ' +
+      'dal quinto se è mobile; cioè, detto altrimenti, da Ariete per i segni di fuoco, ' +
       'Capricorno per la terra, Bilancia per l\'aria, Cancro per l\'acqua.',
     signIndex: (sign, degree) => {
       // 0 cardinale, 1 fisso, 2 mobile: la modalità si legge dall'indice.

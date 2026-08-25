@@ -87,8 +87,8 @@
 
   <label for="anno" class:nascosto={compact}>Anno di dasha</label>
   <select id="anno" bind:value={dashaYear} onchange={() => onchange?.()}>
-    <option value="solare">Anno solare — 365,25 giorni</option>
-    <option value="savana">Anno savana — 360 giorni</option>
+    <option value="solare">Anno solare (365,25 giorni)</option>
+    <option value="savana">Anno savana (360 giorni)</option>
   </select>
 
   <label for="nodi" class:nascosto={compact}>Drishti di Rahu e Ketu</label>

@@ -35,7 +35,7 @@ npm run dist -w @dodicisegni/desktop    # AppImage in apps/desktop/release, dopo
 
 `npm run geo:import -w @dodicisegni/geo` scarica **~215 MB**: serve solo se
 la ricerca delle località non funziona, non va lanciato per abitudine.
-`npm run ephe:download -w @dodicisegni/core` (~2 MB) è opzionale — senza,
+`npm run ephe:download -w @dodicisegni/core` (~2 MB) è opzionale: senza,
 il motore usa Moshier invece delle effemeridi Swiss.
 
 ## Vincoli
@@ -44,16 +44,16 @@ il motore usa Moshier invece delle effemeridi Swiss.
   dipendenza deve esserle compatibile.
 - **Il motore non interpreta: emette predicati verificabili.** Un dato è
   un'affermazione che chiunque può ricalcolare dagli stessi input seguendo la
-  convenzione che il motore dichiara — `Distribution` porta `counted` perché chi
+  convenzione che il motore dichiara: `Distribution` porta `counted` perché chi
   conta diversamente rifaccia la somma, la Parte di Fortuna nomina la formula, il
   tema porta il sistema di case. Che cosa significhi non lo dice mai: la riga sta
   per esteso nel commento a `VoidOfCourse` in `types.ts`. Il confine è il
-  significato, non l'ampiezza — un conteggio su tutto il tema si può fare,
+  significato, non l'ampiezza: un conteggio su tutto il tema si può fare,
   «Saturno in settima ritarda il matrimonio» no. Dove le scuole divergono si
   espongono i componenti e si nomina la scuola, mai un totale solo.
 - **Il client non importa valori da `@dodicisegni/core`, solo tipi.** Un
   import di valore trascina effemeridi e modulo nativo nel bundle del browser.
-- **Niente `async`/`await` nella catena di calcolo** — `chart`, `sky`,
+- **Niente `async`/`await` nella catena di calcolo**: `chart`, `sky`,
   `transits`, `passages`, `election`, `sky-events`. Swiss Ephemeris tiene lo
   zodiaco siderale in **stato globale del modulo nativo**: `set_sid_mode` vale
   per il processo, non per la chiamata. Oggi è sicuro perché fra l'impostazione
@@ -65,10 +65,10 @@ il motore usa Moshier invece delle effemeridi Swiss.
 
   Quello stato è però **per thread**, non per processo: ogni thread carica la
   sua istanza del modulo nativo. È la ragione per cui le tre rotte che costano
-  secondi — passaggi, calendario del cielo, elezione — girano in un pool di
+  secondi (passaggi, calendario del cielo, elezione) girano in un pool di
   worker (`apps/web/src/lib/server/pool.ts`) senza che il vincolo qui sopra
   cambi di una virgola: la catena resta sincrona, solo gira altrove. Il fatto è
-  verificato in `pool.test.ts` e non va dato per scontato — se cadesse, il pool
+  verificato in `pool.test.ts` e non va dato per scontato: se cadesse, il pool
   va smontato, non aggiustato.
 - **Il fallimento è parziale**: un corpo non calcolabile produce un avviso, non
   un errore; l'ora ignota produce una carta senza case, non un rifiuto. Gli
@@ -87,13 +87,13 @@ il motore usa Moshier invece delle effemeridi Swiss.
   copia negli appunti gira nel browser: un import di `core` da qui trascinerebbe
   le effemeridi nel bundle per la via traversa che il vincolo sul client
   chiudeva dalla porta principale. I documenti di lettura sono uno per sistema
-  astrologico, non uno parametrizzato — vedi `src/lettura.ts`.
+  astrologico, non uno parametrizzato; vedi `src/lettura.ts`.
 - **Il service worker conserva il guscio, non i calcoli.** `/api` non entra
   mai nella sua cache, e le pagine ci entrano indicizzate per **percorso**,
   senza query. Le due regole stanno in `apps/web/src/lib/cache-policy.ts` e non
   nel worker apposta per poterle provare. La ragione è una sola e vale per
   entrambe: gli indirizzi di questa applicazione portano data, ora e luogo di
-  nascita — `/?date=…&locationId=…` è una URL vera — e una cache che
+  nascita (`/?date=…&locationId=…` è una URL vera), e una cache che
   l'applicazione governa, con un nome suo e senza scadenza, sarebbe un elenco
   dei temi guardati che resta sul dispositivo. Senza rete si apre
   l'interfaccia; il calcolo no, e `lib/api.ts` lo dice già.
@@ -112,7 +112,7 @@ Commenti e identificatori di dominio in italiano dove il dominio è italiano
 
 **I termini dell'astrologia indiana restano in sanscrito e non si traducono**:
 `nakshatra`, `tithi`, `karana`, `yoga`, `dasha`, `varga`, `drishti`, `pada`. La
-regola di sopra dice «nella lingua del dominio», e qui il dominio è quello —
+regola di sopra dice «nella lingua del dominio», e qui il dominio è quello,
 come `yoga` e `karma`, che in italiano si dicono così. Tradurli produrrebbe
 parole che nessun libro usa e che non si possono cercare da nessuna parte:
 «dimore lunari» per i nakshatra è una perifrasi, non un nome. La prosa dei

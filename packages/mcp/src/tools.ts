@@ -108,7 +108,7 @@ const ZODIAC_SCHEMA = {
       'Zodiaco in cui esprimere le longitudini. Default: tropicale, che è quello ' +
         "dell'astrologia occidentale. siderale è quello ancorato alle stelle fisse, " +
         "usato dall'astrologia indiana: fra i due corrono oltre ventiquattro gradi, " +
-        'cioè quasi un segno intero. Non sceglierlo tu — è una convenzione di scuola, ' +
+        'cioè quasi un segno intero. Non sceglierlo tu: è una convenzione di scuola, ' +
         'e va usata solo se chi scrive la chiede.',
     ),
   ayanamsa: z
@@ -242,7 +242,7 @@ export function registerComputeNatalChart(server: McpServer, context: ToolContex
           .regex(/^\d{2}:\d{2}(:\d{2})?$/)
           .optional()
           .describe(
-            "Ora di nascita locale, formato HH:mm. Ometti se ignota — non tirare a indovinare.",
+            "Ora di nascita locale, formato HH:mm. Ometti se ignota: non tirare a indovinare.",
           ),
         location_id: z
           .number()
@@ -340,7 +340,7 @@ export function registerComputeJyotishaChart(server: McpServer, context: ToolCon
         'Usalo solo se chi scrive chiede astrologia vedica, indiana o Jyotisha: per il tema ' +
         'occidentale c\'è compute_natal_chart. ' +
         'Restituisce solo dati verificabili: nessuna interpretazione. Le dasha portano delle ' +
-        'DATE, e sono aritmetica — dicono quando comincia un periodo, non che cosa accadrà ' +
+        'DATE, e sono aritmetica: dicono quando comincia un periodo, non che cosa accadrà ' +
         'dentro: non usarle per predire. ' +
         'Fornisci data e ora COME SONO SEGNATE sul documento di nascita, in ora locale. ' +
         "Se l'ora è ignota ometti time: le dasha diventano indicative di anni, non di giorni, " +
@@ -355,7 +355,7 @@ export function registerComputeJyotishaChart(server: McpServer, context: ToolCon
           .regex(/^\d{2}:\d{2}(:\d{2})?$/)
           .optional()
           .describe(
-            "Ora di nascita locale, formato HH:mm. Ometti se ignota — non tirare a indovinare: " +
+            "Ora di nascita locale, formato HH:mm. Ometti se ignota, e non tirare a indovinare: " +
               'qui un\'ora sbagliata sposta le dasha di anni.',
           ),
         location_id: z
@@ -471,7 +471,7 @@ export function registerComputeTransits(server: McpServer, context: ToolContext 
         "case DELL'ISTANTE, che sono un'altra cosa: dicono dove i corpi stanno rispetto " +
         "all'orizzonte di quel posto, non in quale settore della vita passano. Non confonderle e " +
         'non sostituire le prime con le seconde. ' +
-        'Le orbite sono molto più strette di quelle natali — due gradi contro otto — perché ' +
+        'Le orbite sono molto più strette di quelle natali (due gradi contro otto) perché ' +
         'altrimenti un transito di Saturno risulterebbe attivo per mesi di fila. ' +
         'Un transito è una FASE, non un evento con una data: non trasformarlo in una previsione, ' +
         'non dire che cosa accadrà né quando, e non attribuirgli un esito.',
@@ -975,7 +975,7 @@ export function registerFindElectionHours(server: McpServer, context: ToolContex
         "pianeta che le regge, l'ASCENDENTE che sorge all'inizio di ciascuna, e i tratti in " +
         'cui la LUNA È VUOTA DI CORSO, cioè non perfeziona più alcun aspetto maggiore prima ' +
         'di cambiare segno. È il materiale dell\'elezione, la tecnica che sceglie QUANDO ' +
-        'cominciare qualcosa — non riguarda nessuna nascita e non va confuso con i transiti. ' +
+        'cominciare qualcosa: non riguarda nessuna nascita e non va confuso con i transiti. ' +
         'Il luogo è OBBLIGATORIO e senza alternative: alba e tramonto vengono da lì, e senza ' +
         'di loro non ci sono ore planetarie. Non inventarlo, chiedilo o cercalo con ' +
         'search_location. ' +
@@ -1099,14 +1099,14 @@ export function registerDrawChartWheel(server: McpServer, context: ToolContext =
       title: 'Disegna la ruota di un tema natale',
       description:
         'Restituisce il tema come IMMAGINE: la ruota con i segni, le case, i corpi e le linee ' +
-        'degli aspetti. Serve a mostrare la carta a chi la sta leggendo, non a calcolarla — i ' +
+        'degli aspetti. Serve a mostrare la carta a chi la sta leggendo, non a calcolarla: i ' +
         'numeri stanno in compute_natal_chart, e un disegno non contiene le avvertenze del ' +
         'calcolo. Chiama prima quello: presentare una ruota senza aver letto i dati significa ' +
         'mostrare una carta di cui non sai se un corpo non è stato calcolato o se l\'ora era ' +
         'ambigua. ' +
         'Prende gli stessi parametri di nascita di compute_natal_chart, con le stesse regole: ' +
         "il luogo da search_location, l'ora come è segnata sul documento, e se è ignota si " +
-        'omette — la ruota uscirà senza case né assi, che è il disegno corretto in quel caso. ' +
+        'omette, e la ruota uscirà senza case né assi, che è il disegno corretto in quel caso. ' +
         'Con with_transits diventa una bi-ruota: il tema al centro e i corpi in transito ' +
         "nell'anello esterno.",
       inputSchema: {
@@ -1119,7 +1119,7 @@ export function registerDrawChartWheel(server: McpServer, context: ToolContext =
           .regex(/^\d{2}:\d{2}(:\d{2})?$/)
           .optional()
           .describe(
-            "Ora di nascita locale, formato HH:mm. Ometti se ignota — non tirare a indovinare: " +
+            "Ora di nascita locale, formato HH:mm. Ometti se ignota, e non tirare a indovinare: " +
               'la ruota verrà disegnata senza case né assi.',
           ),
         location_id: z
@@ -1181,7 +1181,7 @@ export function registerDrawChartWheel(server: McpServer, context: ToolContext =
           .optional()
           .describe(
             'Colori del disegno. Default: chiaro, che è il fondo su cui una carta finisce ' +
-              'quasi sempre — stampata, o incollata in un documento.',
+              'quasi sempre: stampata, o incollata in un documento.',
           ),
         width: z
           .number()
@@ -1285,7 +1285,7 @@ export function registerDrawJyotishaChart(server: McpServer, context: ToolContex
         'calcolo** né i gradi. ' +
         'Il Jyotisha non si disegna in una ruota ma in un quadrato, e in due forme: nel ' +
         'SUD i segni stanno fermi e le case si spostano, nel NORD il contrario. Dicono la ' +
-        'stessa cosa in due disposizioni diverse — è presentazione, non dottrina — quindi ' +
+        'stessa cosa in due disposizioni diverse (è presentazione, non dottrina), quindi ' +
         'non sceglierne una per conto tuo se chi scrive non la nomina. ' +
         'Disegna un varga alla volta: senza indicarne uno esce la carta rashi (d1), che è ' +
         'quella che si guarda per prima. ' +
@@ -1317,8 +1317,8 @@ export function registerDrawJyotishaChart(server: McpServer, context: ToolContex
           .enum(['sud', 'nord'])
           .optional()
           .describe(
-            'La forma del quadro. sud (default): segni fissi, case mobili — si disegna ' +
-              "sempre. nord: case fisse, segni mobili — vuole l'ora di nascita.",
+            'La forma del quadro. sud (default): segni fissi, case mobili, si disegna ' +
+              "sempre. nord: case fisse, segni mobili, vuole l'ora di nascita.",
           ),
         varga: z
           .enum(VARGA_IDS)
@@ -1396,7 +1396,7 @@ export function registerFindTransitPassages(server: McpServer, context: ToolCont
         "Elenca gli istanti in cui i transiti si perfezionano nell'arco di tempo indicato. " +
         'È la risposta a QUANDO e a QUANTE VOLTE, che compute_transits non può dare: quello ' +
         'fotografa un momento, questo guarda un periodo. Un pianeta lento che passa in ' +
-        'retrogradazione tocca lo stesso punto natale tre volte — avanti, indietro, avanti — ' +
+        'retrogradazione tocca lo stesso punto natale tre volte (avanti, indietro, avanti) ' +
         'e quelle tre righe sono UN SOLO periodo letto in tre momenti, non tre fatti distinti: ' +
         'dillo, invece di elencarle come eventi separati. ' +
         'OMETTI from per partire da oggi: la data corrente la mette il server. ' +
