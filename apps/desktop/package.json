@@ -16,7 +16,7 @@
     "dist:win": "npm run build && npm run stage && electron-builder --win"
   },
   "devDependencies": {
-    "electron": "38.8.6",
+    "electron": "43.4.1",
     "electron-builder": "^26.0.12"
   }
 }
