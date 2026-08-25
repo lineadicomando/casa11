@@ -1,4 +1,4 @@
-import type { Location } from '@undicesimacasa/geo';
+import type { Location } from '@dodicisegni/geo';
 import { describe, expect, it } from 'vitest';
 import {
   emptyBirthInput,

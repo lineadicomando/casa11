@@ -7,7 +7,7 @@
  * nessuno leggerà.
  */
 
-import type { PassageRange } from '@undicesimacasa/core';
+import type { PassageRange } from '@dodicisegni/core';
 import { error } from '@sveltejs/kit';
 import { wallClock } from '$lib/clock';
 

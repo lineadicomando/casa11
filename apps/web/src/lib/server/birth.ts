@@ -12,7 +12,7 @@ import type {
   ChartOptions,
   HouseSystem,
   ZodiacOptions,
-} from '@undicesimacasa/core';
+} from '@dodicisegni/core';
 import { error } from '@sveltejs/kit';
 import { resolvePlace, type ResolvedPlace } from './place';
 

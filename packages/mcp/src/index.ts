@@ -1,7 +1,7 @@
 /**
- * @undicesimacasa/mcp — server MCP per il calcolo del tema natale.
+ * @dodicisegni/mcp — server MCP per il calcolo del tema natale.
  *
- * Adattatore sottile sopra @undicesimacasa/core e @undicesimacasa/geo: non contiene
+ * Adattatore sottile sopra @dodicisegni/core e @dodicisegni/geo: non contiene
  * logica di calcolo, solo la definizione dei tool e la traduzione degli errori
  * in messaggi da cui un agente possa correggersi.
  */

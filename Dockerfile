@@ -45,7 +45,7 @@ ENV NODE_ENV=development \
 
 EXPOSE 5173
 
-CMD ["npm", "run", "dev", "-w", "@undicesimacasa/web", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "-w", "@dodicisegni/web", "--", "--host", "0.0.0.0"]
 
 
 # ── Compilazione ─────────────────────────────────────────────────────────────
@@ -55,14 +55,14 @@ COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/ apps/
 
-RUN npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo \
-  && npm run build -w @undicesimacasa/mcp \
-  && npm run build -w @undicesimacasa/web
+RUN npm run build -w @dodicisegni/ruota -w @dodicisegni/lettura -w @dodicisegni/core -w @dodicisegni/geo \
+  && npm run build -w @dodicisegni/mcp \
+  && npm run build -w @dodicisegni/web
 
 # Dati non versionati, scaricati in fase di build.
 # Le effemeridi (~2 MB) stanno nell'immagine; il dataset delle località
 # (~90 MB) è troppo grande e resta su volume — vedi GEONAMES_DB_PATH sotto.
-RUN npm run ephe:download -w @undicesimacasa/core
+RUN npm run ephe:download -w @dodicisegni/core
 
 # Ripulisce le dipendenze di sviluppo prima di copiare nell'immagine finale.
 RUN npm prune --omit=dev --ignore-scripts

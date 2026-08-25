@@ -95,7 +95,7 @@ const FIXTURES: Fixture[] = [
 ];
 
 beforeAll(() => {
-  directory = mkdtempSync(join(tmpdir(), 'undicesimacasa-geo-'));
+  directory = mkdtempSync(join(tmpdir(), 'dodicisegni-geo-'));
   databasePath = join(directory, 'test.db');
 
   const database = new DatabaseSync(databasePath);

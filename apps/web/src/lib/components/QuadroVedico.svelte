@@ -11,7 +11,7 @@
   che a divergere non possono essere le posizioni.
 -->
 <script lang="ts">
-  import { quadroSvg, type SquareChart, type StileQuadro } from '@undicesimacasa/ruota';
+  import { quadroSvg, type SquareChart, type StileQuadro } from '@dodicisegni/ruota';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { PALETTE_PAGINA } from '$lib/palette-pagina';
 

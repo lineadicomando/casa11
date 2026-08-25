@@ -20,7 +20,7 @@
  * o `SCURA`, che sono colori veri.
  */
 
-import type { Palette } from '@undicesimacasa/ruota';
+import type { Palette } from '@dodicisegni/ruota';
 
 export const PALETTE_PAGINA: Palette = {
   sfondo: 'var(--sfondo)',

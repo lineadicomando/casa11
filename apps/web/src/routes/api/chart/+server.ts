@@ -1,4 +1,4 @@
-import { computeNatalChart, formatChartCompact } from '@undicesimacasa/core';
+import { computeNatalChart, formatChartCompact } from '@dodicisegni/core';
 import { error, json } from '@sveltejs/kit';
 import { placeLabel, readBirth, readChartOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';

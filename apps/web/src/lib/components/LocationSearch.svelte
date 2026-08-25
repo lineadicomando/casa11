@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Location } from '@undicesimacasa/geo';
+  import type { Location } from '@dodicisegni/geo';
   import { untrack } from 'svelte';
 
   interface Props {

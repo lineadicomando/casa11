@@ -11,8 +11,8 @@
   separate perché ciascuno sommi le sue.
 -->
 <script lang="ts">
-  import type { Distribution, DistributionGroup } from '@undicesimacasa/core';
-  import { ELEMENT_COLOR, ELEMENT_ORDER, MODALITY_ORDER } from '@undicesimacasa/ruota';
+  import type { Distribution, DistributionGroup } from '@dodicisegni/core';
+  import { ELEMENT_COLOR, ELEMENT_ORDER, MODALITY_ORDER } from '@dodicisegni/ruota';
 
   interface Props {
     distribution: Distribution;

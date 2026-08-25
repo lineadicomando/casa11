@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { SkyPassage } from '@undicesimacasa/core';
-  import { ASPECT_MAJOR, BODY_GLYPH, BODY_LABEL } from '@undicesimacasa/ruota';
+  import type { SkyPassage } from '@dodicisegni/core';
+  import { ASPECT_MAJOR, BODY_GLYPH, BODY_LABEL } from '@dodicisegni/ruota';
 
   /**
    * Gli istanti in cui due corpi in cielo formano un aspetto esatto.

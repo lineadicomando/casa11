@@ -55,7 +55,7 @@ jobs:
       # scaricano lo stesso per due ragioni: è la configurazione che gira in
       # produzione, ed è la sola in cui i tre confronti fra Swiss Ephemeris e
       # Moshier hanno qualcosa da confrontare invece di saltare.
-      - run: npm run ephe:download -w @undicesimacasa/core
+      - run: npm run ephe:download -w @dodicisegni/core
 
       - run: npm test
 
@@ -84,14 +84,14 @@ jobs:
           context: .
           target: runtime
           load: true
-          tags: undicesimacasa:ci
+          tags: dodicisegni:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: L'applicazione web risponde
         shell: bash
         run: |
-          docker run -d --name web -p 3000:3000 undicesimacasa:ci
+          docker run -d --name web -p 3000:3000 dodicisegni:ci
           for _ in $(seq 30); do
             if curl -fsS -o /dev/null http://127.0.0.1:3000/; then exit 0; fi
             sleep 1
@@ -122,7 +122,7 @@ jobs:
           risposte=$(printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-            | timeout 60 docker run --rm -i undicesimacasa:ci node packages/mcp/dist/stdio.js)
+            | timeout 60 docker run --rm -i dodicisegni:ci node packages/mcp/dist/stdio.js)
           echo "$risposte" | jq -se '[.[] | select(.id == 2)][0].result.tools | length >= 1' > /dev/null
 
       # Quando qualcosa qui sopra è andato storto, il perché sta quasi sempre

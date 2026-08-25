@@ -65,8 +65,8 @@ describe('letturaDaIncollare', () => {
     expect(letturaDaIncollare(TEMA)).not.toContain('Tema calcolato da');
     expect(letturaDaIncollare(TEMA, { repository: '' })).not.toContain('Tema calcolato da');
     expect(
-      letturaDaIncollare(TEMA, { repository: 'https://esempio.it/undicesimacasa' }),
-    ).toContain('https://esempio.it/undicesimacasa');
+      letturaDaIncollare(TEMA, { repository: 'https://esempio.it/dodicisegni' }),
+    ).toContain('https://esempio.it/dodicisegni');
   });
 });
 

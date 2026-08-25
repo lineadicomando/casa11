@@ -17,7 +17,7 @@
  * e sta perciò nell'interfaccia.
  */
 
-import type { AspectId, NatalPointId, TransitingPointId } from '@undicesimacasa/core';
+import type { AspectId, NatalPointId, TransitingPointId } from '@dodicisegni/core';
 
 /**
  * Ciò che basta per riconoscere il riflesso di un contatto sull'asse.

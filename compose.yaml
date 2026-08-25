@@ -1,4 +1,4 @@
-name: undicesimacasa
+name: dodicisegni
 
 # Le tre superfici del progetto condividono un'unica immagine: cambia il
 # comando, non il codice. L'ancora evita di ripetere build ed environment.
@@ -6,7 +6,7 @@ x-runtime: &runtime
   build:
     context: .
     target: runtime
-  image: undicesimacasa:latest
+  image: dodicisegni:latest
   environment:
     GEONAMES_DB_PATH: /data/geonames.db
     # L'indirizzo pubblico del sito. Vuoto quando non è dichiarato in `.env`,
@@ -69,7 +69,7 @@ services:
     build:
       context: .
       target: dev
-    image: undicesimacasa-dev:latest
+    image: dodicisegni-dev:latest
     profiles: [dev]
     environment:
       GEONAMES_DB_PATH: /data/geonames.db
@@ -79,7 +79,7 @@ services:
     command:
       - sh
       - -c
-      - npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo && npm run dev -w @undicesimacasa/web -- --host 0.0.0.0 --port 5173
+      - npm run build -w @dodicisegni/ruota -w @dodicisegni/lettura -w @dodicisegni/core -w @dodicisegni/geo && npm run dev -w @dodicisegni/web -- --host 0.0.0.0 --port 5173
     ports:
       - "${DEV_PORT:-5173}:5173"
     volumes:

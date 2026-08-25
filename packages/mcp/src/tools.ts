@@ -37,15 +37,15 @@ import {
   type SkyPassageOptions,
   type TransitMoment,
   type TransitOptions,
-} from '@undicesimacasa/core';
-import { GeoError, getLocation, searchLocations, type Location } from '@undicesimacasa/geo';
+} from '@dodicisegni/core';
+import { GeoError, getLocation, searchLocations, type Location } from '@dodicisegni/geo';
 import {
   paletteDi,
   type OpzioniDisegno,
   type StileQuadro,
   type WheelChart,
-} from '@undicesimacasa/ruota';
-import { quadroPng, ruotaPng } from '@undicesimacasa/ruota/png';
+} from '@dodicisegni/ruota';
+import { quadroPng, ruotaPng } from '@dodicisegni/ruota/png';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';

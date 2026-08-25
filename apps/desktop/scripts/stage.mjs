@@ -44,7 +44,7 @@ writeFileSync(join(bundle, 'server', 'package.json'), '{ "type": "module" }\n');
 
 const moduli = join(bundle, 'node_modules');
 
-const core = join(moduli, '@undicesimacasa', 'core');
+const core = join(moduli, '@dodicisegni', 'core');
 cpSync(join(corePkg, 'package.json'), join(core, 'package.json'));
 cpSync(join(corePkg, 'dist'), join(core, 'dist'), { recursive: true });
 // Le effemeridi nella posizione di default del pacchetto: nessuna variabile
@@ -54,18 +54,18 @@ if (existsSync(join(corePkg, 'ephe'))) {
 } else {
   console.warn(
     'Effemeridi .se1 assenti: il pacchetto userà Moshier. ' +
-      'Per includerle: `npm run ephe:download -w @undicesimacasa/core`.',
+      'Per includerle: `npm run ephe:download -w @dodicisegni/core`.',
   );
 }
 
-const geo = join(moduli, '@undicesimacasa', 'geo');
+const geo = join(moduli, '@dodicisegni', 'geo');
 cpSync(join(geoPkg, 'package.json'), join(geo, 'package.json'));
 cpSync(join(geoPkg, 'dist'), join(geo, 'dist'), { recursive: true });
 cpSync(join(geoPkg, 'schema.sql'), join(geo, 'schema.sql'));
 // Lo script di importazione: l'app lo lancia al primo avvio.
 cpSync(join(geoPkg, 'scripts'), join(geo, 'scripts'), { recursive: true });
 
-const ruota = join(moduli, '@undicesimacasa', 'ruota');
+const ruota = join(moduli, '@dodicisegni', 'ruota');
 cpSync(join(ruotaPkg, 'package.json'), join(ruota, 'package.json'));
 cpSync(join(ruotaPkg, 'dist'), join(ruota, 'dist'), { recursive: true });
 

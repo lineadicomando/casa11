@@ -2,7 +2,7 @@
  * Quel poco che al disegno serve sapere di una carta.
  *
  * Questi tipi sono ridichiarati invece di essere importati da
- * `@undicesimacasa/core`, e la ragione non è la stessa di `ZODIAC_ORDER` in
+ * `@dodicisegni/core`, e la ragione non è la stessa di `ZODIAC_ORDER` in
  * `glyphs.ts` — là si evitava un import di *valore*, qui si evita una
  * dipendenza tout court.
  *

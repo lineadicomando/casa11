@@ -1,5 +1,5 @@
 {
-  "name": "@undicesimacasa/core",
+  "name": "@dodicisegni/core",
   "version": "0.0.0",
   "description": "Motore di calcolo del tema natale: effemeridi, case, aspetti, fusi orari storici",
   "license": "AGPL-3.0-or-later",
@@ -28,8 +28,8 @@
     "ephe:download": "node scripts/download-ephe.mjs"
   },
   "dependencies": {
-    "@undicesimacasa/lettura": "*",
-    "@undicesimacasa/ruota": "*",
+    "@dodicisegni/lettura": "*",
+    "@dodicisegni/ruota": "*",
     "luxon": "^3.7.2",
     "sweph": "^2.10.3-4"
   },

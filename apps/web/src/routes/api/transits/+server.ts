@@ -1,4 +1,4 @@
-import { computeNatalChart, computeTransits, type TransitOptions } from '@undicesimacasa/core';
+import { computeNatalChart, computeTransits, type TransitOptions } from '@dodicisegni/core';
 import { json } from '@sveltejs/kit';
 import { placeLabel, readBirth, readChartOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';

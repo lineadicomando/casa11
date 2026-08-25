@@ -11,8 +11,8 @@
  * gira dopo che tutto è stato compilato, quindi non crea il ciclo.
  */
 
-import type * as core from '@undicesimacasa/core';
-import { DEFAULT_BODIES } from '@undicesimacasa/core';
+import type * as core from '@dodicisegni/core';
+import { DEFAULT_BODIES } from '@dodicisegni/core';
 import { describe, expect, it } from 'vitest';
 import { BODY_GLYPH, SIGN_GLYPH, ZODIAC_ORDER } from '../src/glyphs.js';
 import { CHIARA, SCURA } from '../src/palette.js';

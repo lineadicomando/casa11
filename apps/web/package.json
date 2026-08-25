@@ -1,5 +1,5 @@
 {
-  "name": "@undicesimacasa/web",
+  "name": "@dodicisegni/web",
   "version": "0.0.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
@@ -15,10 +15,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@undicesimacasa/core": "*",
-    "@undicesimacasa/geo": "*",
-    "@undicesimacasa/lettura": "*",
-    "@undicesimacasa/ruota": "*"
+    "@dodicisegni/core": "*",
+    "@dodicisegni/geo": "*",
+    "@dodicisegni/lettura": "*",
+    "@dodicisegni/ruota": "*"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",

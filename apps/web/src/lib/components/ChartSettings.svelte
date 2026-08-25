@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AyanamsaId, HouseSystem, Zodiac } from '@undicesimacasa/core';
+  import type { AyanamsaId, HouseSystem, Zodiac } from '@dodicisegni/core';
   import { HOUSE_SYSTEMS } from '$lib/house-systems';
   import { AYANAMSAS, ZODIACS } from '$lib/zodiacs';
 

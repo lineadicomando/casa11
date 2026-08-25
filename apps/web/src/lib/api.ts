@@ -26,8 +26,8 @@ import type {
   TransitPassage,
   VoidOfCourse,
   Zodiac,
-} from '@undicesimacasa/core';
-import type { Location } from '@undicesimacasa/geo';
+} from '@dodicisegni/core';
+import type { Location } from '@dodicisegni/geo';
 import type { BirthInput } from './birth';
 import { refinedCoordinates } from './birth';
 import type { MomentInput } from './moment';

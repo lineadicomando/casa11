@@ -3,7 +3,7 @@ import {
   MAX_ELECTION_DAYS,
   type BodyId,
   type ElectionOptions,
-} from '@undicesimacasa/core';
+} from '@dodicisegni/core';
 import { error, json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError, resolvePlace } from '$lib/server/place';

@@ -1,4 +1,4 @@
-import type { AspectId, BodyId, NatalPointId, TransitAspect } from '@undicesimacasa/core';
+import type { AspectId, BodyId, NatalPointId, TransitAspect } from '@dodicisegni/core';
 import { describe, expect, it } from 'vitest';
 import { byOrb, collapseNodalAxis } from './nodal-axis';
 

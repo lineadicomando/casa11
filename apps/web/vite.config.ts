@@ -13,7 +13,7 @@ import { defineConfig } from 'vite';
  * usare `build.rollupOptions.external`, perché sostituirebbe l'elenco di
  * esterni di SvelteKit — builtin di Node compresi.
  *
- * `@undicesimacasa/ruota` è esterno anche se il *client* ne importa davvero
+ * `@dodicisegni/ruota` è esterno anche se il *client* ne importa davvero
  * dei valori — glifi, colori, geometria. Non è una contraddizione: nel client
  * la regola non si applica, perché `ssr.external` riguarda il solo bundle del
  * server. Quello che il browser non deve mai vedere è `ruota/png`, e a
@@ -25,9 +25,9 @@ export default defineConfig({
     external: [
       'sweph',
       '@resvg/resvg-js',
-      '@undicesimacasa/core',
-      '@undicesimacasa/geo',
-      '@undicesimacasa/ruota',
+      '@dodicisegni/core',
+      '@dodicisegni/geo',
+      '@dodicisegni/ruota',
     ],
   },
 });

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TransitAspect } from '@undicesimacasa/core';
+  import type { TransitAspect } from '@dodicisegni/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
   import {
@@ -8,7 +8,7 @@
     isNatalPointSigla,
     natalPointGlyph,
     natalPointLabel,
-  } from '@undicesimacasa/ruota';
+  } from '@dodicisegni/ruota';
   import { byOrb, collapseNodalAxis } from '$lib/nodal-axis';
 
   /**

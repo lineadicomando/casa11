@@ -11,7 +11,7 @@
  * carta già calcolata e non ha modo di calcolarne una.
  *
  * La rasterizzazione in PNG sta apposta in un punto d'ingresso separato,
- * `@undicesimacasa/ruota/png`: porta con sé un modulo nativo, e il browser non
+ * `@dodicisegni/ruota/png`: porta con sé un modulo nativo, e il browser non
  * deve avere modo di incontrarlo.
  */
 

@@ -7,7 +7,7 @@
  * fornisce il fuso orario.
  */
 
-import { getLocation, type Location } from '@undicesimacasa/geo';
+import { getLocation, type Location } from '@dodicisegni/geo';
 import { error } from '@sveltejs/kit';
 
 /**

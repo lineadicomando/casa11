@@ -5,14 +5,14 @@ import {
   type OpzioniQuadro,
   type SquareChart,
   type WheelChart,
-} from '@undicesimacasa/ruota';
-import { quadroPng, ruotaPng } from '@undicesimacasa/ruota/png';
+} from '@dodicisegni/ruota';
+import { quadroPng, ruotaPng } from '@dodicisegni/ruota/png';
 import type { WheelOptions } from './wheel';
 
 /**
  * Il disegno come risposta HTTP.
  *
- * Sta a parte perché è l'unico punto in cui `@undicesimacasa/ruota/png` viene
+ * Sta a parte perché è l'unico punto in cui `@dodicisegni/ruota/png` viene
  * importato dall'applicazione, e quell'import porta con sé un modulo nativo:
  * tenerlo in un file di `lib/server` lo mette fuori dalla portata del bundle
  * del browser per costruzione, non per attenzione.

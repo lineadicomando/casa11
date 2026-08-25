@@ -39,7 +39,7 @@ export function openDatabase(databasePath?: string): DatabaseSync {
     throw new GeoError(
       'DATABASE_ASSENTE',
       `Database delle località non trovato in ${path}. ` +
-        'Eseguilo una volta con `npm run geo:import -w @undicesimacasa/geo` ' +
+        'Eseguilo una volta con `npm run geo:import -w @dodicisegni/geo` ' +
         '(scarica ~215 MB da GeoNames e costruisce il database locale).',
     );
   }

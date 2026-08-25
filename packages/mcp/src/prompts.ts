@@ -9,7 +9,7 @@
  * le domanda non occupano un token.
  *
  * È la stessa cosa che il sito mette sotto il pulsante che copia negli
- * appunti, e viene dallo stesso posto — `@undicesimacasa/lettura` — perché due
+ * appunti, e viene dallo stesso posto — `@dodicisegni/lettura` — perché due
  * copie di quel testo divergerebbero, e quel testo è il riferimento unico per
  * la lettura.
  *
@@ -27,8 +27,8 @@ import {
   formatJyotishaCompact,
   type BirthData,
   type ChartOptions,
-} from '@undicesimacasa/core';
-import { letturaDaIncollare, SISTEMI, type Sistema } from '@undicesimacasa/lettura';
+} from '@dodicisegni/core';
+import { letturaDaIncollare, SISTEMI, type Sistema } from '@dodicisegni/lettura';
 import { z } from 'zod';
 import { describeError, resolvePlace, type ToolContext } from './tools.js';
 

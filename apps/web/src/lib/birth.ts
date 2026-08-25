@@ -11,7 +11,7 @@
  * legge nel campo. L'interpretazione sta in `coordinates.ts`.
  */
 
-import type { Location } from '@undicesimacasa/geo';
+import type { Location } from '@dodicisegni/geo';
 import { formatCoordinate, parseCoordinate } from './coordinates';
 
 export interface BirthInput {

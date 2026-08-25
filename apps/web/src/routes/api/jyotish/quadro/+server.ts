@@ -1,5 +1,5 @@
-import { computeNatalChart, computeVarga, type ChartOptions, type VargaId } from '@undicesimacasa/core';
-import type { StileQuadro } from '@undicesimacasa/ruota';
+import { computeNatalChart, computeVarga, type ChartOptions, type VargaId } from '@dodicisegni/core';
+import type { StileQuadro } from '@dodicisegni/ruota';
 import { error } from '@sveltejs/kit';
 import { readAyanamsa, readBirth } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';

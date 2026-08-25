@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AyanamsaId, HouseSystem, NatalChart, Zodiac } from '@undicesimacasa/core';
+  import type { AyanamsaId, HouseSystem, NatalChart, Zodiac } from '@dodicisegni/core';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import {

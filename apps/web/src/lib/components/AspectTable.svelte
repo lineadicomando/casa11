@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { Aspect } from '@undicesimacasa/core';
+  import type { Aspect } from '@dodicisegni/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
-  import { ASPECT_GLYPH, ASPECT_MAJOR, BODY_GLYPH, BODY_LABEL } from '@undicesimacasa/ruota';
+  import { ASPECT_GLYPH, ASPECT_MAJOR, BODY_GLYPH, BODY_LABEL } from '@dodicisegni/ruota';
 
   interface Props {
     aspects: Aspect[];

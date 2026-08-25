@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { BodyId, DashaPeriod, VimshottariDasha } from '@undicesimacasa/core';
-  import { BODY_GLYPH } from '@undicesimacasa/ruota';
+  import type { BodyId, DashaPeriod, VimshottariDasha } from '@dodicisegni/core';
+  import { BODY_GLYPH } from '@dodicisegni/ruota';
   import type { Evidenza } from '$lib/evidenza.svelte';
 
   /**

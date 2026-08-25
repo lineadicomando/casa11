@@ -1,4 +1,4 @@
-import type { CelestialBody, NatalChart, TransitChart } from '@undicesimacasa/core';
+import type { CelestialBody, NatalChart, TransitChart } from '@dodicisegni/core';
 import { describe, expect, it } from 'vitest';
 import {
   CENTER,

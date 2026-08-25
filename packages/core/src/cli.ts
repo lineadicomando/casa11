@@ -9,9 +9,9 @@ import {
   type OpzioniDisegno,
   type StileQuadro,
   type WheelChart,
-} from '@undicesimacasa/ruota';
-import { quadroPng, ruotaPng } from '@undicesimacasa/ruota/png';
-import { letturaDaIncollare, SISTEMI, type OpzioniLettura, type Sistema } from '@undicesimacasa/lettura';
+} from '@dodicisegni/ruota';
+import { quadroPng, ruotaPng } from '@dodicisegni/ruota/png';
+import { letturaDaIncollare, SISTEMI, type OpzioniLettura, type Sistema } from '@dodicisegni/lettura';
 import { AYANAMSAS } from './ayanamsa.js';
 import { computeNatalChart } from './chart.js';
 import { ChartError } from './errors.js';

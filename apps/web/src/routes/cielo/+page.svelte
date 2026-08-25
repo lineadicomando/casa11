@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { AyanamsaId, HouseSystem, SkyChart, Zodiac } from '@undicesimacasa/core';
-  import type { Location } from '@undicesimacasa/geo';
+  import type { AyanamsaId, HouseSystem, SkyChart, Zodiac } from '@dodicisegni/core';
+  import type { Location } from '@dodicisegni/geo';
   import { onMount } from 'svelte';
   import { replaceState } from '$app/navigation';
   import { page } from '$app/state';

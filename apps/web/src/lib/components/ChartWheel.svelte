@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TransitChart } from '@undicesimacasa/core';
+  import type { TransitChart } from '@dodicisegni/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import {
     ASPECT_COLOR,
@@ -18,7 +18,7 @@
     spread,
     transitWheelPoints,
     type WheelChart,
-  } from '@undicesimacasa/ruota';
+  } from '@dodicisegni/ruota';
 
   interface Props {
     chart: WheelChart;
@@ -422,7 +422,7 @@
     max-width: 44rem;
     font-family: system-ui, sans-serif;
     /* Ereditata da tutti i glifi: raddoppia il selettore U+FE0E che le mappe
-       già portano, per i font che quello lo ignorano. Vedi `@undicesimacasa/ruota`. */
+       già portano, per i font che quello lo ignorano. Vedi `@dodicisegni/ruota`. */
     font-variant-emoji: text;
   }
 

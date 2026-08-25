@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { VargaChart } from '@undicesimacasa/core';
-  import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL, type StileQuadro } from '@undicesimacasa/ruota';
+  import type { VargaChart } from '@dodicisegni/core';
+  import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL, type StileQuadro } from '@dodicisegni/ruota';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import QuadroVedico from './QuadroVedico.svelte';
 

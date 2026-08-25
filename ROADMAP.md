@@ -51,10 +51,10 @@ ripetere il nome alla lettera e lo leggono da `SITE_NAME`, e la proprietà
 `--marchio-casa` è diventata `--marchio-parola`: chi posa il marchio decide una
 misura, non che cosa ci sta scritto.
 
-### Passo 2 — lo scope npm e i tag
+### Passo 2 — lo scope npm e i tag — **fatto**
 
-Meccanico e voluminoso, senza una sola decisione dentro. Va in un commit solo
-perché a metà l'albero non compila.
+Meccanico e voluminoso, senza una sola decisione dentro. È andato in un commit
+solo perché a metà l'albero non compila.
 
 - `@undicesimacasa/*` → `@dodicisegni/*`: sette `package.json`, ogni import di
   ogni workspace, gli script della radice, `Dockerfile:48,58-65`,

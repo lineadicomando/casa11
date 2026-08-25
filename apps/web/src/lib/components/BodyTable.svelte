@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ChartPoint, TransitingBody } from '@undicesimacasa/core';
+  import type { ChartPoint, TransitingBody } from '@dodicisegni/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
   import {
@@ -10,7 +10,7 @@
     SIGN_GLYPH,
     SIGN_LABEL,
     SIGN_MODALITY,
-  } from '@undicesimacasa/ruota';
+  } from '@dodicisegni/ruota';
 
   /**
    * Prende i corpi, non il tema.

@@ -1,4 +1,4 @@
-import { getLocation, searchLocations, type SearchOptions } from '@undicesimacasa/geo';
+import { getLocation, searchLocations, type SearchOptions } from '@dodicisegni/geo';
 import { json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import type { RequestHandler } from './$types';

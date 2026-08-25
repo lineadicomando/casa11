@@ -80,7 +80,7 @@
          cosa il sito è. Non disclama il calcolo — che è esatto, ed è l'unica
          cosa che il motore prometta — ma l'uso che se ne fa, e nomina i
          mestieri che nessuna lettura rimpiazza. Il limite è lo stesso che le
-         istruzioni di `@undicesimacasa/lettura` impongono al modello, detto
+         istruzioni di `@dodicisegni/lettura` impongono al modello, detto
          qui a chi legge: due destinatari, due testi. -->
     <p class="avvertenza">
       Questo sito è uno spazio dedicato alla ricerca interiore e all'arricchimento

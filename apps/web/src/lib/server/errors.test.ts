@@ -1,5 +1,5 @@
-import { ChartError } from '@undicesimacasa/core';
-import { GeoError } from '@undicesimacasa/geo';
+import { ChartError } from '@dodicisegni/core';
+import { GeoError } from '@dodicisegni/geo';
 import { describe, expect, it } from 'vitest';
 import { toHttpError } from './errors';
 

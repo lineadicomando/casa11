@@ -7,7 +7,7 @@
  * l'interpretazione fuori di qui, in un programma che sceglie chi legge.
  *
  * Sta fuori sia da `core` sia da `apps/web` per la stessa ragione di
- * `@undicesimacasa/ruota`: **non è né calcolo né interfaccia**, ed è voluto da
+ * `@dodicisegni/ruota`: **non è né calcolo né interfaccia**, ed è voluto da
  * tutte le superfici — la pagina che lo copia negli appunti, la riga di comando
  * che lo stampa, il server MCP che lo offre come prompt.
  *

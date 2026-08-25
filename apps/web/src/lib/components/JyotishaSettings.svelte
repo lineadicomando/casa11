@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AyanamsaId, DashaYear, NodeDrishti, VargaId } from '@undicesimacasa/core';
+  import type { AyanamsaId, DashaYear, NodeDrishti, VargaId } from '@dodicisegni/core';
   import { AYANAMSAS } from '$lib/zodiacs';
 
   /**

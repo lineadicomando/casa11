@@ -6,8 +6,8 @@
     TransitChart,
     TransitPassage,
     Zodiac,
-  } from '@undicesimacasa/core';
-  import type { Location } from '@undicesimacasa/geo';
+  } from '@dodicisegni/core';
+  import type { Location } from '@dodicisegni/geo';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import {

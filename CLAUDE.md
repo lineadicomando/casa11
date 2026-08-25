@@ -25,17 +25,17 @@ Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 
 ```sh
 npm test                                   # tutti i workspace (vitest)
-npm run test:watch -w @undicesimacasa/core
+npm run test:watch -w @dodicisegni/core
 npm run typecheck                          # ricompila core e geo, poi controlla il resto
 npm run build
-npm run dev -w @undicesimacasa/web         # http://localhost:5173 (Vite)
-npm start -w @undicesimacasa/web           # http://localhost:3000, dopo build
-npm run dist -w @undicesimacasa/desktop    # AppImage in apps/desktop/release, dopo build
+npm run dev -w @dodicisegni/web         # http://localhost:5173 (Vite)
+npm start -w @dodicisegni/web           # http://localhost:3000, dopo build
+npm run dist -w @dodicisegni/desktop    # AppImage in apps/desktop/release, dopo build
 ```
 
-`npm run geo:import -w @undicesimacasa/geo` scarica **~215 MB**: serve solo se
+`npm run geo:import -w @dodicisegni/geo` scarica **~215 MB**: serve solo se
 la ricerca delle località non funziona, non va lanciato per abitudine.
-`npm run ephe:download -w @undicesimacasa/core` (~2 MB) è opzionale — senza,
+`npm run ephe:download -w @dodicisegni/core` (~2 MB) è opzionale — senza,
 il motore usa Moshier invece delle effemeridi Swiss.
 
 ## Vincoli
@@ -51,7 +51,7 @@ il motore usa Moshier invece delle effemeridi Swiss.
   significato, non l'ampiezza — un conteggio su tutto il tema si può fare,
   «Saturno in settima ritarda il matrimonio» no. Dove le scuole divergono si
   espongono i componenti e si nomina la scuola, mai un totale solo.
-- **Il client non importa valori da `@undicesimacasa/core`, solo tipi.** Un
+- **Il client non importa valori da `@dodicisegni/core`, solo tipi.** Un
   import di valore trascina effemeridi e modulo nativo nel bundle del browser.
 - **Niente `async`/`await` nella catena di calcolo** — `chart`, `sky`,
   `transits`, `passages`, `election`, `sky-events`. Swiss Ephemeris tiene lo
@@ -71,7 +71,7 @@ il motore usa Moshier invece delle effemeridi Swiss.
   `types.ts`, e `test/tipi.test.ts` verifica che combacino. Serve a rompere il
   ciclo con la CLI, che vive in `core` e disegna. Il disegno riceve una carta
   già calcolata e non deve poterne calcolare una.
-- **Il PNG sta in `@undicesimacasa/ruota/png`**, punto d'ingresso separato:
+- **Il PNG sta in `@dodicisegni/ruota/png`**, punto d'ingresso separato:
   porta un modulo nativo, e nel browser non deve arrivare. Lato web si importa
   solo da `lib/server`.
 - **`packages/lettura` non prende dipendenze, e soprattutto non prende `core`.**

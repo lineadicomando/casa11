@@ -1,5 +1,5 @@
 {
-  "name": "@undicesimacasa/mcp",
+  "name": "@dodicisegni/mcp",
   "version": "0.0.0",
   "description": "Server MCP per il calcolo del tema natale",
   "license": "AGPL-3.0-or-later",
@@ -27,10 +27,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.22.0",
-    "@undicesimacasa/core": "*",
-    "@undicesimacasa/geo": "*",
-    "@undicesimacasa/lettura": "*",
-    "@undicesimacasa/ruota": "*",
+    "@dodicisegni/core": "*",
+    "@dodicisegni/geo": "*",
+    "@dodicisegni/lettura": "*",
+    "@dodicisegni/ruota": "*",
     "zod": "^3.25.76"
   },
   "devDependencies": {

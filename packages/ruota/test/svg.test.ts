@@ -1,4 +1,4 @@
-import type { Aspect, CelestialBody, House, NatalChart } from '@undicesimacasa/core';
+import type { Aspect, CelestialBody, House, NatalChart } from '@dodicisegni/core';
 import { describe, expect, it } from 'vitest';
 import { CHIARA, SCURA } from '../src/palette.js';
 import { ruotaSvg } from '../src/svg.js';

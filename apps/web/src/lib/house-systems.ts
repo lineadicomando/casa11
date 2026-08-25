@@ -10,7 +10,7 @@
  * l'intero grafo nel bundle del browser.
  */
 
-import type { HouseSystem } from '@undicesimacasa/core';
+import type { HouseSystem } from '@dodicisegni/core';
 
 export const HOUSE_SYSTEMS: readonly { value: HouseSystem; label: string }[] = [
   { value: 'placidus', label: 'Placidus' },

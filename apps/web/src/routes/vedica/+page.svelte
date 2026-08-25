@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { AyanamsaId, DashaYear, JyotishaChart, NodeDrishti, VargaId } from '@undicesimacasa/core';
-  import type { StileQuadro } from '@undicesimacasa/ruota';
+  import type { AyanamsaId, DashaYear, JyotishaChart, NodeDrishti, VargaId } from '@dodicisegni/core';
+  import type { StileQuadro } from '@dodicisegni/ruota';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import {

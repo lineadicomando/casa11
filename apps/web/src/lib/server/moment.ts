@@ -7,7 +7,7 @@
  * delle due correggere. Da qui i due nomi diversi per lo stesso istante.
  */
 
-import type { LocalMoment } from '@undicesimacasa/core';
+import type { LocalMoment } from '@dodicisegni/core';
 import { error } from '@sveltejs/kit';
 import { isKnownTimezone, wallClock } from '$lib/clock';
 

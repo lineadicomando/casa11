@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerLetturaDelTema } from './prompts.js';
-import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@undicesimacasa/core';
+import { ASPECTS, HOUSE_SYSTEM_CODES, TRANSIT_ORB_BONUS, TRANSIT_ORBS } from '@dodicisegni/core';
 import {
   registerComputeJyotishaChart,
   registerComputeNatalChart,

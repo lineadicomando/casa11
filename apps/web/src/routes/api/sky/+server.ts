@@ -1,4 +1,4 @@
-import { computeSky, type SkyOptions } from '@undicesimacasa/core';
+import { computeSky, type SkyOptions } from '@dodicisegni/core';
 import { json } from '@sveltejs/kit';
 import { placeLabel, readChartOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';

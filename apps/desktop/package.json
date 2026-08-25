@@ -1,5 +1,5 @@
 {
-  "name": "@undicesimacasa/desktop",
+  "name": "@dodicisegni/desktop",
   "version": "0.1.0",
   "private": true,
   "description": "Applicazione desktop di undicesimacasa: la web app dentro Electron",

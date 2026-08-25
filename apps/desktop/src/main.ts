@@ -30,7 +30,7 @@ const serverEntry = bundleRoot
   : join(repoRoot, 'apps', 'web', 'build', 'index.js');
 
 const importScript = bundleRoot
-  ? join(bundleRoot, 'node_modules', '@undicesimacasa', 'geo', 'scripts', 'import-geonames.mjs')
+  ? join(bundleRoot, 'node_modules', '@dodicisegni', 'geo', 'scripts', 'import-geonames.mjs')
   : join(repoRoot, 'packages', 'geo', 'scripts', 'import-geonames.mjs');
 
 /**

@@ -1,5 +1,5 @@
 {
-  "name": "undicesimacasa",
+  "name": "dodicisegni",
   "version": "0.0.0",
   "private": true,
   "description": "Generazione di temi natali: motore di calcolo, API REST e server MCP",
@@ -13,10 +13,10 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo && npm run build -w @undicesimacasa/mcp -w @undicesimacasa/web",
+    "build": "npm run build -w @dodicisegni/ruota -w @dodicisegni/lettura -w @dodicisegni/core -w @dodicisegni/geo && npm run build -w @dodicisegni/mcp -w @dodicisegni/web",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo && npm run typecheck --workspaces --if-present",
-    "prepare": "npm run build -w @undicesimacasa/ruota -w @undicesimacasa/lettura -w @undicesimacasa/core -w @undicesimacasa/geo"
+    "typecheck": "npm run build -w @dodicisegni/ruota -w @dodicisegni/lettura -w @dodicisegni/core -w @dodicisegni/geo && npm run typecheck --workspaces --if-present",
+    "prepare": "npm run build -w @dodicisegni/ruota -w @dodicisegni/lettura -w @dodicisegni/core -w @dodicisegni/geo"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",

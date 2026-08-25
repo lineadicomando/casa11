@@ -11,7 +11,7 @@ import type {
  * Ordine dei segni, ridichiarato invece di venire dal motore di calcolo.
  *
  * Non è duplicazione gratuita, ed è la stessa ragione per cui questo pacchetto
- * non importa affatto da `@undicesimacasa/core`: importarne un *valore* ne
+ * non importa affatto da `@dodicisegni/core`: importarne un *valore* ne
  * trascinerebbe l'intero grafo nel bundle del browser — effemeridi e modulo
  * nativo compresi — e importarne un *tipo* creerebbe il ciclo di compilazione
  * spiegato in `types.ts`.

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { DrishtiChart } from '@undicesimacasa/core';
-  import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '@undicesimacasa/ruota';
+  import type { DrishtiChart } from '@dodicisegni/core';
+  import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '@dodicisegni/ruota';
   import type { Evidenza } from '$lib/evidenza.svelte';
 
   /**

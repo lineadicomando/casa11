@@ -13,7 +13,7 @@
   contatta nessun altro server.
 -->
 <script lang="ts">
-  import { letturaDaIncollare, type Sistema } from '@undicesimacasa/lettura';
+  import { letturaDaIncollare, type Sistema } from '@dodicisegni/lettura';
   import { RequestError } from '$lib/api';
   import { REPOSITORY_URL } from '$lib/project';
 

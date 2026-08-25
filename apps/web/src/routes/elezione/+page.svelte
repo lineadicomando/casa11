@@ -5,8 +5,8 @@
     NatalChart,
     PlanetaryHour,
     TransitChart,
-  } from '@undicesimacasa/core';
-  import type { Location } from '@undicesimacasa/geo';
+  } from '@dodicisegni/core';
+  import type { Location } from '@dodicisegni/geo';
   import { onMount, tick } from 'svelte';
   import { replaceState } from '$app/navigation';
   import { page } from '$app/state';
@@ -37,7 +37,7 @@
   import StrumentiDisegno from '$lib/components/StrumentiDisegno.svelte';
   import TransitAspectTable from '$lib/components/TransitAspectTable.svelte';
   import { formatDegrees } from '$lib/format';
-  import { BODY_LABEL, SIGN_LABEL } from '@undicesimacasa/ruota';
+  import { BODY_LABEL, SIGN_LABEL } from '@dodicisegni/ruota';
   import { nowMoment, shiftDate, type MomentInput } from '$lib/moment';
 
   /** I sette dell'ordine caldeo: sono gli unici che reggano un'ora. */

@@ -10,7 +10,7 @@
  * l'intero grafo nel bundle del browser.
  */
 
-import type { AyanamsaId, Zodiac } from '@undicesimacasa/core';
+import type { AyanamsaId, Zodiac } from '@dodicisegni/core';
 
 export const ZODIACS: readonly { value: Zodiac; label: string }[] = [
   { value: 'tropicale', label: 'Tropicale' },

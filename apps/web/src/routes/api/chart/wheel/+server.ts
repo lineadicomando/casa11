@@ -1,6 +1,6 @@
-import { computeNatalChart } from '@undicesimacasa/core';
-import { ruotaSvg } from '@undicesimacasa/ruota';
-import { ruotaPng } from '@undicesimacasa/ruota/png';
+import { computeNatalChart } from '@dodicisegni/core';
+import { ruotaSvg } from '@dodicisegni/ruota';
+import { ruotaPng } from '@dodicisegni/ruota/png';
 import { readBirth, readChartOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError } from '$lib/server/place';

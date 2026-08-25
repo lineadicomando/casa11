@@ -35,8 +35,8 @@ Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 
 ```sh
 npm install
-npm run ephe:download -w @undicesimacasa/core   # opzionale, ~2 MB
-npm run geo:import   -w @undicesimacasa/geo     # ricerca località, ~215 MB
+npm run ephe:download -w @dodicisegni/core   # opzionale, ~2 MB
+npm run geo:import   -w @dodicisegni/geo     # ricerca località, ~215 MB
 npm test
 ```
 
@@ -58,8 +58,8 @@ npx casa11 --help        # tutte le opzioni
 tema è una funzione pura dei suoi parametri:
 
 ```sh
-npm run dev -w @undicesimacasa/web      # http://localhost:5173
-npm run build && npm start -w @undicesimacasa/web   # http://localhost:3000
+npm run dev -w @dodicisegni/web      # http://localhost:5173
+npm run build && npm start -w @dodicisegni/web   # http://localhost:3000
 ```
 
 Si installa come applicazione — manifesto, icone e un service worker che tiene
@@ -91,9 +91,9 @@ loopback.
 
 ```sh
 npm run build
-npm start -w @undicesimacasa/desktop        # sviluppo
-npm run dist -w @undicesimacasa/desktop     # AppImage in apps/desktop/release/
-npm run dist:win -w @undicesimacasa/desktop # installer Windows
+npm start -w @dodicisegni/desktop        # sviluppo
+npm run dist -w @dodicisegni/desktop     # AppImage in apps/desktop/release/
+npm run dist:win -w @dodicisegni/desktop # installer Windows
 ```
 
 ## Docker
@@ -146,7 +146,7 @@ l'informativa dice il falso.
 
 ```sh
 npm test                                  # tutti i workspace
-npm run test:watch -w @undicesimacasa/core
+npm run test:watch -w @dodicisegni/core
 npm run typecheck
 npm run build
 ```

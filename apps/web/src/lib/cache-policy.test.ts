@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cacheKey, isApiRequest, isCrawlerAsset } from './cache-policy';
 
-const SITO = 'https://undicesimacasa.example';
+const SITO = 'https://dodicisegni.example';
 
 describe('isApiRequest', () => {
   it('riconosce le chiamate al motore', () => {

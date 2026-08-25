@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TransitPassage } from '@undicesimacasa/core';
+  import type { TransitPassage } from '@dodicisegni/core';
   import {
     ASPECT_MAJOR,
     BODY_GLYPH,
@@ -7,7 +7,7 @@
     isNatalPointSigla,
     natalPointGlyph,
     natalPointLabel,
-  } from '@undicesimacasa/ruota';
+  } from '@dodicisegni/ruota';
   import { byInstant, collapseNodalAxis } from '$lib/nodal-axis';
 
   /**

@@ -6,7 +6,7 @@ import {
   type JyotishaOptions,
   type VargaId,
   type VimshottariOptions,
-} from '@undicesimacasa/core';
+} from '@dodicisegni/core';
 import { error, json } from '@sveltejs/kit';
 import { placeLabel, readAyanamsa, readBirth } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';

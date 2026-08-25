@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { loadSchema, normalizeName } from '@undicesimacasa/geo';
+import { loadSchema, normalizeName } from '@dodicisegni/geo';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createServer } from '../src/server.js';
 
@@ -22,7 +22,7 @@ const ROMA_ID = 3169070;
 const TOKYO_ID = 1850147;
 
 beforeAll(async () => {
-  directory = mkdtempSync(join(tmpdir(), 'undicesimacasa-mcp-'));
+  directory = mkdtempSync(join(tmpdir(), 'dodicisegni-mcp-'));
   databasePath = join(directory, 'test.db');
 
   const database = new DatabaseSync(databasePath);

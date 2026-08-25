@@ -1,5 +1,5 @@
 {
-  "name": "@undicesimacasa/ruota",
+  "name": "@dodicisegni/ruota",
   "version": "0.0.0",
   "description": "Il disegno del tema: vocabolario grafico, geometria della ruota e resa in SVG",
   "license": "AGPL-3.0-or-later",
@@ -23,7 +23,7 @@
     "@resvg/resvg-js": "^2.6.2"
   },
   "devDependencies": {
-    "@undicesimacasa/core": "*"
+    "@dodicisegni/core": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

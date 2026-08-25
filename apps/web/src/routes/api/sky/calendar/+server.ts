@@ -5,7 +5,7 @@ import {
   type BodyId,
   type SkyEventOptions,
   type SkyPassageOptions,
-} from '@undicesimacasa/core';
+} from '@dodicisegni/core';
 import { error, json } from '@sveltejs/kit';
 import { readZodiacOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';

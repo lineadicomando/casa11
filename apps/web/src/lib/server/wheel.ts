@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { paletteDi, type Palette } from '@undicesimacasa/ruota';
+import { paletteDi, type Palette } from '@dodicisegni/ruota';
 
 /**
  * I parametri del disegno, comuni al tema e ai transiti.

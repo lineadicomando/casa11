@@ -1,7 +1,7 @@
 /**
  * La ruota rasterizzata.
  *
- * Sta in un punto d'ingresso separato — `@undicesimacasa/ruota/png` — e non
+ * Sta in un punto d'ingresso separato — `@dodicisegni/ruota/png` — e non
  * nell'indice: porta con sé un modulo nativo, e il bundle del browser non deve
  * avere modo di incontrarlo. Chi disegna nella pagina importa dalla radice e
  * questo file non lo vede nemmeno.
