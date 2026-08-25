@@ -2,7 +2,7 @@
   "name": "@dodicisegni/desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "Applicazione desktop di undicesimacasa: la web app dentro Electron",
+  "description": "Applicazione desktop di dodicisegni: la web app dentro Electron",
   "license": "AGPL-3.0-or-later",
   "author": "Alessandro Gagliano",
   "type": "module",

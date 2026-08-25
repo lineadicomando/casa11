@@ -19,6 +19,13 @@ import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
+/**
+ * Il nome che l'utente vede: titolo della finestra e intestazione dei
+ * dialoghi. Qui e non importato da `web`, che non è una libreria: il
+ * desktop non dipende da quel pacchetto e non deve cominciare adesso.
+ */
+const NOME = 'dodicisegni';
+
 const appRoot = fileURLToPath(new URL('..', import.meta.url));
 const repoRoot = join(appRoot, '..', '..');
 
@@ -74,7 +81,7 @@ function avviaServer(porta: number): UtilityProcess {
       GEONAMES_DB_PATH: databasePath,
     },
     stdio: 'pipe',
-    serviceName: 'undicesimacasa-web',
+    serviceName: 'dodicisegni-web',
   });
   processo.stdout?.on('data', (blocco: Buffer) => process.stdout.write(blocco));
   processo.stderr?.on('data', (blocco: Buffer) => process.stderr.write(blocco));
@@ -150,7 +157,7 @@ async function preparaDatabase(): Promise<EsitoDatabase> {
 
   const { response } = await dialog.showMessageBox({
     type: 'question',
-    title: 'undicesimacasa',
+    title: NOME,
     message: 'Database delle località assente',
     detail:
       'La ricerca delle località usa un database locale costruito dai dati ' +
@@ -169,7 +176,7 @@ async function preparaDatabase(): Promise<EsitoDatabase> {
     return 'pronto';
   } catch (errore) {
     dialog.showErrorBox(
-      'undicesimacasa',
+      NOME,
       errore instanceof Error ? errore.message : String(errore),
     );
     return existsSync(databasePath) ? 'pronto' : 'assente';
@@ -250,7 +257,7 @@ async function avvia(): Promise<void> {
     await attendiServer(serverUrl, server);
   } catch (errore) {
     dialog.showErrorBox(
-      'undicesimacasa',
+      NOME,
       errore instanceof Error ? errore.message : String(errore),
     );
     app.quit();
@@ -259,7 +266,7 @@ async function avvia(): Promise<void> {
 
   server.once('exit', (codice) => {
     if (!chiusuraVoluta) {
-      dialog.showErrorBox('undicesimacasa', `Il server interno si è arrestato (codice ${codice}).`);
+      dialog.showErrorBox(NOME, `Il server interno si è arrestato (codice ${codice}).`);
       app.quit();
     }
   });

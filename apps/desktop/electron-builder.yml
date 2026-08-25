@@ -1,9 +1,9 @@
 # Impacchettamento dell'app desktop. Presuppone `npm run build` alla radice
 # e `npm run stage` qui: electron-builder non costruisce nulla, copia.
-appId: it.undicesimacasa.desktop
-productName: undicesimacasa
+appId: it.dodicisegni.desktop
+productName: dodicisegni
 # Senza, deriverebbe dal nome scoped del pacchetto, illegale in un percorso.
-executableName: undicesimacasa
+executableName: dodicisegni
 directories:
   output: release
   buildResources: buildResources
