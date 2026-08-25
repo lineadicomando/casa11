@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ChartPoint, TransitingBody } from '@dodicisegni/core';
   import type { Evidenza } from '$lib/evidenza.svelte';
-  import { formatDegrees } from '$lib/format';
+  import { formatSignDegree } from '$lib/format';
   import {
     BODY_GLYPH,
     ELEMENT_COLOR,
@@ -98,7 +98,7 @@
             </button>
           </td>
           <td>
-            {formatDegrees(body.signDegree)}
+            {formatSignDegree(body.signDegree)}
             <!-- Il glifo del segno porta il colore del suo elemento, lo stesso
                  dei settori della ruota: lega le due viste senza aggiungere una
                  colonna. È un rinforzo, non l'unica strada — l'elemento si
@@ -120,7 +120,7 @@
           <td class="glifo glifo-punto">{POINT_GLYPH.fortuna}</td>
           <td>Parte di Fortuna</td>
           <td>
-            {formatDegrees(partOfFortune.signDegree)}
+            {formatSignDegree(partOfFortune.signDegree)}
             <span
               class="glifo-piccolo"
               style:color={ELEMENT_COLOR[SIGN_ELEMENT[partOfFortune.sign]]}

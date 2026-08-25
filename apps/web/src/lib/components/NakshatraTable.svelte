@@ -2,7 +2,7 @@
   import type { JyotishaChart } from '@dodicisegni/core';
   import { BODY_GLYPH, SIGN_GLYPH, SIGN_LABEL } from '@dodicisegni/ruota';
   import type { Evidenza } from '$lib/evidenza.svelte';
-  import { formatDegrees } from '$lib/format';
+  import { formatSignDegree } from '$lib/format';
 
   /**
    * I nakshatra dei graha: la ventisettesima parte di cielo in cui ciascuno
@@ -49,7 +49,7 @@
           <td>{voce.name}</td>
           <td>
             {#if corpo}
-              {formatDegrees(corpo.signDegree)}
+              {formatSignDegree(corpo.signDegree)}
               <span class="glifo-piccolo" title={SIGN_LABEL[corpo.sign as keyof typeof SIGN_LABEL]}>
                 {SIGN_GLYPH[corpo.sign as keyof typeof SIGN_GLYPH]}
               </span>

@@ -263,7 +263,7 @@ export function natalWheelPoints(chart: WheelChart): WheelPoint[] {
       glyph: POINT_GLYPH.fortuna,
       longitude,
       retrograde: false,
-      label: `Parte di Fortuna a ${signDegree.toFixed(0)} gradi ${sign}${house !== undefined ? `, casa ${house}` : ''}`,
+      label: `Parte di Fortuna a ${gradiNelSegno(signDegree)} gradi ${sign}${house !== undefined ? `, casa ${house}` : ''}`,
     });
   }
 
@@ -298,8 +298,20 @@ export function natalPointLongitude(chart: WheelChart, id: NatalPointId): number
   return chart.bodies.find((body) => body.id === id)?.longitude;
 }
 
+/**
+ * Il grado da leggere ad alta voce, che non arriva mai a trenta.
+ *
+ * Si arrotonda, come è giusto per un numero intero letto a voce, ma non oltre
+ * il ventinovesimo: «trenta gradi acquario» è un posto che non esiste, perché
+ * lì comincia il segno dopo.
+ */
+function gradiNelSegno(signDegree: number): number {
+  return Math.min(Math.round(signDegree), 29);
+}
+
+/** Che cosa legge ad alta voce chi non vede il disegno. */
 function bodyLabel(body: CelestialBody): string {
   const house = body.house !== undefined ? `, casa ${body.house}` : '';
   const retrograde = body.retrograde ? ', retrogrado' : '';
-  return `${body.name} a ${body.signDegree.toFixed(0)} gradi ${body.sign}${house}${retrograde}`;
+  return `${body.name} a ${gradiNelSegno(body.signDegree)} gradi ${body.sign}${house}${retrograde}`;
 }

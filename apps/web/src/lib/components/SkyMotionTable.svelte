@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { SignIngress, Station } from '@dodicisegni/core';
   import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '@dodicisegni/ruota';
-  import { formatDegrees } from '$lib/format';
+  import { formatSignDegree } from '$lib/format';
 
   /**
    * Ingressi nei segni e stazioni, in un elenco solo.
@@ -47,8 +47,8 @@
           glifo: SIGN_GLYPH[station.sign],
           testo:
             station.direction === 'retrograda'
-              ? `si ferma e retrograda a ${formatDegrees(station.signDegree)} ${SIGN_LABEL[station.sign]}`
-              : `riprende il moto diretto a ${formatDegrees(station.signDegree)} ${SIGN_LABEL[station.sign]}`,
+              ? `si ferma e retrograda a ${formatSignDegree(station.signDegree)} ${SIGN_LABEL[station.sign]}`
+              : `riprende il moto diretto a ${formatSignDegree(station.signDegree)} ${SIGN_LABEL[station.sign]}`,
           retrograde: station.direction === 'retrograda',
         }),
       ),

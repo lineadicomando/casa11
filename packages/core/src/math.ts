@@ -68,7 +68,26 @@ export function formatDegrees(degrees: number, withSeconds = false): string {
   return `${finalDeg}°${String(finalMin).padStart(2, '0')}'${String(finalSec).padStart(2, '0')}"`;
 }
 
-/** Formatta una longitudine eclittica come `12°34' Ari`. */
+/**
+ * Formatta una longitudine eclittica come `12°34' Ari`.
+ *
+ * Il grado si arrotonda come dappertutto, **ma non oltre l'ultimo primo del
+ * segno**. `formatDegrees` da sola, su un corpo a 29°59'40", scriverebbe
+ * `30°00'`: dentro un segno non esiste, perché i trenta gradi finiscono a
+ * 29°59'59". Non è un caso di scuola — il Sole del 19 febbraio 1980 ci sta
+ * dentro, e la finestra è di mezzo primo per ogni corpo.
+ *
+ * Chiudere il riporto passando al segno successivo sarebbe peggio del rimedio:
+ * cambierebbe il segno, che è il dato di un tema che pesa di più, per mezzo
+ * secondo d'arco. Il segno resta quello in cui il corpo si trova davvero, e a
+ * cedere è il primo.
+ *
+ * Il limite vale alla risoluzione con cui si stampa: sono i primi ad
+ * arrotondare a sessanta, e con `withSeconds` i secondi.
+ */
 export function formatZodiacal(longitude: number, withSeconds = false): string {
-  return `${formatDegrees(degreeInSign(longitude), withSeconds)} ${SIGN_ABBR[signOf(longitude)]}`;
+  const risoluzione = withSeconds ? 3600 : 60;
+  const ultimo = 30 * risoluzione - 1;
+  const passi = Math.min(Math.round(degreeInSign(longitude) * risoluzione), ultimo);
+  return `${formatDegrees(passi / risoluzione, withSeconds)} ${SIGN_ABBR[signOf(longitude)]}`;
 }

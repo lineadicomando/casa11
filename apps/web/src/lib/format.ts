@@ -19,3 +19,20 @@ export function formatDegrees(value: number): string {
     ? `${degrees + 1}°00'`
     : `${degrees}°${String(minutes).padStart(2, '0')}'`;
 }
+
+/**
+ * Il grado dentro un segno, es. `22°03'`.
+ *
+ * Arrotonda come `formatDegrees`, **ma non oltre l'ultimo primo del segno**.
+ * A 29°59'40" il riporto scriverebbe `30°00'`, che accanto al glifo
+ * dell'acquario è una posizione che nessun tema può avere: i trenta gradi di
+ * un segno finiscono a 29°59'59". Il segno lo mostra la colonna di fianco, e
+ * contraddirlo per mezzo secondo d'arco costerebbe più del primo che si perde.
+ *
+ * `formatDegrees` resta com'è per le orbite degli aspetti, dove non c'è nessun
+ * segno da contraddire e trenta gradi sono una misura come un'altra.
+ */
+export function formatSignDegree(value: number): string {
+  const ultimo = 30 * 60 - 1;
+  return formatDegrees(Math.min(Math.round(value * 60), ultimo) / 60);
+}

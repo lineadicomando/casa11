@@ -142,6 +142,16 @@ describe('natalWheelPoints', () => {
     expect(sole!.label).toBe('Sole a 10 gradi ariete, casa 3');
   });
 
+  it('tronca i gradi invece di arrotondarli al segno successivo', () => {
+    // 29,99° dell'acquario: arrotondando, l'etichetta direbbe «trenta gradi»,
+    // e un segno di trenta gradi non ce n'è.
+    const bordo = {
+      bodies: [body('sole', 329.99, { name: 'Sole', house: 3, sign: 'acquario', signDegree: 29.99 })],
+    } as unknown as NatalChart;
+
+    expect(natalWheelPoints(bordo)[0]!.label).toBe('Sole a 29 gradi acquario, casa 3');
+  });
+
   it('aggiunge la Parte di Fortuna, che non è un corpo', () => {
     const fortuna = natalWheelPoints(chart).find((p) => p.id === 'fortuna');
 

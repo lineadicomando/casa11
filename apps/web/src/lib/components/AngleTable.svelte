@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Angles, House } from '@dodicisegni/core';
-  import { formatDegrees } from '$lib/format';
+  import { formatSignDegree } from '$lib/format';
   import { SIGN_GLYPH, SIGN_LABEL, signOfLongitude } from '@dodicisegni/ruota';
 
   interface Props {
@@ -31,7 +31,7 @@
     {#each AXES as [label, longitude] (label)}
       <div>
         <span class="etichetta">{label}</span>
-        <span>{formatDegrees(longitude % 30)} {SIGN_GLYPH[signOfLongitude(longitude)]}</span>
+        <span>{formatSignDegree(longitude % 30)} {SIGN_GLYPH[signOfLongitude(longitude)]}</span>
       </div>
     {/each}
   </div>
@@ -49,7 +49,7 @@
         <tr>
           <td class="numerico">{house.number}</td>
           <td>
-            {formatDegrees(house.signDegree)}
+            {formatSignDegree(house.signDegree)}
             <span class="glifo-piccolo">{SIGN_GLYPH[house.sign]}</span>
             <span class="tenue">{SIGN_LABEL[house.sign]}</span>
           </td>

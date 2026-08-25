@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { BodyId, PlanetaryHour, VoidOfCourse } from '@dodicisegni/core';
-  import { formatDegrees } from '$lib/format';
+  import { formatSignDegree } from '$lib/format';
   import { BODY_GLYPH, BODY_LABEL, SIGN_GLYPH, SIGN_LABEL } from '@dodicisegni/ruota';
 
   /**
@@ -129,7 +129,7 @@
               <td class="tenue">{ora.diurnal ? 'diurna' : 'notturna'} {ora.index}</td>
               <td class="numero">{ora.minutes} min</td>
               <td class="numero">
-                {formatDegrees(ora.ascendant.signDegree)}
+                {formatSignDegree(ora.ascendant.signDegree)}
                 <span class="glifo-piccolo">{SIGN_GLYPH[ora.ascendant.sign]}</span>
               </td>
               <!-- Il vuoto di corso è un fatto, non un divieto: la casella dice
