@@ -7,7 +7,7 @@
  * diagnostica va su stderr, altrimenti corrompe i messaggi JSON-RPC.
  */
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createServer } from './server.js';
+import { createServer, SERVER_NAME } from './server.js';
 import type { ToolContext } from './tools.js';
 
 const context: ToolContext = {};
@@ -18,4 +18,4 @@ const server = createServer(context);
 const transport = new StdioServerTransport();
 
 await server.connect(transport);
-process.stderr.write('undicesimacasa MCP in ascolto su stdio\n');
+process.stderr.write(`${SERVER_NAME} MCP in ascolto su stdio\n`);

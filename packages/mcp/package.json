@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "undicesimacasa-mcp": "./dist/stdio.js"
+    "dodicisegni-mcp": "./dist/stdio.js"
   },
   "files": [
     "dist"

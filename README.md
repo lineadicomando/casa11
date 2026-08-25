@@ -77,9 +77,9 @@ tool perché lo sceglie chi usa il client, non il modello.
 ```json
 {
   "mcpServers": {
-    "undicesimacasa": {
+    "dodicisegni": {
       "command": "node",
-      "args": ["/percorso/undicesimacasa/packages/mcp/dist/stdio.js"]
+      "args": ["/percorso/dodicisegni/packages/mcp/dist/stdio.js"]
     }
   }
 }

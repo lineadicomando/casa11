@@ -188,12 +188,12 @@ describe('superficie MCP', () => {
     const { resources } = await client.listResources();
     const uris = resources.map((resource) => resource.uri);
 
-    expect(uris).toContain('undicesimacasa://riferimento/aspetti');
-    expect(uris).toContain('undicesimacasa://riferimento/sistemi-case');
+    expect(uris).toContain('dodicisegni://riferimento/aspetti');
+    expect(uris).toContain('dodicisegni://riferimento/sistemi-case');
   });
 
   it('serve il contenuto di una risorsa', async () => {
-    const result = await client.readResource({ uri: 'undicesimacasa://riferimento/aspetti' });
+    const result = await client.readResource({ uri: 'dodicisegni://riferimento/aspetti' });
 
     expect(String(result.contents[0]?.text)).toContain('congiunzione');
   });

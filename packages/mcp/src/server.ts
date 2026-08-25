@@ -15,7 +15,7 @@ import {
   type ToolContext,
 } from './tools.js';
 
-export const SERVER_NAME = 'undicesimacasa';
+export const SERVER_NAME = 'dodicisegni';
 export const SERVER_VERSION = '0.0.0';
 
 /**
@@ -80,7 +80,7 @@ export function createServer(context: ToolContext = {}): McpServer {
 function registerReferenceResources(server: McpServer): void {
   server.registerResource(
     'aspetti',
-    'undicesimacasa://riferimento/aspetti',
+    `${SERVER_NAME}://riferimento/aspetti`,
     {
       title: 'Aspetti e orbite',
       description:
@@ -101,7 +101,7 @@ function registerReferenceResources(server: McpServer): void {
 
   server.registerResource(
     'sistemi-case',
-    'undicesimacasa://riferimento/sistemi-case',
+    `${SERVER_NAME}://riferimento/sistemi-case`,
     {
       title: 'Sistemi di domificazione',
       description:

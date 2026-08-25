@@ -94,11 +94,20 @@ questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
   toglie il collegamento vecchio in `node_modules/.bin`, lo affianca. Finché
   non si cancella a mano, `npx casa11` continua a rispondere e il rinomino
   sembra non aver preso.
-- **Il server MCP.** `SERVER_NAME` in `packages/mcp/src/server.ts:18`, la riga
-  di avvio in `stdio.ts:21`, il binario `undicesimacasa-mcp` in
-  `packages/mcp/package.json:16`, la chiave in `.mcp.json` e l'esempio nel
-  `README.md:80-82`, e lo schema di URI `undicesimacasa://riferimento/…`
-  (`server.ts:83,104`), che `packages/mcp/test/server.test.ts:191-196` verifica.
+- **Il server MCP** — **fatto**. `SERVER_NAME` vale `dodicisegni`, il binario
+  è `dodicisegni-mcp`, la chiave in `.mcp.json` e l'esempio del `README` pure,
+  e le risorse di riferimento stanno su `dodicisegni://riferimento/…`.
+
+  Come nel passo 1, il nome ha smesso di essere ripetuto alla lettera dove una
+  costante c'era già: i due URI in `server.ts` e la riga di avvio in `stdio.ts`
+  si compongono da `SERVER_NAME`. Il test resta sui letterali di proposito —
+  deve provare il valore che passa sul filo, non che due costanti siano la
+  stessa costante.
+
+  Verificato avviando `dist/stdio.js` su stdio con un `initialize` a mano:
+  `serverInfo.name` è `dodicisegni`, `resources/list` restituisce i due URI
+  nuovi e `resources/read` serve il contenuto. Come per la CLI, il
+  collegamento vecchio in `node_modules/.bin` è andato tolto a mano.
 - **L'applicazione desktop.** `appId`, `productName` ed `executableName` in
   `apps/desktop/electron-builder.yml:3-6`, il `serviceName` e i titoli in
   `apps/desktop/src/main.ts:77,153,172,253,262`, la descrizione in
