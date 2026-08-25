@@ -200,7 +200,15 @@ passata. Resta comunque fuori dai test: vuole un display e un binario Electron.
 `apps/desktop/package.json` fissa `electron` a `38.8.6`, esatta. `npm audit`
 riporta diciannove avvisi su quella versione, più uno su `extract-zip@2.0.1`,
 che entra sotto Electron e serve al `postinstall` per scompattare il binario
-ufficiale. La versione corretta è `43.4.1`.
+ufficiale. I due conti sono stati rifatti e non sono cambiati.
+
+**Le versioni di arrivo sono due, e vanno scelte.** `43.4.1` è l'ultima della
+serie 43 e chiude tutto: l'intervallo vulnerabile di quel major si ferma a
+`43.0.0-beta.8`. Nel frattempo è però uscita la `44.0.0` stabile, ed è quella
+che `npm audit fix --force` propone. Un major in più oggi costa la stessa
+prova a mano e allontana il prossimo salto; contro, è appena uscita, e questo
+è l'unico posto del progetto dove una regressione la vede l'utente e non un
+test.
 
 **Non è una dipendenza di sviluppo nel senso che conta.** `electron-builder`
 impacchetta il runtime dentro l'AppImage: chi lancia `npm run dist` distribuisce
@@ -222,7 +230,7 @@ quelle usate e regge due cose — il server SvelteKit in `avviaServer` e
 l'importazione GeoNames in `importaDatabase` — e il `preload.cjs` della finestra
 di avanzamento, che è CommonJS proprio perché gira in sandbox.
 
-Verifica: `npm run dist -w @undicesimacasa/desktop`, poi lanciare davvero
+Verifica: `npm run dist -w @dodicisegni/desktop`, poi lanciare davvero
 l'AppImage prodotto e percorrere le due strade che il processo principale
 governa — l'importazione del database al primo avvio, e il calcolo di un tema.
 I test non toccano niente di tutto questo.
@@ -335,11 +343,12 @@ tre righe di prosa possono portare la stessa cifra.
 ### La pagina del metodo non è legata a `constants.ts`
 
 `apps/web/src/routes/(informativa)/metodo/+page.svelte` ricopia in prosa valori
-che vivono nel motore: le nove orbite e i nove aspetti da `ASPECTS` in
-`packages/core/src/constants.ts` (tabella a riga 194), i nove sistemi di case da
-`HOUSE_SYSTEM_CODES`, il bonus dei luminari, le orbite dei transiti da
-`TRANSIT_ORBS`, i sei ayanamsa da `AYANAMSAS` in `ayanamsa.ts`, i sei varga da
-`VARGAS` in `varga.ts` (riga 344).
+che vivono nel motore: le nove orbite e i nove aspetti da `ASPECTS`
+(`packages/core/src/constants.ts:275`), che la pagina ricopia nella tabella a
+riga 194; i nove sistemi di case da `HOUSE_SYSTEM_CODES`, il bonus dei
+luminari, le orbite dei transiti da `TRANSIT_ORBS`; i sei ayanamsa da
+`AYANAMSAS` (`ayanamsa.ts:44`) e i sei varga da `VARGAS` (`varga.ts:75`), che
+la pagina elenca a riga 344.
 
 Cambiando un'orbita, la pagina resta vecchia in silenzio. Non c'è nessun test
 che colleghi le due cose, ed è la scelta scritta nel commento in testa al file:
@@ -512,10 +521,10 @@ mano in `PAGINE_PUBBLICHE`, come `/metodo` e `/privacy`, e
 
 ### La revisione di /metodo
 
-La pagina non è povera: 476 righe e diciotto sezioni, ciascuna con il suo `id`.
-Il problema è che è **una pagina sola**. Le diciotto ancore non sono diciotto
-risultati: `#dasha` non è mai un indirizzo per sé, e chi cerca «dasha
-vimshottari» trova al più la pagina intera, che parla di altre diciassette
+La pagina non è povera: 476 righe e diciassette sezioni, ciascuna con il suo
+`id`. Il problema è che è **una pagina sola**. Le diciassette ancore non sono
+diciassette risultati: `#dasha` non è mai un indirizzo per sé, e chi cerca
+«dasha vimshottari» trova al più la pagina intera, che parla di altre sedici
 cose.
 
 Va quindi valutato — non è deciso — se le cinque parti dell'astrologia indiana
