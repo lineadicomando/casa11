@@ -773,49 +773,50 @@ quei valori non cambieranno mai.
 
 Verifica: scambiare due lettere in `HOUSE_SYSTEM_CODES` e vedere cadere il test.
 
-## 16. L'importazione finisce e non lo dice a nessuno
+## 16. L'importazione finisce e non lo dice a nessuno — **fatto**
 
-Quando il download di GeoNames è completo, la finestra di avanzamento resta
-aperta e ferma sull'ultima riga del log. Chi guarda non ha modo di saperlo se
-non leggendo il log: chiude la finestra a mano e riavvia il programma.
+A download completo la finestra di avanzamento restava aperta e ferma
+sull'ultima riga del log: per andare avanti bisognava accorgersene leggendo,
+chiudere la finestra a mano e riavviare il programma.
 
-**Non è una regressione di Electron 43.** Lo stesso test minimo — un
-`utilityProcess.fork` su uno script che stampa e finisce — dà lo stesso esito
-sulla `38.8.6` e sulla `43.4.1`: un figlio avviato così non esce quando il suo
-event loop si svuota, perché il canale con il processo padre lo tiene vivo.
-`import-geonames.mjs` chiude tutto quello che apre e finisce senza chiamare
-`process.exit`, il che è giusto da riga di comando e qui non basta: la promessa
-su `processo.once('exit')` dentro `importaDatabase`
-(`apps/desktop/src/main.ts:146`) non si risolve mai, quindi `splash.destroy()`
-non viene mai raggiunto.
+**Non era una regressione di Electron 43**: lo stesso `utilityProcess.fork` su
+uno script che stampa e finisce si comporta identico sulla `38.8.6` e sulla
+`43.4.1`. Un figlio avviato così non esce quando il suo event loop si svuota,
+perché il canale col processo padre lo tiene vivo, e `import-geonames.mjs`
+chiude tutto quello che apre e finisce senza chiamare `process.exit`. La
+promessa su `processo.once('exit')` non si risolveva mai, quindi
+`splash.destroy()` non veniva mai raggiunto.
 
-Le vie misurate, e nessuna è gratis:
+Le quattro vie, misurate prima di scegliere:
 
 | | codice d'uscita | ultima riga del log |
 |---|---|---|
-| com'è oggi | non esce | completa, ma la finestra resta |
+| com'era | non esce | completa, ma la finestra resta |
 | `process.exit(0)` nel figlio | 0 | **persa** |
 | `process.parentPort?.close()` | **1** | completa |
 | `exitCode = 0` più `parentPort.close()` | **1** | completa |
 
 Le due che il processo lo chiudono davvero sbagliano ciascuna una cosa.
-`process.exit` tronca l'output, perché su una pipe `console.log` è asincrono e
-le righe che si perdono sono proprio il riepilogo finale — quante località,
-quanto pesa il database. Chiudere `parentPort` conserva l'output ma esce con
-`1`, che `importaDatabase` legge come fallimento e trasforma in un messaggio
-d'errore per un'importazione andata bene.
+`process.exit` tronca l'output, perché su una pipe `console.log` scrive in modo
+asincrono e le righe che si perdono sono proprio il riepilogo finale; chiudere
+`parentPort` conserva l'output ma esce con `1`, che `importaDatabase`
+leggerebbe come fallimento di un'importazione andata bene.
 
-Va quindi deciso dove mettere il rimedio, e le due sponde non sono equivalenti:
-`import-geonames.mjs` vive in `packages/geo` e serve anche alla riga di comando
-e al container, dove oggi si comporta bene; `main.ts` è del desktop e non ha
-altri clienti. Una terza via, da valutare prima delle altre, è
-`ELECTRON_RUN_AS_NODE` con `child_process`: dà al figlio la semantica di Node
-vera — esce da solo, con il suo codice d'uscita e il suo output — al prezzo di
-non passare più da `utilityProcess`.
+Ha vinto la quinta, che era da valutare per prima: `ELECTRON_RUN_AS_NODE` con
+`child_process.spawn` su `process.execPath`. Dà al figlio la semantica di Node
+vera — esce da solo, col suo codice d'uscita e tutto il suo output — e il
+binario resta quello di Electron, quindi l'ABI non cambia e il modulo nativo di
+SQLite si carica come prima. Il rimedio sta tutto in `apps/desktop/src/main.ts`
+e `packages/geo` non si tocca, che è la sponda giusta: quello script serve
+anche alla riga di comando e al container, dove si comportava già bene.
 
-Verifica: importare da zero, che basta togliere `geonames.db` da
-`~/.config/@dodicisegni/desktop`, e vedere la finestra chiudersi da sola con il
-log intero, e il programma proseguire fino alla finestra vera senza riavvio.
+`utilityProcess` resta dov'era per il server, che invece deve **restare vivo**:
+è la stessa proprietà, guardata dai due lati.
+
+Verificato eseguendo l'importazione vera — non un finto script — col binario e
+i moduli presi dall'AppImage impacchettata: dodici secondi riusando la cache
+dei sorgenti, codice d'uscita `0`, log completo fino a «Fatto.», database di 90
+MB costruito.
 
 ## Esaminato, e lasciato stare
 
