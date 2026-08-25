@@ -1,12 +1,8 @@
-import {
-  findElectionHours,
-  MAX_ELECTION_DAYS,
-  type BodyId,
-  type ElectionOptions,
-} from '@dodicisegni/core';
+import { MAX_ELECTION_DAYS, type BodyId, type ElectionOptions } from '@dodicisegni/core';
 import { error, json } from '@sveltejs/kit';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError, resolvePlace } from '$lib/server/place';
+import { nelPool } from '$lib/server/pool';
 import { resolvePassageRange } from '$lib/server/range';
 import type { RequestHandler } from './$types';
 
@@ -24,7 +20,7 @@ import type { RequestHandler } from './$types';
  * Non contiene raccomandazioni e non ne conterrà: dice quale pianeta regge
  * un'ora, non se quell'ora sia buona per qualcosa.
  */
-export const GET: RequestHandler = ({ url, setHeaders }) => {
+export const GET: RequestHandler = async ({ url, setHeaders }) => {
   try {
     const parameters = url.searchParams;
     const place = resolvePlace(parameters);
@@ -58,7 +54,11 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
     if (rulers) options.rulers = rulers;
     if (parameters.get('skipMoonVoid') === 'true') options.skipMoonVoid = true;
 
-    const election = findElectionHours(
+    // In un altro thread, come i passaggi: un mese di ore planetarie non
+    // costa quanto tre anni di transiti, ma resta calcolo sincrono che
+    // qui bloccherebbe tutto il resto.
+    const election = await nelPool(
+      'elezione',
       range,
       { latitude: place.latitude, longitude: place.longitude },
       options,

@@ -1,15 +1,9 @@
-import {
-  findSignIngresses,
-  findSkyPassages,
-  findStations,
-  type BodyId,
-  type SkyEventOptions,
-  type SkyPassageOptions,
-} from '@dodicisegni/core';
+import type { BodyId, SkyEventOptions, SkyPassageOptions } from '@dodicisegni/core';
 import { error, json } from '@sveltejs/kit';
 import { readZodiacOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError } from '$lib/server/place';
+import { nelPool } from '$lib/server/pool';
 import { resolvePassageRange } from '$lib/server/range';
 import type { RequestHandler } from './$types';
 
@@ -29,7 +23,7 @@ import type { RequestHandler } from './$types';
  * confine. Gli incontri fra due corpi restano dove sono: sono differenze fra
  * longitudini dello stesso istante, e l'ayanamsa le sposta entrambe.
  */
-export const GET: RequestHandler = ({ url, setHeaders }) => {
+export const GET: RequestHandler = async ({ url, setHeaders }) => {
   try {
     const parameters = url.searchParams;
     const timezone = parameters.get('timezone') || 'UTC';
@@ -51,9 +45,15 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
       eventOptions.bodies = bodies;
     }
 
-    const incontri = findSkyPassages(range, passageOptions);
-    const ingressi = findSignIngresses(range, eventOptions);
-    const stazioni = findStations(range, eventOptions);
+    // Le tre ricerche vanno insieme in un altro thread: chiederle una per
+    // volta sarebbe tre viaggi per un risultato solo, e qui sul filo
+    // principale sarebbero circa mezzo secondo di server fermo.
+    const { incontri, ingressi, stazioni } = await nelPool(
+      'calendario',
+      range,
+      passageOptions,
+      eventOptions,
+    );
 
     // Le tre ricerche attraversano gli stessi corpi: le avvertenze si
     // ripeterebbero identiche, e ripeterle non aggiunge niente.

@@ -1,13 +1,13 @@
 import {
   computeNatalChart,
   DEFAULT_PASSAGE_BODIES,
-  findTransitPassages,
   type PassageOptions,
 } from '@dodicisegni/core';
 import { json } from '@sveltejs/kit';
 import { placeLabel, readBirth, readChartOptions } from '$lib/server/birth';
 import { toHttpError } from '$lib/server/errors';
 import { isHttpError } from '$lib/server/place';
+import { nelPool } from '$lib/server/pool';
 import { resolvePassageRange } from '$lib/server/range';
 import type { RequestHandler } from './$types';
 
@@ -22,7 +22,7 @@ import type { RequestHandler } from './$types';
  * da oggi, senza `to` si arriva a un anno dopo. La Luna è esclusa: da sola
  * perfeziona qualche migliaio di aspetti all'anno, e si chiede con `moon=true`.
  */
-export const GET: RequestHandler = ({ url, setHeaders }) => {
+export const GET: RequestHandler = async ({ url, setHeaders }) => {
   try {
     const parameters = url.searchParams;
     const { birth, place } = readBirth(parameters);
@@ -39,7 +39,10 @@ export const GET: RequestHandler = ({ url, setHeaders }) => {
       passageOptions.bodies = [...DEFAULT_PASSAGE_BODIES, 'luna'];
     }
 
-    const { passages, warnings } = findTransitPassages(chart, range, passageOptions);
+    // Il calcolo va in un altro thread: su tre anni con la Luna sono circa
+    // due secondi, e qui terrebbero fermo il server per tutti. Il perché e
+    // il perché sia sicuro stanno in `lib/server/pool.ts`.
+    const { passages, warnings } = await nelPool('passaggi', chart, range, passageOptions);
 
     // Stessa regola dei transiti: un arco indicato è una funzione pura dei
     // parametri, un arco che comincia «oggi» scade a mezzanotte.

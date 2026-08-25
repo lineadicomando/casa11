@@ -62,6 +62,14 @@ il motore usa Moshier invece delle effemeridi Swiss.
   è un errore ma un tema sbagliato di ventiquattro gradi. Per la stessa ragione
   `zodiacContext` restituisce una **copia** del contesto invece di scrivere sui
   flag di quello che `initEphemeris` tiene in cache.
+
+  Quello stato è però **per thread**, non per processo: ogni thread carica la
+  sua istanza del modulo nativo. È la ragione per cui le tre rotte che costano
+  secondi — passaggi, calendario del cielo, elezione — girano in un pool di
+  worker (`apps/web/src/lib/server/pool.ts`) senza che il vincolo qui sopra
+  cambi di una virgola: la catena resta sincrona, solo gira altrove. Il fatto è
+  verificato in `pool.test.ts` e non va dato per scontato — se cadesse, il pool
+  va smontato, non aggiustato.
 - **Il fallimento è parziale**: un corpo non calcolabile produce un avviso, non
   un errore; l'ora ignota produce una carta senza case, non un rifiuto. Gli
   errori di dominio sono `ChartError` con un `code` mappabile su HTTP.
