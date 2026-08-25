@@ -550,11 +550,10 @@ Due cose invece vanno fatte comunque:
 
 ## 9. Il codice morto non lo vede nessuno
 
-**Priorità media.** Il progetto non ha alcuna configurazione di lint o di
-formattazione — nessun ESLint, nessun Prettier, nessun Biome, nessun oxlint, e
-in `package.json` nessuno script che li chiami. E in `tsconfig.base.json` non
-sono impostati né `noUnusedLocals` né `noUnusedParameters`, che è la parte che
-costa meno e che ha già lasciato passare qualcosa.
+**Priorità media**, e il primo passo è **fatto**: restano il linter vero e la
+decisione che porta con sé. Il progetto non ha alcuna configurazione di lint o
+di formattazione — nessun ESLint, nessun Prettier, nessun Biome, nessun oxlint,
+e in `package.json` nessuno script che li chiami.
 
 Non è un'ipotesi: due difetti reali sono entrati e nessuno se n'è accorto.
 `api/chart/wheel/+server.ts` importava `ruotaSvg` e `ruotaPng` senza usarli, e
@@ -563,28 +562,29 @@ modulo nativo che deve entrare solo da `lib/server`, cioè una regola di
 `CLAUDE.md` aggirata da un import dimenticato. Quello è corretto; l'altro no.
 Nessuno dei due lo vedono `typecheck` né i test, che girano verdi lo stesso.
 
-### Il primo passo costa quasi niente
+### Il primo passo — **fatto**
 
-`noUnusedLocals` e `noUnusedParameters` in `tsconfig.base.json`. Non è una
-dipendenza nuova, quindi non apre la questione di licenza che l'AGPL impone a
-ogni aggiunta, e oggi **manca un solo posto** perché l'albero passi:
+`noUnusedLocals` e `noUnusedParameters` in `tsconfig.base.json`, e **anche in
+`apps/web/tsconfig.json`**, che è la cosa che non si vedeva da qui: quello non
+estende la base ma il `tsconfig` generato da SvelteKit, quindi i due flag alla
+radice non lo raggiungono. Nessuna dipendenza nuova, quindi nessuna questione
+di licenza aperta.
 
-```
-packages/core/src/election.ts(290,3): 'context' is declared but its value is never read.
-```
+Il parametro morto che teneva fermo l'albero è tolto: `findVoidsOfCourse`
+riceveva un `EphemerisContext` e non lo toccava, per la ragione dichiarata alle
+righe 92-93 dello stesso file — l'elezione è tropicale per scelta, e «il vuoto
+di corso siderale non è una tecnica di nessuno».
 
-`findVoidsOfCourse` riceve un `EphemerisContext` e non lo tocca. **Non è un
-difetto di correttezza, ed è già stato verificato**: `ElectionOptions` non ha
-né `zodiac` né `ayanamsa`, e le righe 92-93 dello stesso file dichiarano
-l'elezione tropicale per scelta — «il vuoto di corso siderale non è una tecnica
-di nessuno». Il parametro è peso morto, e va tolto dalla firma insieme
-all'argomento che `election.ts:120` gli passa.
+Due cose sono andate meglio del previsto. Si temeva che coprire i `.svelte`
+volesse qualcosa in più: non lo vuole, perché `svelte-check` legge i due flag
+come **errori** e non come suggerimenti, e li applica ai componenti come ai
+`.ts`. E accendendoli è saltato fuori subito un import morto vero, `ASPECT_GLYPH`
+in `components/TransitAspectTable.svelte`, che nessuno aveva visto — il terzo
+della serie, dopo i due che aprono questa voce.
 
-Il modo di rifare il conto senza installare niente, workspace per workspace:
-
-```sh
-npx tsc -p packages/core/tsconfig.json --noEmit --noUnusedLocals --noUnusedParameters
-```
+Verificato aggiungendo un import inutile in `packages/core/src/place.ts` e una
+costante inutile in `apps/web/src/lib/seo.ts`: cadono tutt'e due, la seconda
+solo dopo il flag nel `tsconfig` dell'app.
 
 ### Il linter vero è una decisione a parte
 
@@ -598,13 +598,11 @@ Va deciso, e non è ovvio:
   peggiora tutto, e il diff che ne esce non si rilegge. Il lint delle regole e
   la formattazione del testo sono due decisioni, e conviene prendere solo la
   prima.
-- **Che cosa copre i `.svelte`.** `svelte-check` gira già su `apps/web` e dà
-  zero avvisi, ma legge il `tsconfig` dell'app: senza i due flag lì, gli import
-  morti nei `.ts` di quell'app non li ha visti nessuno. Coprire i `.svelte`
-  vuole comunque qualcosa in più.
-
-Verifica del primo passo: i due flag accesi, `npm run typecheck` verde su tutti
-i workspace, e un import inutile aggiunto apposta che lo fa cadere.
+- **Che cosa aggiunge, ora che i `.svelte` sono coperti.** Il primo passo li
+  prende già, import e variabili morte comprese. Quello che un linter porta in
+  più sono le regole che il compilatore non ha — le promesse non attese, i
+  confronti che non possono essere veri — e vanno guardate una per una prima di
+  accenderle tutte.
 
 ## 10. Il rinomino su GitHub, e i due riferimenti che lascia indietro
 

@@ -3,7 +3,6 @@
   import type { Evidenza } from '$lib/evidenza.svelte';
   import { formatDegrees } from '$lib/format';
   import {
-    ASPECT_GLYPH,
     ASPECT_MAJOR,
     isNatalPointSigla,
     natalPointGlyph,

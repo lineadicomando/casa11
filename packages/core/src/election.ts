@@ -117,7 +117,7 @@ export function findElectionHours(
     );
   }
 
-  const periods = findVoidsOfCourse(range, start, end, options, context, warnings);
+  const periods = findVoidsOfCourse(range, start, end, options, warnings);
   const hours = buildPlanetaryHours(range, place, start, end, periods, options, context, warnings);
 
   const filters: NonNullable<ElectionResult['filters']> = {};
@@ -287,7 +287,6 @@ function findVoidsOfCourse(
   start: number,
   end: number,
   options: ElectionOptions,
-  context: EphemerisContext,
   warnings: string[],
 ): VoidPeriod[] {
   const wide = widen(range, VOID_MARGIN_DAYS);
