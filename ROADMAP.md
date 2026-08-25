@@ -81,16 +81,19 @@ profili espliciti.
 Pochi, e ciascuno vuole una decisione prima di una riga di codice. Nessuno di
 questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
 
-- **La CLI `casa11` diventa `dodicisegni`** — deciso, e la ragione è che il
-  nome vecchio era già un terzo nome, né `undicesimacasa` né altro, e un
+- **La CLI `casa11` è diventata `dodicisegni`** — **fatto**. La ragione era
+  che il nome vecchio era già un terzo nome, né `undicesimacasa` né altro, e un
   progetto che si chiama in tre modi si spiega tre volte. `12segni` si sarebbe
   digitato meglio, ma il nome breve ha una sola giustificazione — i sette
   caratteri sotto un'icona — e sulla riga di comando quella giustificazione non
-  c'è. Da cambiare: `packages/core/package.json:16`, l'aiuto in
-  `packages/core/src/cli.ts:70-75,751`, le citazioni in `README.md:26,52,54`,
-  `CLAUDE.md:14`, `packages/ruota/src/types.ts:9` e
-  `.claude/skills/nuova-funzione/SKILL.md:20`, che la nomina nella mappa dei
-  file.
+  c'è. Cambiati il `bin` di `packages/core/package.json`, l'aiuto e il commento
+  a `printSky` in `cli.ts`, e le citazioni in `README.md`, `CLAUDE.md`,
+  `packages/ruota/src/types.ts` e `.claude/skills/nuova-funzione/SKILL.md`.
+
+  Una nota per chi rifà il giro su un altro identificatore: `npm install` non
+  toglie il collegamento vecchio in `node_modules/.bin`, lo affianca. Finché
+  non si cancella a mano, `npx casa11` continua a rispondere e il rinomino
+  sembra non aver preso.
 - **Il server MCP.** `SERVER_NAME` in `packages/mcp/src/server.ts:18`, la riga
   di avvio in `stdio.ts:21`, il binario `undicesimacasa-mcp` in
   `packages/mcp/package.json:16`, la chiave in `.mcp.json` e l'esempio nel

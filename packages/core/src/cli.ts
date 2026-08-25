@@ -67,12 +67,12 @@ import type {
 } from './types.js';
 
 const USAGE = `
-casa11 — calcolo del tema natale da riga di comando
+dodicisegni — calcolo del tema natale da riga di comando
 
-  casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
-  casa11 --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome \\
-         --transits --on 2026-08-15
-  casa11 --sky
+  dodicisegni --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome
+  dodicisegni --date 1968-03-12 --time 14:30 --lat 40.8518 --lon 14.2681 --tz Europe/Rome \\
+              --transits --on 2026-08-15
+  dodicisegni --sky
 
 Opzioni
   --date <YYYY-MM-DD>   Data di nascita locale (obbligatoria)
@@ -748,7 +748,7 @@ function scriviQuadro(
 /**
  * Stampa il cielo di un istante.
  *
- * Nessun parametro è obbligatorio, ed è il punto: `casa11 --sky` risponde
+ * Nessun parametro è obbligatorio, ed è il punto: `dodicisegni --sky` risponde
  * subito. Il fuso, se non indicato, è quello della macchina — non sposta il
  * cielo, decide solo come vengono scritte data e ora.
  */

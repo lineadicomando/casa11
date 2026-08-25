@@ -17,7 +17,7 @@ packages/core/src/<funzione>.ts     il calcolo
   ├── types.ts                      i tipi del risultato
   ├── index.ts                      l'export pubblico
   ├── format.ts                     formatXxxCompact — la resa densa per gli agenti
-  ├── cli.ts                        le opzioni di casa11
+  ├── cli.ts                        le opzioni di dodicisegni
   └── test/<funzione>.test.ts       obbligatorio
 
 apps/web/

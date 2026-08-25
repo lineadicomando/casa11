@@ -23,7 +23,7 @@ Monorepo npm workspaces, Node ≥ 22, ESM, TypeScript.
 
 | | |
 |---|---|
-| `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
+| `packages/core` | motore di calcolo e CLI `dodicisegni`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
 | `packages/ruota` | il disegno: la ruota e il quadro vedico, geometria, glifi, colori, SVG e PNG |
 | `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo: un documento per sistema astrologico |
@@ -49,9 +49,9 @@ dichiara in `warnings`.
 **Riga di comando.** Dopo `npm run build`:
 
 ```sh
-npx casa11 --date 1968-03-12 --time 14:30 \
+npx dodicisegni --date 1968-03-12 --time 14:30 \
   --lat 40.8518 --lon 14.2681 --tz Europe/Rome
-npx casa11 --help        # tutte le opzioni
+npx dodicisegni --help        # tutte le opzioni
 ```
 
 **Applicazione web.** Cinque sezioni e undici endpoint, tutti in GET perché un

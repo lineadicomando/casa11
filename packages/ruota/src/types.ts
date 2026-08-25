@@ -6,9 +6,10 @@
  * `glyphs.ts` — là si evitava un import di *valore*, qui si evita una
  * dipendenza tout court.
  *
- * Il motivo è un ciclo: la CLI `casa11` vive dentro `core`, e per salvare un
- * disegno `core` deve poter chiamare questo pacchetto. Se questo pacchetto a
- * sua volta importasse `core`, nessuno dei due potrebbe compilare per primo.
+ * Il motivo è un ciclo: la CLI `dodicisegni` vive dentro `core`, e per
+ * salvare un disegno `core` deve poter chiamare questo pacchetto. Se questo
+ * pacchetto a sua volta importasse `core`, nessuno dei due potrebbe compilare
+ * per primo.
  * Rompendo la dipendenza da questo lato l'ordine diventa quello giusto anche
  * concettualmente: **il disegno non conosce il motore**, riceve una carta già
  * calcolata e non ha modo di calcolarne una.

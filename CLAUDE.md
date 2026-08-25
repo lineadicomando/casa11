@@ -11,7 +11,7 @@ che sono la fonte.
 
 | | |
 |---|---|
-| `packages/core` | motore di calcolo e CLI `casa11`. Nessuna dipendenza da HTTP, framework o MCP |
+| `packages/core` | motore di calcolo e CLI `dodicisegni`. Nessuna dipendenza da HTTP, framework o MCP |
 | `packages/geo` | ricerca località su dataset GeoNames locale (SQLite) |
 | `packages/ruota` | il disegno: la ruota e il quadro vedico nei due stili. Geometria, glifi, colori, SVG e PNG. Non dipende da `core` |
 | `packages/lettura` | il tema più le istruzioni per leggerlo, in un testo solo. Un documento per sistema astrologico. Riceve una tabella già impaginata: non dipende da `core`, nemmeno dai tipi |
