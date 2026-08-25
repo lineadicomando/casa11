@@ -1,4 +1,6 @@
-# dodicisegni
+<p align="center">
+  <img src="graphics/marchio.svg" alt="dodicisegni" width="246">
+</p>
 
 Generazione di temi natali: motore di calcolo astronomico, API REST e server MCP.
 

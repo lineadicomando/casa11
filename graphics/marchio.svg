@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Il marchio in un file solo, per i posti che non possono disegnarlo: il README
+  su GitHub, e chiunque altro voglia l'immagine invece del componente.
+
+  **Questa è una copia, e le copie divergono.** La fonte resta
+  `apps/web/src/lib/components/Marchio.svelte`, dove il disegno sta insieme
+  alle ragioni di ogni sua parte, e le icone a punti continuano a nascere dal
+  favicon come dice `apps/web/scripts/build-icons.mjs`. Chi tocca il sigillo
+  laggiù passi anche di qui: la geometria è la stessa, riportata alle stesse
+  coordinate su una griglia di cento, e le tre misure che contano sono il
+  raggio dei due cerchi, il poligono {12/5} e le otto posizioni sulla fascia.
+
+  Due cose non potevano restare come sono nel componente.
+
+  **I colori sono scritti per esteso.** Un `<img>` non porta con sé il
+  `currentColor` né le proprietà personalizzate del foglio di stile: qui valgono
+  i valori del tema scuro, cioè quelli che `app.css` dà a `testo`, `testo-tenue`
+  e `oro` sotto `light-dark`. Vanno nominate senza il doppio trattino che hanno
+  davvero, perché XML non lo ammette dentro un commento.
+
+  **Il fondo scuro c'è sempre**, ed è la stessa scelta di `graphics/favicon.svg`
+  per la stessa ragione: un file solo va su fondo chiaro e su fondo scuro, e
+  GitHub è tutt'e due a seconda di chi guarda. L'oro sul crema starebbe a
+  1,73:1, sotto il 3:1 che WCAG chiede a un oggetto grafico.
+
+  I due glifi delle luci sono scritti e non disegnati, come nel componente, e
+  come là portano U+FE0E perché nessun sistema li faccia diventare pittogrammi
+  colorati. Vengono dal font di chi guarda: è la stessa dipendenza che il sito
+  ha già.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="246" height="132" viewBox="0 0 246 132"
+     role="img" aria-labelledby="nome">
+  <title id="nome">dodicisegni</title>
+
+  <rect width="246" height="132" rx="14" fill="#1a1917"/>
+
+  <g transform="translate(20 18) scale(0.96)">
+    <g fill="none" stroke="#ebe7de" stroke-width="0.9">
+      <circle cx="50" cy="50" r="47.5"/>
+      <circle cx="50" cy="50" r="35.5"/>
+    </g>
+
+    <path d="M50 18L66 77.713L22.287 34L82 50L22.287 66L66 22.287L50 82L34 22.287L77.713 66L18 50L77.713 34L34 77.713Z" fill="none" stroke="#fab219" stroke-width="0.8" stroke-linejoin="round"/>
+
+    <g fill="#ebe7de" font-size="10.5" text-anchor="middle" dominant-baseline="central"
+       font-family="Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif">
+      <text x="8.5" y="50">☽︎</text>
+      <text x="91.5" y="50">☉︎</text>
+    </g>
+
+    <g fill="#ebe7de">
+      <path d="M0 -4.1Q0 0 4.1 0Q0 0 0 4.1Q0 0 -4.1 0Q0 0 0 -4.1Z" transform="translate(50.0 8.5)"/>
+      <path d="M0 -3.1Q0 0 3.1 0Q0 0 0 3.1Q0 0 -3.1 0Q0 0 0 -3.1Z" transform="translate(79.345 20.655)"/>
+      <path d="M0 -3.1Q0 0 3.1 0Q0 0 0 3.1Q0 0 -3.1 0Q0 0 0 -3.1Z" transform="translate(79.345 79.345)"/>
+      <path d="M0 -4.1Q0 0 4.1 0Q0 0 0 4.1Q0 0 -4.1 0Q0 0 0 -4.1Z" transform="translate(50.0 91.5)"/>
+      <path d="M0 -3.1Q0 0 3.1 0Q0 0 0 3.1Q0 0 -3.1 0Q0 0 0 -3.1Z" transform="translate(20.655 79.345)"/>
+      <path d="M0 -3.1Q0 0 3.1 0Q0 0 0 3.1Q0 0 -3.1 0Q0 0 0 -3.1Z" transform="translate(20.655 20.655)"/>
+    </g>
+  </g>
+
+  <g font-family="Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif" text-anchor="middle">
+    <!-- Lo scarto sulla x compensa la spaziatura, che si somma anche dopo
+         l'ultimo segno: senza, il testo risulterebbe di mezza spaziatura a
+         sinistra del suo centro. È il `margin-right` negativo del componente. -->
+    <text x="181.8" y="77" font-size="64" letter-spacing="11.52" fill="#ebe7de"
+          style="font-variant-numeric: lining-nums">12</text>
+    <text x="179" y="100" font-size="19.84" letter-spacing="5.95" fill="#9d968a">SEGNI</text>
+  </g>
+</svg>
