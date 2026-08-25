@@ -7,10 +7,12 @@ ogni voce è una cosa nota, con il file, la riga e il modo di verificarla.
 In fondo c'è una lista che non è lavoro — roba esaminata e lasciata stare, per
 non ritrovarla una seconda volta e ricominciare da capo.
 
-## 1. Il nome: da undicesimacasa a dodicisegni
+## 1. Il nome: da undicesimacasa a dodicisegni — **fatto**
 
-**Prioritario.** Il progetto prende il nome `dodicisegni`, sul dominio
-`dodicisegni.it`; `12segni.it` è il dominio di servizio, già registrato. Nel
+I tre passi sono chiusi. Resta fuori il solo `REPOSITORY_URL`, che dipende da
+un rinomino su GitHub e sta al **punto 10**.
+
+Il progetto prende il nome `dodicisegni`, sul dominio `dodicisegni.it`; `12segni.it` è il dominio di servizio, già registrato. Nel
 marchio il numero è in cifre — «12» sopra «segni» — perché «XII» si legge
 anche «dodicesima» e il nome dice dodici segni, non il dodicesimo di qualcosa;
 il nome breve dell'icona installata è `12segni`, che sta nei sette caratteri
@@ -23,10 +25,11 @@ Ogni identificatore si cambia sul posto, e chi lo cambia non deve niente a
 nessuno. È la ragione per cui questa voce è più corta di quanto sarebbe stata
 fra un anno, ed è anche la ragione per cui conviene farla adesso.
 
-Resta in tre passi per una ragione sola e molto più piccola di quella: **la
+È andato in tre passi per una ragione sola e molto più piccola di quella: **la
 leggibilità del diff**. Il rinomino dello scope npm tocca quasi ogni file del
 repo ed è rumore meccanico; impastarlo con le decisioni di nome — la CLI, il
-server MCP, l'applicazione desktop — produrrebbe un commit che nessuno rilegge.
+server MCP, l'applicazione desktop — avrebbe prodotto un commit che nessuno
+rilegge.
 
 ### Il sigillo non va ridisegnato
 
@@ -76,10 +79,12 @@ nuovo sono altri file), poi
 `npm run typecheck && npm test && npm run build`, poi il giro Docker con i
 profili espliciti.
 
-### Passo 3 — gli identificatori con un nome da scegliere
+### Passo 3 — gli identificatori con un nome da scegliere — **fatto**
 
-Pochi, e ciascuno vuole una decisione prima di una riga di codice. Nessuno di
-questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
+Pochi, e ciascuno voleva una decisione prima di una riga di codice. Nessuno
+aveva più un vincolo di compatibilità: restava scegliere bene, e la scelta è
+stata la stessa dappertutto — `dodicisegni`. `12segni` ha una giustificazione
+sola, i sette caratteri sotto un'icona, e nessuno di questi posti è quello.
 
 - **La CLI `casa11` è diventata `dodicisegni`** — **fatto**. La ragione era
   che il nome vecchio era già un terzo nome, né `undicesimacasa` né altro, e un
@@ -108,41 +113,44 @@ questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
   `serverInfo.name` è `dodicisegni`, `resources/list` restituisce i due URI
   nuovi e `resources/read` serve il contenuto. Come per la CLI, il
   collegamento vecchio in `node_modules/.bin` è andato tolto a mano.
-- **L'applicazione desktop.** `appId`, `productName` ed `executableName` in
-  `apps/desktop/electron-builder.yml:3-6`, il `serviceName` e i titoli in
-  `apps/desktop/src/main.ts:77,153,172,253,262`, la descrizione in
-  `apps/desktop/package.json:5`. L'`appId` diventa `it.dodicisegni.desktop`.
-  `syncDesktopName: true` lega il nome della voce di menu a `productName`:
-  cambia anche quella, e va bene perché nessuno ha l'AppImage installata.
-- **La chiave del tema** `undicesimacasa:color-scheme`, in
-  `apps/web/src/lib/color-scheme.ts:22` e ripetuta alla lettera nello script in
-  linea di `apps/web/src/app.html:39` — che non può importare la costante,
-  perché gira prima di tutto il resto per non far lampeggiare la pagina. Le due
-  copie vanno cambiate insieme, e con loro la prosa in
-  `privacy/+page.svelte:170`, che il valore lo cita.
-- **Il nome della cache** `casa11-${version}` in `service-worker.ts:39`, e la
-  prosa che lo cita in `privacy/+page.svelte:178`. Le cache di nome vecchio le
-  butta `activate` da sé (righe 113-118).
-- **Il repository resta `lineadicomando/casa11`** — deciso, per ora. Il
-  rinomino su GitHub è un'azione fuori dal repo, e `REPOSITORY_URL` in
-  `apps/web/src/lib/project.ts:16` non va toccata finché quella non è fatta:
-  quell'indirizzo è insieme il recapito che l'informativa privacy dichiara e
-  l'offerta del sorgente che l'AGPL articolo 13 impone, quindi un collegamento
-  rotto lì non è un refuso ma una violazione di licenza. **L'ordine è
-  obbligato: prima si rinomina su GitHub, poi si cambia la costante** — mai il
-  contrario, e neanche insieme.
+- **L'applicazione desktop** — **fatto**. `appId` è `it.dodicisegni.desktop`,
+  `productName` ed `executableName` sono `dodicisegni`, e così la descrizione
+  del pacchetto, che finisce nel `Comment` della voce di menu. In `main.ts` il
+  nome sta in una costante `NOME` — dichiarata lì e non importata da `web`, che
+  non è una libreria e da cui il desktop non dipende.
 
-  Il costo di aspettare è piccolo: nei due posti dove il collegamento compare —
-  il piè di pagina e l'informativa — il testo dice «codice sorgente» e «il
-  repository pubblico del progetto», quindi il nome vecchio sta nell'indirizzo
-  e non sulla pagina. Si vede passandoci sopra, non leggendo. Da chiudere prima
-  di mettere il sito in rete, non necessariamente prima dei passi 2 e 3.
+  Verificato impacchettando davvero: `npm run dist` produce
+  `dodicisegni-0.1.0.AppImage`, l'eseguibile dentro è `dodicisegni`, e il
+  `.desktop` porta `Name`, `Icon` e `StartupWMClass` tutti col nome nuovo.
+  L'app avviata mostra il titolo giusto.
 
-  Dopo il rinomino su GitHub resta indietro anche il **remote della copia
-  locale**, che oggi è `https://github.com/lineadicomando/casa11.git`. Non
-  urge: GitHub redirige i remote vecchi, quindi non si rompe niente e non c'è
-  un ordine da rispettare. Sta qui solo perché è l'unica cosa, oltre a
-  `REPOSITORY_URL`, che quel rinomino lasci indietro sulla macchina.
+  Due cose viste di passaggio e **non toccate**, perché non sono di questo
+  lavoro: `release/` tiene ancora l'AppImage vecchia del nome vecchio, e
+  `electron-builder` avvisa che `desktopName` non è impostato in
+  `package.json`, il che rende `syncDesktopName: true` meno efficace di quanto
+  la riga qui sopra dicesse. L'avviso c'era già prima del rinomino.
+- **La chiave del tema** — **fatto**. Vale `dodicisegni:color-scheme`, e
+  `COLOR_SCHEME_KEY` la compone da `SITE_NAME` invece di ripeterla.
+
+  Lo script in linea di `app.html` **non può** fare altrettanto: gira prima di
+  ogni import, per non far lampeggiare la pagina, e la chiave se la scrive a
+  mano. Prima erano due letterali e si dimenticavano insieme; ora la costante
+  segue `SITE_NAME` e la copia in `app.html` no, che è un modo peggiore di
+  sbagliare — cambiare il nome del sito perderebbe l'aspetto scelto a ogni
+  caricamento, in silenzio. Per questo `color-scheme.test.ts` adesso legge
+  `app.html` e confronta le due copie: è l'unico posto dove si guardano in
+  faccia. Provato facendolo cadere.
+- **Il nome della cache** — **fatto**. `service-worker.ts` lo compone da
+  `SITE_NAME`, che già importava per il titolo della pagina senza rete;
+  nel worker compilato risulta `dodicisegni-<versione>`. Le cache di nome
+  vecchio le butta `activate` da sé.
+
+  In tutt'e due i casi è cambiata anche la prosa dell'informativa privacy, che
+  i due valori li cita alla lettera.
+
+Il repository non è in questo elenco: `REPOSITORY_URL` dipende da un rinomino
+su GitHub, che è fuori dal repo e non si può fare da qui. Sta al **punto 10**,
+e non blocca niente di quanto sopra.
 
 ### Deciso, per non ridiscuterlo
 
@@ -597,6 +605,37 @@ Va deciso, e non è ovvio:
 
 Verifica del primo passo: i due flag accesi, `npm run typecheck` verde su tutti
 i workspace, e un import inutile aggiunto apposta che lo fa cadere.
+
+## 10. Il rinomino su GitHub, e i due riferimenti che lascia indietro
+
+**Bassa priorità**, e l'unica voce del cambio di nome che non si chiude
+scrivendo codice: il primo passo è un'azione sull'interfaccia di GitHub, che
+nessuno può fare da dentro il repo. Sta qui, e non dentro il punto 1, proprio
+per questo — non è un passo rimasto indietro, è un lavoro d'altra natura.
+
+Il repository oggi è `lineadicomando/casa11`.
+
+**L'ordine è obbligato: prima si rinomina su GitHub, poi si cambia la
+costante** — mai il contrario, e neanche insieme. `REPOSITORY_URL` in
+`apps/web/src/lib/project.ts:16` è insieme il recapito che l'informativa
+privacy dichiara e l'offerta del sorgente che l'AGPL articolo 13 impone: un
+collegamento rotto lì non è un refuso ma una violazione di licenza. Cambiarla
+prima del rinomino rompe l'indirizzo per il tempo che passa in mezzo.
+
+Il costo di aspettare è piccolo, ed è la ragione della bassa priorità. Nei due
+posti dove il collegamento compare — il piè di pagina e l'informativa — il
+testo dice «codice sorgente» e «il repository pubblico del progetto», quindi il
+nome vecchio sta nell'indirizzo e non sulla pagina. Si vede passandoci sopra,
+non leggendo.
+
+**Da chiudere prima di mettere il sito in rete.** Fino ad allora l'indirizzo
+funziona e nessuno lo legge.
+
+Dopo il rinomino resta indietro anche il **remote della copia locale**, che
+oggi è `https://github.com/lineadicomando/casa11.git`. Non urge e non ha un
+ordine da rispettare: GitHub redirige i remote vecchi, quindi non si rompe
+niente. Sta qui solo perché è l'unica cosa, oltre a `REPOSITORY_URL`, che quel
+rinomino lasci indietro sulla macchina.
 
 ## Esaminato, e lasciato stare
 
