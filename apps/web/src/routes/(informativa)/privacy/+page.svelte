@@ -8,7 +8,7 @@
    * a ogni ricostruzione, e un'informativa che si dice aggiornata senza
    * esserlo dice il falso proprio sul punto in cui deve essere credibile.
    */
-  const AGGIORNAMENTO = '23 agosto 2026';
+  const AGGIORNAMENTO = '25 agosto 2026';
 
   /**
    * Giorni di conservazione dei log del server.
@@ -40,9 +40,9 @@
 </div>
 
 <p>
-  Il resto della pagina spiega per esteso queste cinque righe, comprese le due
-  cose che il sito <em>fa</em> registrare: i log tecnici del server e il fatto
-  che i dati inseriti passino per l'indirizzo della pagina.
+  Restano due cose che il sito <em>fa</em> registrare, e qui sotto sono spiegate
+  per esteso: i log tecnici del server, e il fatto che i dati inseriti passino
+  per l'indirizzo della richiesta.
 </p>
 
 <h2>Titolare del trattamento</h2>
@@ -83,13 +83,13 @@
 </p>
 
 <p>
-  Va detta però una cosa che si vede a occhio nudo:
+  C'è una cosa, però, che si vede a occhio nudo:
   <strong>i valori inseriti compaiono nell'indirizzo</strong> della richiesta
-  (<code>/api/chart?date=…&amp;time=…</code>). È una scelta voluta — rende un
-  tema riproducibile — ma ha due conseguenze: quell'indirizzo resta nella
-  cronologia del tuo browser, e transita per i log del server descritti qui
-  sotto. Il server è configurato per registrare il percorso <em>senza</em> i
-  parametri, proprio per non conservarli.
+  (<code>/api/chart?date=…&amp;time=…</code>). La scelta è voluta, e rende un
+  tema riproducibile. Ha due conseguenze: quell'indirizzo resta nella
+  cronologia del tuo browser, e arriva al server che tiene i log descritti qui
+  sotto. Lì non si ferma: il server è configurato per registrare il percorso
+  <em>senza</em> i parametri, proprio per non conservarli.
 </p>
 
 <p>
@@ -100,8 +100,8 @@
 <ul>
   <li>
     Su <strong>Cielo</strong> ed <strong>Elezione</strong> l'indirizzo si
-    aggiorna da sé con quello che stai guardando — giorno, ora, fuso, luogo,
-    opzioni — così che la pagina si possa ricaricare, mettere fra i segnalibri
+    aggiorna da sé con quello che stai guardando (giorno, ora, fuso, luogo,
+    opzioni), così che la pagina si possa ricaricare, mettere fra i segnalibri
     e mandare a qualcuno. Sono un istante e una città: non dicono niente di te.
     Sull'Elezione il tema di nascita facoltativo <em>non</em> ci finisce.
   </li>
@@ -161,12 +161,12 @@
     Passando da una pagina all'altra il sistema di navigazione registra nella
     <em>sessionStorage</em> la posizione dello scorrimento, alla voce
     <code>sveltekit:scroll</code>, per riportarti dove eri se torni indietro.
-    Sono due numeri per pagina — nessun identificativo, nessun dato che ti
-    riguardi — e spariscono chiudendo la scheda.
+    Sono due numeri per pagina (nessun identificativo, nessun dato che ti
+    riguardi) e spariscono chiudendo la scheda.
   </li>
   <li>
-    Se scegli l'aspetto della pagina con il pulsante in alto, quella scelta —
-    la parola <code>light</code> o <code>dark</code>, nient'altro — resta nella
+    Se scegli l'aspetto della pagina con il pulsante in alto, quella scelta
+    (la parola <code>light</code> o <code>dark</code>, nient'altro) resta nella
     <em>localStorage</em> alla voce <code>dodicisegni:color-scheme</code>,
     così ricaricando il sito lo ritrovi come lo avevi lasciato. Finché non
     tocchi il pulsante non viene scritto nulla, e riportandolo su «automatico»
@@ -179,8 +179,8 @@
     della versione. Dentro ci sono le pagine, i programmi, gli stili e le
     icone: il contenitore, non il contenuto. <strong>Le risposte del calcolo
     non ci finiscono mai</strong>, e gli indirizzi delle pagine ci vengono
-    scritti <strong>senza i parametri</strong> — cioè senza la data, l'ora e il
-    luogo che portano con sé — per non farne un elenco dei temi che hai
+    scritti <strong>senza i parametri</strong>, cioè senza la data, l'ora e il
+    luogo che portano con sé, per non farne un elenco dei temi che hai
     guardato. Disinstallando l'applicazione, o cancellando i dati del sito
     dalle impostazioni del browser, sparisce tutto.
   </li>
@@ -197,8 +197,8 @@
 <p>
   Nessuno di questi elementi richiede il tuo consenso: sono strettamente
   necessari a far funzionare la navigazione e non permettono di riconoscerti.
-  Non c'è quindi nessun banner. Le opzioni che scegli nel modulo — sistema di
-  case, aspetti minori — non vengono memorizzate affatto: vivono nella pagina
+  Non c'è quindi nessun banner. Le opzioni che scegli nel modulo, sistema di
+  case e aspetti minori, non vengono memorizzate affatto: vivono nella pagina
   aperta e spariscono quando la chiudi.
 </p>
 
@@ -213,11 +213,12 @@
 <h2>Nessuna profilazione, nessun marketing</h2>
 
 <p>
-  Non viene svolta alcuna attività di profilazione, non viene costruito alcun
-  profilo di comportamento o di interessi, non esiste alcun processo
-  decisionale automatizzato che ti riguardi. I dati non vengono usati per
-  finalità commerciali, pubblicitarie o promozionali, né ceduti o venduti a
-  terzi per tali finalità.
+  Non c'è profilazione. Non viene costruito nessun profilo di comportamento o
+  di interessi, non esiste nessun processo decisionale automatizzato che ti
+  riguardi, e i dati non vengono usati per finalità commerciali, pubblicitarie
+  o promozionali, né ceduti o venduti a terzi per quelle finalità. Del resto
+  mancherebbe la materia: di te restano un indirizzo IP e un percorso, per
+  {RITENZIONE_LOG} giorni.
 </p>
 
 <h2>Servizi di terze parti</h2>
@@ -257,7 +258,7 @@
 <p>
   Il Regolamento UE 2016/679 riconosce il diritto di accedere ai propri dati,
   rettificarli, cancellarli, limitarne o opporsi al trattamento e riceverli in
-  forma portabile (artt. 15-22).
+  forma portabile (artt. 15–22).
 </p>
 
 <p>
@@ -265,7 +266,7 @@
   fatto che nulla viene conservato: non c'è un archivio da consultare o da
   ripulire. Restano esercitabili sui log tecnici, per il tempo in cui esistono,
   scrivendo al recapito indicato sopra e indicando l'indirizzo IP e il periodo
-  di riferimento — sono i soli elementi che permettono di ritrovare le righe
+  di riferimento: sono i soli elementi che permettono di ritrovare le righe
   che ti riguardano.
 </p>
 
