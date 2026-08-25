@@ -45,10 +45,18 @@
       Scarico i dati GeoNames e costruisco il database locale. Serve una volta
       sola; chiudere questa finestra interrompe l'operazione.
     </p>
-    <pre id="log"></pre>
+    <pre id="log">Mi collego a GeoNames…</pre>
     <script>
       const log = document.getElementById('log');
+      // La riga d'attesa sta nel documento e non qui, così si vede anche nel
+      // tempo in cui il processo che scarica sta ancora partendo e non ha
+      // scritto niente. La prima riga vera la porta via.
+      let attesa = true;
       window.importazione.suRiga((riga) => {
+        if (attesa) {
+          log.textContent = '';
+          attesa = false;
+        }
         log.textContent += riga + '\n';
         log.scrollTop = log.scrollHeight;
       });

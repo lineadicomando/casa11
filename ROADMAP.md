@@ -833,6 +833,20 @@ riavvio. Provato in isolamento — una finestra distrutta, una seconda aperta un
 secondo e mezzo dopo — con la guardia e senza: senza, l'applicazione muore
 prima della seconda.
 
+### E i secondi di silenzio dopo «Scarica ora»
+
+Fra il consenso e la comparsa della finestra passavano un paio di secondi
+senza niente a schermo. Non è il caricamento della pagina, che è di 0,3: è il
+primo processo renderer dentro l'AppImage, dove le librerie di Chromium si
+leggono da un filesystem compresso — misurati 2,1 secondi contro i 0,3 dello
+stesso codice in un albero non impacchettato.
+
+La finestra si costruisce quindi **prima** del dialogo e resta invisibile, così
+quei secondi passano mentre chi legge decide; alla scelta, `show()` costa un
+millesimo. Chi risponde «Continua senza» o «Esci» non la vede mai, perché viene
+distrutta lì. Nel frattempo il `<pre>` non è più vuoto: porta una riga
+d'attesa, che la prima riga vera dello scaricamento porta via.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:

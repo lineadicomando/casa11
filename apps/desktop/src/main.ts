@@ -119,6 +119,31 @@ async function attendiServer(url: string, processo: UtilityProcess): Promise<voi
   throw new Error('Il server interno non ha risposto entro 20 secondi.');
 }
 
+/** La finestra dell'avanzamento e la promessa che dice quando ha caricato. */
+type Avanzamento = { finestra: BrowserWindow; pronta: Promise<void> };
+
+/**
+ * Costruisce la finestra dell'avanzamento **ancora invisibile**, prima che a
+ * chi guarda sia stato chiesto se scaricare.
+ *
+ * Il primo processo renderer costa un paio di secondi dentro l'AppImage, dove
+ * le librerie di Chromium si leggono da un filesystem compresso: misurati 2,1
+ * contro i 0,3 di un albero non impacchettato. Costruendola qui quei secondi
+ * passano mentre il dialogo è a schermo e chi lo legge decide, invece che dopo
+ * il suo consenso, davanti a uno schermo dove non succede niente.
+ */
+function preparaAvanzamento(): Avanzamento {
+  const finestra = new BrowserWindow({
+    width: 640,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    show: false,
+    webPreferences: { preload: join(appRoot, 'preload.cjs') },
+  });
+  return { finestra, pronta: finestra.loadFile(join(appRoot, 'splash.html')) };
+}
+
 /**
  * Scarica il dataset GeoNames riusando lo script del pacchetto `geo`,
  * mostrandone l'avanzamento riga per riga in una finestra dedicata.
@@ -136,15 +161,11 @@ async function attendiServer(url: string, processo: UtilityProcess): Promise<voi
  * quello di Electron, quindi l'ABI non cambia e il modulo nativo di SQLite si
  * carica come prima.
  */
-async function importaDatabase(): Promise<void> {
-  const splash = new BrowserWindow({
-    width: 640,
-    height: 480,
-    resizable: false,
-    autoHideMenuBar: true,
-    webPreferences: { preload: join(appRoot, 'preload.cjs') },
-  });
-  await splash.loadFile(join(appRoot, 'splash.html'));
+async function importaDatabase({ finestra: splash, pronta }: Avanzamento): Promise<void> {
+  splash.show();
+  // Le righe si mandano a una pagina che è già in piedi: `webContents.send`
+  // prima del caricamento non le mette in coda, le perde.
+  await pronta;
 
   await mkdir(dirname(databasePath), { recursive: true });
   const processo = spawn(process.execPath, [importScript], {
@@ -180,6 +201,9 @@ type EsitoDatabase = 'pronto' | 'assente' | 'esci';
 async function preparaDatabase(): Promise<EsitoDatabase> {
   if (existsSync(databasePath)) return 'pronto';
 
+  // Si comincia da qui, prima di chiedere: vedi `preparaAvanzamento`.
+  const avanzamento = preparaAvanzamento();
+
   const { response } = await dialog.showMessageBox({
     type: 'question',
     title: NOME,
@@ -193,11 +217,14 @@ async function preparaDatabase(): Promise<EsitoDatabase> {
     defaultId: 0,
     cancelId: 2,
   });
-  if (response === 2) return 'esci';
-  if (response === 1) return 'assente';
+  // Chi non scarica non ha mai visto quella finestra, e non deve vederla ora.
+  if (response !== 0) {
+    avanzamento.finestra.destroy();
+    return response === 2 ? 'esci' : 'assente';
+  }
 
   try {
-    await importaDatabase();
+    await importaDatabase(avanzamento);
     return 'pronto';
   } catch (errore) {
     dialog.showErrorBox(
