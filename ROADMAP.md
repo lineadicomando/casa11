@@ -796,28 +796,79 @@ lavoro è tutto CPU, e più thread che nuclei non calcolano niente di più — m
 se un giorno l'applicazione sta in rete pubblica con concorrenza seria, la coda
 va guardata di nuovo, e non da dentro il motore.
 
-## 15. Le cuspidi non sono ancorate a niente
+## 15. Le cuspidi sono ancorate a una fonte esterna — **fatto**
 
-**Priorità media.** I test del motore verificano le case per proprietà interne:
-dodici cuspidi, l'Ascendente opposto al Discendente, i segni interi che
-cominciano a zero gradi. Sono controlli veri, e nessuno di essi guarda fuori.
+`packages/core/test/houses.test.ts`: le dodici cuspidi dei nove sistemi su un
+tema solo, confrontate al primo d'arco con valori che non vengono dal motore.
+Centootto cuspidi, scarto massimo ventitré secondi d'arco.
 
-`HOUSE_SYSTEM_CODES` (`packages/core/src/constants.ts:255`) mappa nove nomi su
-nove lettere di Swiss Ephemeris. Scambiarne due — Porfirio è `O`, Alcabizio è
-`B` — darebbe cuspidi giuste in tutto tranne che nel sistema, e ogni test
-resterebbe verde: un risultato plausibile e sbagliato, cioè la specie di errore
-che il commento a `validatePlace` chiama la peggiore. Le nove lettere oggi sono
-quelle giuste, verificate una per una.
+Il tema è quello dell'esempio pubblicato da Jan Kampherbeek su **RadixPro** —
+Enschede, 2 novembre 2016, 21:17:30 UT — dove il calcolo è svolto passo per
+passo, con tutte le cifre intermedie, sulle formule di Geoffrey Dean (*Recent
+Advances in Natal Astrology*, 1977, p. 185) e di Michael Munkasey (*An
+Astrological House Formulary*). È aritmetica su carta, e copre Porfirio,
+Regiomontano e Alcabizio. Gli altri sei vengono da **Astrolog 8.00** di Walter
+D. Pullen, compilato dai sorgenti **senza il modulo Swiss Ephemeris** — che è
+la sola precauzione che conti, e sta qui sotto.
 
-L'unico ancoraggio esterno del motore è il Sole a J2000 in
-`packages/core/test/chart.test.ts:30`, con una cifra decimale, più i valori
-dell'ayanamsa in `test/ayanamsa.test.ts`. Per le case non c'è niente.
+Verificato scambiando le lettere, come la voce chiedeva: `O` con `B` fa cadere
+Porfirio di sessantun primi, e anche `P` con `T` — la coppia più vicina di
+tutte — cade, di sette primi. Il messaggio nomina il sistema e la cuspide.
 
-Il rimedio è un tema fissato con le cuspidi dei nove sistemi prese da una fonte
-indipendente, confrontate al primo d'arco. Si fa una volta e non si rifà più:
-quei valori non cambieranno mai.
+### Quello che non si sapeva da qui, ed è la ragione per cui poteva non servire a niente
 
-Verifica: scambiare due lettere in `HOUSE_SYSTEM_CODES` e vedere cadere il test.
+**Astrolog, compilato come esce dalla scatola, non calcola le case: le chiede a
+Swiss Ephemeris.** `calc.cpp:2824` chiama `swe_houses_armc_ex2`, e il commento
+sopra `ComputeHouses` lo dice in chiaro — «is only called when Swiss Ephemeris
+is NOT computing the houses». Un confronto fatto con quel binario avrebbe
+mostrato un accordo perfetto e non avrebbe provato niente, perché sarebbe stato
+il motore contro sé stesso. Va disattivato `SWISS` in `astrolog.h` e usato
+`-bm`: allora le cuspidi escono da `matrix.cpp` e `calc.cpp`, discendenti dalle
+routine di James Neely per Matrix Software degli anni Settanta. È l'unica
+precauzione che conti in tutta questa voce.
+
+**Lo scarto residuo non è imprecisione, è una convenzione diversa, e si sa
+quale.** I sette-ventitré secondi che restano sono sistematici e tutti dello
+stesso segno: entrambe le fonti usano l'obliquità **media** dell'eclittica, il
+motore quella **vera**. La differenza è la nutazione in obliquità, che a quella
+data vale −8,67 secondi d'arco. Dando a Swiss Ephemeris lo stesso ARMC e la
+stessa obliquità delle fonti — `houses_armc_ex2`, che li prende espliciti — i
+nove sistemi rientrano entro **un secondo d'arco**, e sui tre di RadixPro
+l'accordo è esatto fino all'ultima cifra pubblicata. La domificazione non
+aggiunge errore: lo eredita dagli assi. È la ragione per cui un primo d'arco è
+la tolleranza giusta e non se ne può chiedere meno.
+
+**Le due fonti si sono trovate d'accordo fra loro al secondo d'arco** sui tre
+sistemi che entrambe calcolano, arrivandoci per vie separate — aritmetica a
+mano da una parte, codice di quarant'anni fa dall'altra.
+
+**La tolleranza regge perché i nove sistemi su quel tema stanno larghi.** La
+coppia più vicina è Placido/Topocentrico, a quarantadue primi: quaranta volte
+la tolleranza. Il fatto è provato da un test suo, perché è quello che regge
+l'altro — se due sistemi cadessero vicini, scambiarne le lettere non farebbe
+cadere niente.
+
+Due trappole più piccole. Astrolog con `-C` stampa Medio Cielo e Fondo Cielo
+come **punti angolari** e non come cuspidi decima e quarta: nell'equale e nei
+segni interi quelle sono un'altra cosa, e vanno derivate dalla definizione.
+E le cuspidi non dipendono dai file delle effemeridi — obliquità e tempo
+siderale sono analitici — quindi la prova vale identica con Moshier.
+
+### Le fonti che sembrano indipendenti e non lo sono
+
+Da non ricontrollare: **astro.com** e le sue tavole delle case in PDF,
+**AstroSeek**, **Cafe Astrology**, **AstroLibrary**, e ogni libreria costruita
+su `pyswisseph` o `sweph` — Kerykeion, flatlib, immanuel. Sono tutte lo stesso
+motore visto da fuori.
+
+Se un giorno servisse un secondo ancoraggio, la strada c'è ed è di pubblico
+dominio: **Dalton, *The Spherical Basis of Astrology* (1911, settima edizione,
+che incorpora le Raphael's Tables of Houses)**, su archive.org come
+`sphericalbasisof00dalt`, senza restrizioni, cuspidi Placido al primo d'arco per
+le latitudini da 22 a 60. L'OCR delle tabelle è illeggibile ma le pagine si
+leggono a vista. Le tavole di Koch — le sue *Häusertabellen* del 1971 e il
+*Koch Book of Tables* di Michelsen — ci sono ma sono in prestito, non
+scaricabili.
 
 ## 16. L'importazione finisce e non lo dice a nessuno — **fatto**
 
