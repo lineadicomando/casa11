@@ -21,7 +21,7 @@
 
 <Meta
   titolo="Metodo"
-  descrizione="Le convenzioni con cui il sito calcola: effemeridi, ayanamsa, sistemi di case, orbite degli aspetti, formula della Parte di Fortuna, nakshatra, dasha e varga."
+  descrizione="Le convenzioni con cui il sito calcola: effemeridi, ayanamsa, sistemi di case, orbite degli aspetti, Parte di Fortuna, nakshatra, dasha e varga."
 />
 
 <h1>Metodo</h1>
@@ -41,7 +41,7 @@
 <p>
   Un tema natale non è una misura: è una misura <em>più</em> una lunga fila di
   convenzioni. Due programmi che partono dalla stessa nascita danno due carte
-  diverse, e quasi mai perché uno dei due sbaglia i conti — perché contano
+  diverse, e quasi mai perché uno dei due sbaglia i conti, ma perché contano
   l'inizio dell'Ariete da due punti diversi, dividono le case con due formule
   diverse, chiamano aspetto due angoli diversi. Questa pagina elenca le scelte
   fatte qui, così che chi trova un risultato diverso altrove possa vedere dove
@@ -63,7 +63,7 @@
 <p>
   Il confine non è l'ampiezza del calcolo ma il significato: un conteggio esteso
   a tutto il tema si può fare, un'inferenza su una vita no. È la stessa riga che
-  separa il settore diurno dal carattere di chi è nato di giorno — il motore
+  separa il settore diurno dal carattere di chi è nato di giorno: il motore
   produce il primo e tace sul secondo.
 </p>
 
@@ -74,14 +74,14 @@
   Ephemeris</a>, che è lo standard di fatto anche dei programmi commerciali.
   Quando i suoi file di dati non sono installati il motore ripiega sulle
   effemeridi analitiche di Moshier: il sito resta utilizzabile, la precisione
-  scende di una frazione di secondo d'arco sui pianeti principali — irrilevante
-  per un tema, dove il grado è già una misura fine — e <strong>Chirone non è
+  scende di una frazione di secondo d'arco sui pianeti principali (irrilevante
+  per un tema, dove il grado è già una misura fine), e <strong>Chirone non è
   più calcolabile</strong>, perché richiede il file degli asteroidi.
 </p>
 
 <p>
   Quale delle due strade sia stata presa non resta implicito: finisce fra le
-  avvertenze che accompagnano il risultato. È la regola generale del motore —
+  avvertenze che accompagnano il risultato. È la regola generale del motore:
   <strong>il fallimento è parziale</strong>. Un corpo che non si riesce a
   calcolare produce un avviso e non un errore, e la carta arriva lo stesso con
   tutto il resto.
@@ -92,7 +92,7 @@
 <p>
   I due zodiaci non sono due astronomie: sono due convenzioni su dove cominci
   l'Ariete. Quello <strong>tropicale</strong>, usato dall'astrologia
-  occidentale, lo fa cominciare al punto vernale — l'equinozio di primavera —
+  occidentale, lo fa cominciare al punto vernale (l'equinozio di primavera),
   che per via della precessione degli equinozi arretra di circa un grado ogni
   settantadue anni. Quello <strong>siderale</strong>, usato dall'astrologia
   indiana, lo àncora alle stelle fisse.
@@ -107,8 +107,8 @@
 
 <p>
   Non esiste un ayanamsa giusto: dipende da quale stella si prende come chiodo
-  e a quale longitudine la si fissa. Fra Lahiri — l'ufficiale del governo
-  indiano, e il predefinito qui — e Raman corre più di un grado e mezzo,
+  e a quale longitudine la si fissa. Fra Lahiri (l'ufficiale del governo
+  indiano, e il predefinito qui) e Raman corre più di un grado e mezzo,
   abbastanza da spostare la Luna di un nakshatra e con essa l'intera sequenza
   delle dasha. Il sito ne espone sei: <strong>Lahiri</strong>,
   <strong>Chitrapaksha vero</strong>, <strong>Krishnamurti</strong>,
@@ -148,8 +148,8 @@
 <p>
   Il sito calcola lo stesso, e non chiede di inventare un'ora. Quello che cade è
   tutto e solo ciò che dipende dalla rotazione della Terra: niente Ascendente,
-  niente Medio Cielo, nessuna casa, nessuna Parte di Fortuna — che si costruisce
-  sull'Ascendente — e nessun settore diurno o notturno. Restano le posizioni nei
+  niente Medio Cielo, nessuna casa, nessuna Parte di Fortuna (che si costruisce
+  sull'Ascendente) e nessun settore diurno o notturno. Restano le posizioni nei
   segni e gli aspetti fra i corpi.
 </p>
 
@@ -162,8 +162,8 @@
 <h2 id="corpi">I corpi</h2>
 
 <p>
-  Di serie: i dieci fra luminari e pianeti — Sole, Luna, Mercurio, Venere,
-  Marte, Giove, Saturno, Urano, Nettuno, Plutone — più l'asse dei Nodi lunari.
+  Di serie: i dieci fra luminari e pianeti (Sole, Luna, Mercurio, Venere,
+  Marte, Giove, Saturno, Urano, Nettuno, Plutone), più l'asse dei Nodi lunari.
   Su richiesta anche <strong>Lilith</strong> e <strong>Chirone</strong>.
 </p>
 
@@ -171,7 +171,7 @@
   Due precisazioni che altrove restano implicite. Il <strong>Nodo Nord è il nodo
   medio</strong>, non quello vero: sono due punti che distano fino a un grado e
   mezzo, e i programmi si dividono su quale usare. Il Nodo Sud non è calcolato
-  ma derivato, essendo per definizione all'opposizione esatta del Nord — per la
+  ma derivato, essendo per definizione all'opposizione esatta del Nord; per la
   stessa ragione non compare fra i corpi in transito, dove ogni sua riga sarebbe
   una riga già presente letta al contrario, e non gli si assegna nessun aspetto
   col Nord. <strong>Lilith è l'apogeo lunare medio</strong>, la cosiddetta Luna
@@ -179,7 +179,8 @@
 </p>
 
 <p>
-  I graha retrogradi sono marcati con <code>℞</code>.
+  I <em>graha</em>, che è come l'astrologia indiana chiama i corpi, quando
+  sono retrogradi si marcano con <code>℞</code>.
 </p>
 
 <h2 id="aspetti">Gli aspetti e le orbite</h2>
@@ -214,15 +215,15 @@
 </table>
 
 <p>
-  I quattro aspetti minori — semisestile, quinconce, semiquadrato,
-  sesquiquadrato — <strong>sono esclusi finché non si chiedono</strong>: la
+  I quattro aspetti minori (semisestile, quinconce, semiquadrato,
+  sesquiquadrato) <strong>sono esclusi finché non si chiedono</strong>: la
   tabella predefinita porta i cinque maggiori.
 </p>
 
 <p>
   <strong>I luminari ricevono orbite più larghe</strong>, secondo la prassi
   corrente: due gradi in più nel tema natale, e il bonus vale per ciascuno dei
-  due lati della coppia — un aspetto fra Sole e Luna somma quindi quattro gradi.
+  due lati della coppia, così che un aspetto fra Sole e Luna ne sommi quattro.
   In transito il supplemento è di un grado per la Luna e mezzo per il Sole, in
   entrambi i versi: un contatto che tocca il Sole natale ha più spazio tanto
   quanto ne ha la Luna che passa.
@@ -237,8 +238,8 @@
 </p>
 
 <p>
-  Ogni aspetto porta anche la direzione — <strong>applicativo</strong> se la
-  distanza si sta stringendo, <strong>separativo</strong> se si sta aprendo —
+  Ogni aspetto porta anche la direzione (<strong>applicativo</strong> se la
+  distanza si sta stringendo, <strong>separativo</strong> se si sta aprendo),
   ricavata dal moto di entrambi i punti e non dal solo più veloce.
 </p>
 
@@ -249,7 +250,7 @@
   convenzione divergente: nella tradizione ellenistica e medievale la formula
   <strong>si inverte nei temi notturni</strong>, mentre parte dei programmi
   moderni usa sempre la forma diurna. Su un tema notturno le due danno risultati
-  che possono distare oltre cento gradi — non un dettaglio, un altro punto in un
+  che possono distare oltre cento gradi: non un dettaglio, un altro punto in un
   altro segno.
 </p>
 
@@ -261,7 +262,8 @@
 </p>
 
 <p>
-  Il settore diurno o notturno non si decide dal numero di casa del Sole ma
+  Un tema è diurno quando il Sole sta sopra l'orizzonte, notturno quando sta
+  sotto. Da che parte stia non si decide dal numero di casa del Sole ma
   geometricamente, dall'arco fra Discendente e Ascendente: nei segni interi la
   settima casa non comincia al Discendente, e «casa maggiore o uguale a sette»
   darebbe la risposta sbagliata.
@@ -279,7 +281,7 @@
 
 <p>
   Qui la decisione non si prende. I dieci fra luminari e pianeti fanno un gruppo,
-  e ciò che sta oltre — Nodi, Lilith, Chirone, assi, Parte di Fortuna — viene
+  e ciò che sta oltre (Nodi, Lilith, Chirone, assi, Parte di Fortuna) viene
   contato a parte invece che escluso. Ogni gruppo porta con sé
   <strong>l'elenco di ciò che ha contato</strong>, così che chi conta
   diversamente possa rifare la somma senza rifare il tema.
@@ -291,7 +293,7 @@
   I termini restano in sanscrito, qui come nel resto del sito: <em>nakshatra</em>,
   <em>dasha</em>, <em>varga</em>, <em>drishti</em>, <em>tithi</em>. Tradurli
   produrrebbe parole che nessun libro usa e che non si possono cercare da
-  nessuna parte — «dimore lunari» per i nakshatra è una perifrasi, non un nome.
+  nessuna parte, e «dimore lunari» per i nakshatra è una perifrasi, non un nome.
   Tutto quello che segue vale <strong>nello zodiaco siderale</strong>.
 </p>
 
@@ -300,7 +302,7 @@
 <p>
   Lo zodiaco diviso in ventisette parti invece che in dodici: sono le tappe di
   un giro della Luna, non del Sole, e ciascuna misura 13°20'. Nell'astrologia
-  indiana pesano quanto i segni e in più d'un caso di più — il nakshatra della
+  indiana pesano quanto i segni e in più d'un caso di più; il nakshatra della
   Luna alla nascita è quello che si intende quando si chiede sotto quale stella
   qualcuno è nato. Ognuno si divide in quattro <em>pada</em> di 3°20'.
 </p>
@@ -325,7 +327,7 @@
 <p>
   Dove la catena cominci lo dice il nakshatra della Luna alla nascita; quanto ne
   resti lo dice il punto esatto dentro quel nakshatra. È l'unico calcolo del
-  sito in cui un secondo d'arco vale ore di calendario — 13°20' valgono fino a
+  sito in cui un secondo d'arco vale ore di calendario: 13°20' valgono fino a
   vent'anni di dasha, quindi un secondo d'arco vale circa tre ore e mezza. Su
   un'ora di nascita incerta, le date che ne escono lo sono altrettanto.
 </p>
@@ -341,7 +343,7 @@
   Un varga divide ogni segno in <em>n</em> parti e assegna a ciascuna un segno,
   secondo una regola che cambia da varga a varga. Ne esce una carta nuova, con
   gli stessi corpi in posti diversi: il D-9 di una nascita è una seconda carta,
-  non una colonna della prima. Il sito ne calcola sei — <strong>D-1, D-3, D-9,
+  non una colonna della prima. Il sito ne calcola sei: <strong>D-1, D-3, D-9,
   D-10, D-12 e D-30</strong>.
 </p>
 
@@ -361,7 +363,7 @@
   segno intero e tutto ciò che vi si trova. <strong>Sono direzionali</strong>: si
   contano sempre in avanti nello zodiaco, quindi che A guardi B non implica che
   B guardi A. E <strong>cadono anche sul vuoto</strong>, perché un graha che
-  guarda una casa disabitata la guarda lo stesso — per questo i segni
+  guarda una casa disabitata la guarda lo stesso; per questo i segni
   bersagliati si riportano tutti, non solo quelli occupati.
 </p>
 
@@ -374,7 +376,7 @@
 <h3 id="panchanga">Il panchanga</h3>
 
 <p>
-  Le cinque membra del calendario indiano — tithi, vara, nakshatra, yoga e
+  Le cinque membra del calendario indiano: tithi, vara, nakshatra, yoga e
   karana. Non è un tema: è la qualità di un istante in un luogo. Tutto discende
   da due sole longitudini, quella del Sole e quella della Luna, e da un'alba.
 </p>
@@ -383,7 +385,7 @@
   Da lì discende anche una distinzione che vale la pena tenere a mente:
   <strong>tithi e karana non dipendono dall'ayanamsa</strong>, perché una
   differenza fra due longitudini non cambia se si spostano entrambe. Nakshatra e
-  yoga sì — e lo yoga il doppio degli altri, perché usa la somma.
+  yoga sì, e lo yoga il doppio degli altri, perché usa la somma.
 </p>
 
 <h2 id="elezione">L'elezione: le ore planetarie</h2>
@@ -401,7 +403,7 @@
   </li>
   <li>
     <strong>Le ore non durano un'ora.</strong> Il giorno si divide comunque in
-    dodici parti — lunghe d'estate, corte d'inverno — e la notte per differenza.
+    dodici parti (lunghe d'estate, corte d'inverno) e la notte per differenza.
   </li>
   <li>
     <strong>Il giorno comincia all'alba</strong>, non a mezzanotte: il reggitore
@@ -413,7 +415,7 @@
   La successione dei reggitori segue l'ordine caldeo, cioè i sette pianeti
   classici per velocità apparente decrescente. Ventiquattro ore avanzano di tre
   posizioni nella catena, ed è da questo scarto che nasce l'ordine dei giorni
-  della settimana — che infatti non è quello dei pianeti, e che sopravvive
+  della settimana, che infatti non è quello dei pianeti, e che sopravvive
   intatto nei nomi italiani dei giorni.
 </p>
 
@@ -446,7 +448,7 @@
 <p>
   Il codice è pubblico e la licenza è AGPL-3.0-or-later: chiunque può leggere
   come ciascuno di questi numeri viene fuori, e correggerlo se è sbagliato. È il
-  senso di questa pagina — non chiedere fiducia, ma dire dove guardare.
+  senso di questa pagina: non chiedere fiducia, ma dire dove guardare.
 </p>
 
 <style>
