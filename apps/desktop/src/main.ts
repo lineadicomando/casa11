@@ -176,18 +176,64 @@ async function preparaDatabase(): Promise<EsitoDatabase> {
   }
 }
 
+/**
+ * L'origine di un indirizzo, o `null` se non è un indirizzo.
+ *
+ * `new URL` solleva su una stringa malformata, e qui una stringa malformata
+ * arriva da fuori: vale come «non è la nostra origine», che è la risposta
+ * prudente.
+ */
+function origineDi(url: string): string | null {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
+/** Gli unici schemi che si passano al browser di sistema. */
+function apribileFuori(url: string): boolean {
+  return url.startsWith('http:') || url.startsWith('https:');
+}
+
 function creaFinestra(url: string): void {
+  // L'origine e non l'indirizzo: il server interno sta su una porta libera del
+  // loopback, sorteggiata a ogni avvio, quindi `url` cambia da una sessione
+  // all'altra mentre l'origine è l'unica cosa che si possa confrontare.
+  const origineInterna = origineDi(url);
+
   finestra = new BrowserWindow({
     width: 1280,
     height: 860,
     autoHideMenuBar: true,
   });
+
+  // `window.open` e i link con `target="_blank"`.
   finestra.webContents.setWindowOpenHandler(({ url: esterno }) => {
-    if (esterno.startsWith('http:') || esterno.startsWith('https:')) {
+    if (apribileFuori(esterno)) {
       void shell.openExternal(esterno);
     }
     return { action: 'deny' };
   });
+
+  // La navigazione di primo livello, che non passa dal gestore qui sopra.
+  // Senza questo, un link esterno cliccato nella finestra caricherebbe il sito
+  // remoto dentro il Chromium impacchettato: contenuto di terzi in un motore
+  // che non si aggiorna con la fretta di un browser, e — con `autoHideMenuBar`
+  // e nessun comando di navigazione — nessun modo di tornare indietro se non
+  // riavviando. L'interfaccia mette `target="_blank"` sui link che escono, ma
+  // quello è un rimedio che si può dimenticare aggiungendone uno nuovo: questo
+  // no, perché non sta nella pagina.
+  finestra.webContents.on('will-navigate', (evento, destinazione) => {
+    if (origineInterna !== null && origineDi(destinazione) === origineInterna) return;
+    evento.preventDefault();
+    // Solo `http(s)`: `shell.openExternal` su uno schema qualunque è il modo
+    // di far aprire al sistema operativo cose che non sono pagine.
+    if (apribileFuori(destinazione)) {
+      void shell.openExternal(destinazione);
+    }
+  });
+
   void finestra.loadURL(url);
 }
 
