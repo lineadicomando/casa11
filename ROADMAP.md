@@ -713,28 +713,88 @@ un conteggio su tredici elementi, quindi non è una questione di tempo: è che i
 un file dove ogni riga ha una ragione ce n'è una che non ne ha, e il commento
 accanto spiega la seconda chiamata senza dire niente della prima.
 
-## 14. Il calcolo tiene fermo il server mentre gira
+## 14. Il calcolo tiene fermo il server mentre gira — **fatto**
 
-**Da sapere, non da fare** — finché l'applicazione sta su una macchina sola e la
-usa chi l'ha avviata.
+Le tre ricerche che costano secondi — i passaggi dei transiti, il calendario del
+cielo, l'elezione — girano in un pool di worker thread. Il rimedio è **attorno
+al motore e non dentro**, come la voce prevedeva: la catena di calcolo resta
+sincrona e il vincolo su `await` non è stato toccato.
 
-Misurato: `/api/transits/passages` su tre anni con `moon=true` sono circa 1,9
-secondi di calcolo, e il calendario del cielo sullo stesso arco 0,7. Un tema
-natale sono due millesimi, quindi il grosso della superficie non c'entra: è la
-ricerca delle radici, che campiona e dimezza migliaia di volte.
+Sta in `apps/web/src/lib/server/pool.ts`, senza dipendenze nuove — quindi
+nessuna questione di licenza — e le tre rotte lo chiamano con `nelPool`.
 
-I tetti ci sono e reggono — `MAX_RANGE_DAYS` a tre anni in
-`apps/web/src/lib/server/range.ts:18`, e l'elezione ha il suo di trentun giorni
-dentro il motore. Il punto è un altro: quei secondi sono sincroni per
-costruzione, e la costruzione è voluta. Il vincolo che vieta `await` nella
-catena di calcolo esiste perché Swiss Ephemeris tiene lo zodiaco siderale in
-stato globale del modulo nativo, quindi spezzare il calcolo dall'interno non è
-un'opzione. Node è a un filo solo: mentre quei due secondi girano, nessun'altra
-richiesta viene servita.
+### Quello che non si sapeva da qui, ed è la ragione per cui si poteva fare
 
-Se un giorno l'applicazione sta in rete pubblica il rimedio non è dentro il
-motore, è attorno — un worker per richiesta, o una coda. Sta scritto qui perché
-è il genere di cosa che si scopre sotto carico, quando progettarla è tardi.
+**Lo stato globale dell'ayanamsa è per thread, non per processo.** La voce dava
+per scontato il contrario, ed è per questo che chiamava il pool un rimedio da
+rimandare: se `set_sid_mode` valesse per il processo, due richieste con
+ayanamsa diversi servite da thread diversi si contaminerebbero, e il risultato
+non sarebbe un errore ma un tema sbagliato di ventiquattro gradi. Ogni thread
+carica invece la **sua istanza** del modulo nativo.
+
+Verificato, e non dedotto: due worker che calcolano in parallelo con `lahiri` e
+`raman` danno gli stessi valori che darebbero da soli, cifra per cifra. La
+prova sta in `pool.test.ts` e tiene fermo il fatto — se un domani smettesse di
+valere, il pool va smontato e non aggiustato.
+
+### Perché solo tre rotte
+
+Misurato su questa macchina: tema natale **0,4 ms**, passaggi su tre anni
+**621 ms**, con la Luna **1884 ms**. Avviare un worker e caricarci il motore
+costa **~50 ms**. Mandare un tema natale nel pool lo peggiorerebbe di cento
+volte, quindi le rotte leggere restano sincrone: il pool è un rimedio a una
+misura, non una regola di stile.
+
+Il pool ha una **coda** e un tetto di thread — `min(4, nuclei − 1)`, uno resta
+al filo principale, che deve poter servire le richieste leggere mentre le
+pesanti girano. Un worker per richiesta, l'altra forma che questa voce
+proponeva, sarebbe stato ~50 ms di avvio ogni volta e nessun tetto al numero di
+thread: il problema di prima con un nome diverso.
+
+### La misura che dice se è servito
+
+Sul server compilato, una `/api/chart` lanciata mentre gira una ricerca di
+passaggi da 1,94 s:
+
+| | prima | dopo |
+|---|---|---|
+| richiesta leggera durante una pesante | **1,677 s** | **0,004 s** |
+
+Il «prima» non è una stima: le rotte sono state rimesse nella forma sincrona,
+ricompilate e rimisurate.
+
+### Quello che è costato scriverlo
+
+Il worker è **una sorgente e non un file**, ed è la sola bruttezza della voce.
+Vite impacchetta il codice di server in `build/server/chunks`, quindi un file
+lasciato fuori dalla pipeline andrebbe ritrovato a runtime in tre posti diversi
+— `vite dev`, `build/index.js` e il `bundle/` che `apps/desktop` compone — con
+tre percorsi da tenere allineati a mano. Un `data:` non ha percorso e non ne
+può sbagliare nessuno. Da un `data:` però i nomi dei pacchetti non si
+risolvono, e il motore arriva quindi come URL assoluta in `workerData`, risolta
+dal thread principale, che sta in un file vero.
+
+Verificato in tutti e tre gli ambienti, perché è l'unica cosa che poteva
+rompersi in uno solo: i test, il server compilato, e il bundle di Electron
+dove `node_modules` è composto a mano da `stage.mjs`. In tutti e tre le tre
+rotte rispondono 200, e un errore di dominio resta un **400 con il suo codice**
+— l'errore attraversa il confine smontato e si rimonta di qua, perché
+`structuredClone` conserva il messaggio e perde la classe, quindi perderebbe il
+`code`.
+
+Verificato anche che i thread inattivi non trattengano il processo: il server
+esce su `SIGTERM` dopo aver usato il pool.
+
+### Quello che resta fuori, e non per dimenticanza
+
+Il **server MCP** non ha un pool e non gli serve: è un processo per client, sul
+trasporto stdio, e non c'è nessun'altra richiesta da tenere in attesa.
+
+Resta vero che sotto carico vero i thread non bastano: sono quattro, e quattro
+richieste pesanti insieme mettono in coda la quinta. Il tetto è voluto — il
+lavoro è tutto CPU, e più thread che nuclei non calcolano niente di più — ma
+se un giorno l'applicazione sta in rete pubblica con concorrenza seria, la coda
+va guardata di nuovo, e non da dentro il motore.
 
 ## 15. Le cuspidi non sono ancorate a niente
 
