@@ -167,7 +167,7 @@
   <li>
     Se scegli l'aspetto della pagina con il pulsante in alto, quella scelta —
     la parola <code>light</code> o <code>dark</code>, nient'altro — resta nella
-    <em>localStorage</em> alla voce <code>undicesimacasa:color-scheme</code>,
+    <em>localStorage</em> alla voce <code>dodicisegni:color-scheme</code>,
     così ricaricando il sito lo ritrovi come lo avevi lasciato. Finché non
     tocchi il pulsante non viene scritto nulla, e riportandolo su «automatico»
     la voce viene cancellata.
@@ -175,7 +175,7 @@
   <li>
     Il sito si può <strong>installare</strong> come applicazione, e per potersi
     aprire anche senza collegamento ne tiene una copia sul dispositivo, nel
-    <em>Cache Storage</em> alla voce <code>casa11-</code> seguita dal numero
+    <em>Cache Storage</em> alla voce <code>dodicisegni-</code> seguita dal numero
     della versione. Dentro ci sono le pagine, i programmi, gli stili e le
     icone: il contenitore, non il contenuto. <strong>Le risposte del calcolo
     non ci finiscono mai</strong>, e gli indirizzi delle pagine ci vengono

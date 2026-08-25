@@ -36,7 +36,7 @@ const sw = self as unknown as ServiceWorkerGlobalScope;
  * di una versione nuova trova solo cache di altri nomi e le butta: non esiste
  * il caso di un file vecchio che sopravvive dentro il guscio nuovo.
  */
-const CACHE = `casa11-${version}`;
+const CACHE = `${SITE_NAME}-${version}`;
 
 /**
  * Tutto ciò che la build produce e che ha un indirizzo stabile: i chunk con

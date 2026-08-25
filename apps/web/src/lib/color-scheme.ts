@@ -10,6 +10,8 @@
  * sul dispositivo, e chi torna ad `auto` cancella quel che aveva lasciato.
  */
 
+import { SITE_NAME } from '$lib/project';
+
 export type ColorScheme = 'auto' | 'light' | 'dark';
 
 /** Il ciclo del pulsante, nell'ordine in cui gli scatti si susseguono. */
@@ -17,9 +19,10 @@ export const COLOR_SCHEMES: readonly ColorScheme[] = ['auto', 'light', 'dark'];
 
 /**
  * La chiave nella `localStorage`, dichiarata nell'informativa privacy: se
- * cambia qui deve cambiare anche là.
+ * cambia qui deve cambiare anche là, e nello script in linea di `app.html`,
+ * che gira prima di ogni import e la ripete alla lettera.
  */
-export const COLOR_SCHEME_KEY = 'undicesimacasa:color-scheme';
+export const COLOR_SCHEME_KEY = `${SITE_NAME}:color-scheme`;
 
 /** L'attributo che il CSS guarda su `<html>`. Lo scrive anche `app.html`. */
 export const COLOR_SCHEME_ATTRIBUTE = 'data-color-scheme';

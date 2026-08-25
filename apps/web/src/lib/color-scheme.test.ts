@@ -1,5 +1,25 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { nextColorScheme, parseColorScheme, resolveColorScheme } from './color-scheme';
+import {
+  COLOR_SCHEME_KEY,
+  nextColorScheme,
+  parseColorScheme,
+  resolveColorScheme,
+} from './color-scheme';
+
+describe('COLOR_SCHEME_KEY', () => {
+  it('è ripetuta alla lettera nello script in linea di app.html', () => {
+    // La costante si compone da `SITE_NAME`, lo script in linea no: gira prima
+    // di ogni import, per non far lampeggiare la pagina, e la chiave se la
+    // scrive a mano. Cambiare il nome del sito senza toccare `app.html` non
+    // romperebbe niente di visibile — perderebbe soltanto l'aspetto scelto, a
+    // ogni caricamento, e in silenzio. Questo test è l'unico posto dove le due
+    // copie si guardano in faccia.
+    const html = readFileSync(new URL('../app.html', import.meta.url), 'utf8');
+
+    expect(html).toContain(`localStorage.getItem('${COLOR_SCHEME_KEY}')`);
+  });
+});
 
 describe('nextColorScheme', () => {
   it('gira in tondo partendo da automatico', () => {
