@@ -637,6 +637,124 @@ ordine da rispettare: GitHub redirige i remote vecchi, quindi non si rompe
 niente. Sta qui solo perché è l'unica cosa, oltre a `REPOSITORY_URL`, che quel
 rinomino lasci indietro sulla macchina.
 
+## 11. Gli elenchi che vivono in quattro posti
+
+**Priorità media.** `AYANAMSAS` è dichiarato in `packages/core/src/ayanamsa.ts:44`,
+di nuovo in `packages/mcp/src/tools.ts:88`, di nuovo in
+`apps/web/src/lib/server/birth.ts:27` e una quarta volta in
+`apps/web/src/lib/zodiacs.ts:28`. I sistemi di case stanno in cinque, contando
+`HOUSE_SYSTEM_CODES` in `constants.ts:255`. Oggi combaciano tutti: verificati uno
+per uno.
+
+Il commento in testa a `ayanamsa.ts` dice che aggiungerne uno «è una riga qui».
+Sono quattro, e due delle quattro non se ne accorgerebbero. `zodiacs.ts` e
+`house-systems.ts` dichiarano `AyanamsaId` e `HouseSystem`, quindi il
+compilatore le tiene legate al motore; `birth.ts` usa un `Set<string>` e il
+server MCP uno `z.enum` scritto lì, e un settimo ayanamsa non produrrebbe
+nessun errore da nessuna parte — le due superfici continuerebbero a rifiutarlo,
+cioè a dire che non esiste una cosa che esiste.
+
+Il guasto è sicuro: un rifiuto, non un numero sbagliato, ed è la ragione per cui
+la priorità è media e non alta. È però invisibile a chi aggiunge, che vede il
+motore accettare il valore nuovo dalla riga di comando e non ha motivo di
+sospettare le altre tre copie.
+
+Il rimedio non è importare dappertutto. La ragione per cui `zodiacs.ts` non lo
+fa sta scritta lì ed è il bundle del browser, dove un import di valore dal
+motore trascina le effemeridi. Quella ragione non vale per `packages/mcp`, che è
+codice di server e che in `server.ts:3` importa già `HOUSE_SYSTEM_CODES` da
+`core`: là la copia non ha nessuna giustificazione e si toglie. Per `birth.ts` e
+per i due elenchi del client la forma è quella che il progetto usa già in
+`packages/ruota/test/tipi.test.ts` — un test che confronta e cade a voce alta.
+
+Verifica: un settimo ayanamsa in `AYANAMSAS`, e il test che cade nominando i
+posti rimasti indietro.
+
+## 12. Le funzioni che compongono gli indirizzi non hanno test
+
+**Priorità media.** `apps/web/src/lib/api.ts` sono 472 righe senza un test.
+Dentro ci stanno `chartParameters`, `jyotishaParameters`, `skyParameters`,
+`transitParameters`, `passageParameters` ed `electionParameters`: funzioni pure,
+senza rete, che prendono la nascita e le opzioni e decidono che cosa finisce
+nella query.
+
+Da loro dipende una proprietà che la pagina del tema dichiara per iscritto —
+`apps/web/src/routes/+page.svelte:47` — e cioè che il collegamento da copiare
+ricalcoli lo stesso tema che si sta guardando: «un indirizzo condiviso che
+ricalcolasse un tema diverso da quello a schermo sarebbe il peggiore dei
+difetti, perché non si vede». È una proprietà tabellare, di quelle che un test
+di venti righe blinda per sempre, e oggi regge sull'attenzione di chi tocca il
+file.
+
+Stessa lacuna in `apps/web/src/lib/server/birth.ts`, dove `readBirth` e
+`readChartOptions` validano gli input di ogni rotta: i vicini di cartella —
+`moment.ts`, `place.ts`, `range.ts`, `errors.ts` — i test ce li hanno tutti.
+
+Verifica: cambiare il nome di un parametro in `chartParameters` senza toccare la
+rotta, e vedere cadere il test invece del sito.
+
+## 13. Due semplificazioni piccole
+
+**Priorità bassa**, e nessuna delle due rompe niente.
+
+`fetchChartCompact` (`apps/web/src/lib/api.ts:142`) e `fetchJyotishaCompact`
+(riga 224) sono la stessa funzione scritta due volte: cambiano l'indirizzo e due
+messaggi. Che non passino da `request` è giusto — quella risposta è testo e non
+JSON — ma è una ragione che vale una volta sola.
+
+`packages/core/src/chart.ts:64` calcola la distribuzione e la butta: viene
+rifatta a riga 123, quando anche gli assi e la Parte di Fortuna esistono, ed è
+quella la buona. La prima serve solo a costruire un `NatalChart` completo. Costa
+un conteggio su tredici elementi, quindi non è una questione di tempo: è che in
+un file dove ogni riga ha una ragione ce n'è una che non ne ha, e il commento
+accanto spiega la seconda chiamata senza dire niente della prima.
+
+## 14. Il calcolo tiene fermo il server mentre gira
+
+**Da sapere, non da fare** — finché l'applicazione sta su una macchina sola e la
+usa chi l'ha avviata.
+
+Misurato: `/api/transits/passages` su tre anni con `moon=true` sono circa 1,9
+secondi di calcolo, e il calendario del cielo sullo stesso arco 0,7. Un tema
+natale sono due millesimi, quindi il grosso della superficie non c'entra: è la
+ricerca delle radici, che campiona e dimezza migliaia di volte.
+
+I tetti ci sono e reggono — `MAX_RANGE_DAYS` a tre anni in
+`apps/web/src/lib/server/range.ts:18`, e l'elezione ha il suo di trentun giorni
+dentro il motore. Il punto è un altro: quei secondi sono sincroni per
+costruzione, e la costruzione è voluta. Il vincolo che vieta `await` nella
+catena di calcolo esiste perché Swiss Ephemeris tiene lo zodiaco siderale in
+stato globale del modulo nativo, quindi spezzare il calcolo dall'interno non è
+un'opzione. Node è a un filo solo: mentre quei due secondi girano, nessun'altra
+richiesta viene servita.
+
+Se un giorno l'applicazione sta in rete pubblica il rimedio non è dentro il
+motore, è attorno — un worker per richiesta, o una coda. Sta scritto qui perché
+è il genere di cosa che si scopre sotto carico, quando progettarla è tardi.
+
+## 15. Le cuspidi non sono ancorate a niente
+
+**Priorità media.** I test del motore verificano le case per proprietà interne:
+dodici cuspidi, l'Ascendente opposto al Discendente, i segni interi che
+cominciano a zero gradi. Sono controlli veri, e nessuno di essi guarda fuori.
+
+`HOUSE_SYSTEM_CODES` (`packages/core/src/constants.ts:255`) mappa nove nomi su
+nove lettere di Swiss Ephemeris. Scambiarne due — Porfirio è `O`, Alcabizio è
+`B` — darebbe cuspidi giuste in tutto tranne che nel sistema, e ogni test
+resterebbe verde: un risultato plausibile e sbagliato, cioè la specie di errore
+che il commento a `validatePlace` chiama la peggiore. Le nove lettere oggi sono
+quelle giuste, verificate una per una.
+
+L'unico ancoraggio esterno del motore è il Sole a J2000 in
+`packages/core/test/chart.test.ts:30`, con una cifra decimale, più i valori
+dell'ayanamsa in `test/ayanamsa.test.ts`. Per le case non c'è niente.
+
+Il rimedio è un tema fissato con le cuspidi dei nove sistemi prese da una fonte
+indipendente, confrontate al primo d'arco. Si fa una volta e non si rifà più:
+quei valori non cambieranno mai.
+
+Verifica: scambiare due lettere in `HOUSE_SYSTEM_CODES` e vedere cadere il test.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:
