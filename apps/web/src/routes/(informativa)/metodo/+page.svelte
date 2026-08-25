@@ -11,7 +11,7 @@
   cambia per primo: `constants.ts` per orbite, corpi e sistemi di case,
   `ayanamsa.ts` per i sei ayanamsa, `varga.ts` per le sei divisionali. Quando
   quelli cambiano, questa pagina è vecchia — non c'è nessun test che la leghi,
-  e non è un dimenticanza: legarla vorrebbe dire ridurre la prosa a una tabella
+  e non è una dimenticanza: legarla vorrebbe dire ridurre la prosa a una tabella
   generata, che è esattamente la cosa che una pagina come questa non deve
   essere.
 -->
