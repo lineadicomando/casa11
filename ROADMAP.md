@@ -195,48 +195,43 @@ quello che gli arriva. La finestra è rimasta sull'origine interna, lo stub ha
 ricevuto l'indirizzo esterno, e la navigazione interna verso `/metodo` è
 passata. Resta comunque fuori dai test: vuole un display e un binario Electron.
 
-## 3. Electron da 38 a 43, o a 44
+## 3. Electron da 38 a 43 — **fatto**
 
-`apps/desktop/package.json` fissa `electron` a `38.8.6`, esatta. `npm audit`
-riporta diciannove avvisi su quella versione, più uno su `extract-zip@2.0.1`,
-che entra sotto Electron e serve al `postinstall` per scompattare il binario
-ufficiale. I due conti sono stati rifatti e non sono cambiati.
+`apps/desktop/package.json` porta `electron` a `43.4.1`, esatta come prima. I
+diciannove avvisi che `npm audit` contava sulla `38.8.6` sono chiusi:
+l'intervallo vulnerabile di quel major si ferma a `43.0.0-beta.8`. Il conto del
+repo passa da cinque vulnerabilità a tre, e le tre che restano sono `cookie`
+sotto SvelteKit, che sta in fondo fra le cose esaminate e lasciate stare.
 
-**Le versioni di arrivo sono due, e vanno scelte.** `43.4.1` è l'ultima della
-serie 43 e chiude tutto: l'intervallo vulnerabile di quel major si ferma a
-`43.0.0-beta.8`. Nel frattempo è però uscita la `44.0.0` stabile, ed è quella
-che `npm audit fix --force` propone. Un major in più oggi costa la stessa
-prova a mano e allontana il prossimo salto; contro, è appena uscita, e questo
-è l'unico posto del progetto dove una regressione la vede l'utente e non un
-test.
+**Perché la 43 e non la 44.** La `44.0.0` era uscita stabile ed era quella che
+`npm audit fix --force` proponeva, ma è anche l'unica versione della sua serie:
+nessuna patch dietro, nessun rodaggio. Il desktop è l'unico posto del progetto
+dove una regressione la vede chi usa il programma e non un test, e un major in
+più si prende quando la serie ha qualche settimana addosso.
 
-**Non è una dipendenza di sviluppo nel senso che conta.** `electron-builder`
-impacchetta il runtime dentro l'AppImage: chi lancia `npm run dist` distribuisce
-quel Chromium a chi userà il programma. `npm audit --omit=dev` dice zero perché
-guarda l'albero delle dipendenze, non cosa finisce nel pacchetto.
+### Quello che non si sapeva da qui
 
-`extract-zip` invece si può ignorare: il path traversal via link simbolico
-richiede uno zip malevolo, cioè che siano compromessi i rilasci ufficiali di
-Electron, e in CI il binario non viene nemmeno scaricato.
+**`extract-zip` non va ignorato: sparisce.** Era il ventesimo avviso, quello che
+si era deciso di accettare perché il path traversal richiede uno zip malevolo.
+Electron 43 non dipende più dal pacchetto pubblico — il `postinstall` usa
+`@electron-internal/extract-zip`, un fork interno caricato pigramente — e
+`node_modules/extract-zip` non esiste più nell'albero. L'avviso si chiude da
+solo, senza che nessuno debba ragionarci sopra.
 
-Cosa rende l'aggiornamento meno spaventoso di cinque major: la superficie usata
-è piccola — `app`, `BrowserWindow`, `dialog`, `shell`, `utilityProcess`, e
-nient'altro. La finestra non passa `webPreferences`, quindi eredita i default
-(isolamento del contesto attivo, `nodeIntegration` spento, sandbox attiva) e non
-c'è niente di personalizzato da riportare.
+**Dentro l'AppImage il motore dà gli stessi numeri di fuori.** Verificato sul
+tema del 2 giugno 1978, 15:15, Palermo: `ephemerisMode: swisseph`, Sole 11°39'
+Gemelli, Luna 4°56' Toro, le stesse case della CLI lanciata fuori da Electron.
+Il modulo nativo gira nell'`utilityProcess` senza accorgersi del motore nuovo.
 
-Cosa guardare con attenzione: `utilityProcess`, che è l'API più giovane fra
-quelle usate e regge due cose — il server SvelteKit in `avviaServer` e
-l'importazione GeoNames in `importaDatabase` — e il `preload.cjs` della finestra
-di avanzamento, che è CommonJS proprio perché gira in sandbox.
+Percorse tutt'e due le strade che il processo principale governa. L'importazione
+GeoNames al primo avvio ha scaricato, costruito i 90 MB in
+`~/.config/@dodicisegni/desktop` e mostrato l'avanzamento riga per riga
+attraverso il `preload.cjs` in sandbox; il calcolo di un tema passa dalla
+ricerca delle località alla carta a schermo. Nessuna delle due si comporta
+diversamente da prima.
 
-Verifica: `npm run dist -w @dodicisegni/desktop`, poi lanciare davvero
-l'AppImage prodotto e percorrere le due strade che il processo principale
-governa — l'importazione del database al primo avvio, e il calcolo di un tema.
-I test non toccano niente di tutto questo.
-
-Da fare dopo il punto 2, così il guardiano è già al suo posto quando si cambia
-il motore sotto.
+L'importazione ha però mostrato un difetto che con l'aggiornamento non c'entra
+ed è più vecchio di lui: sta al **punto 16**.
 
 ## 4. Le azioni di GitHub su Node 24 — **fatto**
 
@@ -777,6 +772,50 @@ indipendente, confrontate al primo d'arco. Si fa una volta e non si rifà più:
 quei valori non cambieranno mai.
 
 Verifica: scambiare due lettere in `HOUSE_SYSTEM_CODES` e vedere cadere il test.
+
+## 16. L'importazione finisce e non lo dice a nessuno
+
+Quando il download di GeoNames è completo, la finestra di avanzamento resta
+aperta e ferma sull'ultima riga del log. Chi guarda non ha modo di saperlo se
+non leggendo il log: chiude la finestra a mano e riavvia il programma.
+
+**Non è una regressione di Electron 43.** Lo stesso test minimo — un
+`utilityProcess.fork` su uno script che stampa e finisce — dà lo stesso esito
+sulla `38.8.6` e sulla `43.4.1`: un figlio avviato così non esce quando il suo
+event loop si svuota, perché il canale con il processo padre lo tiene vivo.
+`import-geonames.mjs` chiude tutto quello che apre e finisce senza chiamare
+`process.exit`, il che è giusto da riga di comando e qui non basta: la promessa
+su `processo.once('exit')` dentro `importaDatabase`
+(`apps/desktop/src/main.ts:146`) non si risolve mai, quindi `splash.destroy()`
+non viene mai raggiunto.
+
+Le vie misurate, e nessuna è gratis:
+
+| | codice d'uscita | ultima riga del log |
+|---|---|---|
+| com'è oggi | non esce | completa, ma la finestra resta |
+| `process.exit(0)` nel figlio | 0 | **persa** |
+| `process.parentPort?.close()` | **1** | completa |
+| `exitCode = 0` più `parentPort.close()` | **1** | completa |
+
+Le due che il processo lo chiudono davvero sbagliano ciascuna una cosa.
+`process.exit` tronca l'output, perché su una pipe `console.log` è asincrono e
+le righe che si perdono sono proprio il riepilogo finale — quante località,
+quanto pesa il database. Chiudere `parentPort` conserva l'output ma esce con
+`1`, che `importaDatabase` legge come fallimento e trasforma in un messaggio
+d'errore per un'importazione andata bene.
+
+Va quindi deciso dove mettere il rimedio, e le due sponde non sono equivalenti:
+`import-geonames.mjs` vive in `packages/geo` e serve anche alla riga di comando
+e al container, dove oggi si comporta bene; `main.ts` è del desktop e non ha
+altri clienti. Una terza via, da valutare prima delle altre, è
+`ELECTRON_RUN_AS_NODE` con `child_process`: dà al figlio la semantica di Node
+vera — esce da solo, con il suo codice d'uscita e il suo output — al prezzo di
+non passare più da `utilityProcess`.
+
+Verifica: importare da zero, che basta togliere `geonames.db` da
+`~/.config/@dodicisegni/desktop`, e vedere la finestra chiudersi da sola con il
+log intero, e il programma proseguire fino alla finestra vera senza riavvio.
 
 ## Esaminato, e lasciato stare
 
