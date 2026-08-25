@@ -204,26 +204,13 @@ I test non toccano niente di tutto questo.
 Da fare dopo il punto 2, così il guardiano è già al suo posto quando si cambia
 il motore sotto.
 
-## 4. Le azioni di GitHub su Node 24
+## 4. Le azioni di GitHub su Node 24 — **fatto**
 
-`.github/workflows/controlli.yml` usa `actions/checkout@v4`,
-`actions/setup-node@v4` e `actions/cache@v4`. Tutte e tre dichiarano `node20`, e
-GitHub le sta già forzando su Node 24 con un'annotazione a ogni giro. Funziona
-oggi, non funzionerà per sempre.
-
-Verificato leggendo `action.yml` a ogni tag: `v5` è il primo major che dichiara
-`node24`, per tutte e tre. Gli ultimi major pubblicati sono `checkout@v7`,
-`setup-node@v7` e `cache@v6`.
-
-Conviene salire all'ultimo, non al minimo che toglie l'annotazione: un salto
-solo invece di due, e questo file lo si tocca una volta.
-
-Da leggere prima: le note di rilascio di `setup-node` fra v4 e v7, che è l'unica
-delle tre a cui il workflow passi un'opzione (`cache: npm`) — un cambio di
-default lì è l'unica cosa che possa rompere qualcosa in silenzio, cioè
-scaricando le dipendenze senza cache invece di fallire.
-
-Verifica: il push stesso. Il giro deve restare verde e l'annotazione sparire.
+`controlli.yml` è salito a `checkout@v7`, `setup-node@v7` e `cache@v6` nel
+commit «Porta le azioni sul runtime che i runner eseguono»: gli ultimi major, e
+non il minimo che togliesse l'annotazione, così il file si tocca una volta
+sola. La voce resta al suo numero invece di sparire: togliendola scalerebbero
+tutte quelle dopo, e i punti 2, 3 e 6 sono citati per numero altrove.
 
 ## 5. I dieci varga che mancano
 
