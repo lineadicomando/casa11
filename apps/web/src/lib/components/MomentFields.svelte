@@ -211,7 +211,51 @@
     padding: 0.3rem 0.5rem;
   }
 
+  /* I tre controlli si allineano per stiramento e non per centro: il menù ha
+     un'altezza propria che il solo incavo non pareggia, e in una riga di
+     comandi tutti alti uguali sarebbe l'unico più basso. Così prende la misura
+     delle frecce senza che nessuno debba scriverla in cifre. */
   .compatto .passo {
     flex-basis: auto;
+    align-items: stretch;
+  }
+
+  /* Nella striscia i controlli del passo non stanno più sotto i campi ma in
+     riga con loro e con il pulsante dei dettagli, e là un'altezza propria non
+     si legge come una gerarchia: si legge come un dislivello. Prendono la
+     misura del pulsante — stesso corpo, stesso incavo — e la riga torna una
+     riga sola. La misura è quella di `.commuta` in `ModuloPieghevole`: se
+     cambia là, cambia qui. */
+  .compatto .passo select,
+  .compatto .freccia,
+  .compatto .adesso {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+
+  /* Le frecce sono i due controlli che si premono più spesso — sfogliare è il
+     mestiere della striscia — e portano il segno più stretto di tutta la riga.
+     La larghezza gliela dà un minimo e non l'incavo: il bersaglio deve essere
+     più grande del glifo, e i due tasti larghi uguali fra loro anche se «‹» e
+     «›» non misurano lo stesso. */
+  .compatto .freccia {
+    min-width: 2.5rem;
+    padding-inline: 0.6rem;
+  }
+
+  /* Aperto, «adesso» è una parola in fondo alla nota del fuso, e il
+     sottolineato la distingue dal testo intorno. Chiuso non ha più nessun
+     testo intorno: è un comando in una riga di comandi, e lo dice stando come
+     stanno gli altri. */
+  .compatto .adesso {
+    flex: none;
+    border: 1px solid var(--linea-forte);
+    border-radius: var(--raggio);
+    text-decoration: none;
+  }
+
+  .compatto .adesso:hover {
+    border-color: var(--accento);
   }
 </style>
