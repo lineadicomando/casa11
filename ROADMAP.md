@@ -195,7 +195,7 @@ quello che gli arriva. La finestra è rimasta sull'origine interna, lo stub ha
 ricevuto l'indirizzo esterno, e la navigazione interna verso `/metodo` è
 passata. Resta comunque fuori dai test: vuole un display e un binario Electron.
 
-## 3. Electron da 38 a 43
+## 3. Electron da 38 a 43, o a 44
 
 `apps/desktop/package.json` fissa `electron` a `38.8.6`, esatta. `npm audit`
 riporta diciannove avvisi su quella versione, più uno su `extract-zip@2.0.1`,
