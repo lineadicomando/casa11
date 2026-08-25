@@ -88,7 +88,9 @@ questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
   caratteri sotto un'icona — e sulla riga di comando quella giustificazione non
   c'è. Da cambiare: `packages/core/package.json:16`, l'aiuto in
   `packages/core/src/cli.ts:70-75,751`, le citazioni in `README.md:26,52,54`,
-  `CLAUDE.md:14` e `packages/ruota/src/types.ts:9`.
+  `CLAUDE.md:14`, `packages/ruota/src/types.ts:9` e
+  `.claude/skills/nuova-funzione/SKILL.md:20`, che la nomina nella mappa dei
+  file.
 - **Il server MCP.** `SERVER_NAME` in `packages/mcp/src/server.ts:18`, la riga
   di avvio in `stdio.ts:21`, il binario `undicesimacasa-mcp` in
   `packages/mcp/package.json:16`, la chiave in `.mcp.json` e l'esempio nel
@@ -96,17 +98,19 @@ questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
   (`server.ts:83,104`), che `packages/mcp/test/server.test.ts:191-196` verifica.
 - **L'applicazione desktop.** `appId`, `productName` ed `executableName` in
   `apps/desktop/electron-builder.yml:3-6`, il `serviceName` e i titoli in
-  `apps/desktop/src/main.ts:77,153,172,207,216`, la descrizione in
+  `apps/desktop/src/main.ts:77,153,172,253,262`, la descrizione in
   `apps/desktop/package.json:5`. L'`appId` diventa `it.dodicisegni.desktop`.
+  `syncDesktopName: true` lega il nome della voce di menu a `productName`:
+  cambia anche quella, e va bene perché nessuno ha l'AppImage installata.
 - **La chiave del tema** `undicesimacasa:color-scheme`, in
   `apps/web/src/lib/color-scheme.ts:22` e ripetuta alla lettera nello script in
   linea di `apps/web/src/app.html:39` — che non può importare la costante,
   perché gira prima di tutto il resto per non far lampeggiare la pagina. Le due
   copie vanno cambiate insieme, e con loro la prosa in
   `privacy/+page.svelte:170`, che il valore lo cita.
-- **Il nome della cache** `casa11-${version}` in `service-worker.ts:38`, e la
+- **Il nome della cache** `casa11-${version}` in `service-worker.ts:39`, e la
   prosa che lo cita in `privacy/+page.svelte:178`. Le cache di nome vecchio le
-  butta `activate` da sé (righe 112-117).
+  butta `activate` da sé (righe 113-118).
 - **Il repository resta `lineadicomando/casa11`** — deciso, per ora. Il
   rinomino su GitHub è un'azione fuori dal repo, e `REPOSITORY_URL` in
   `apps/web/src/lib/project.ts:16` non va toccata finché quella non è fatta:
@@ -121,6 +125,12 @@ questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
   repository pubblico del progetto», quindi il nome vecchio sta nell'indirizzo
   e non sulla pagina. Si vede passandoci sopra, non leggendo. Da chiudere prima
   di mettere il sito in rete, non necessariamente prima dei passi 2 e 3.
+
+  Dopo il rinomino su GitHub resta indietro anche il **remote della copia
+  locale**, che oggi è `https://github.com/lineadicomando/casa11.git`. Non
+  urge: GitHub redirige i remote vecchi, quindi non si rompe niente e non c'è
+  un ordine da rispettare. Sta qui solo perché è l'unica cosa, oltre a
+  `REPOSITORY_URL`, che quel rinomino lasci indietro sulla macchina.
 
 ### Deciso, per non ridiscuterlo
 
