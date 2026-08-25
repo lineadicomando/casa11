@@ -668,28 +668,44 @@ per i due elenchi del client la forma è quella che il progetto usa già in
 Verifica: un settimo ayanamsa in `AYANAMSAS`, e il test che cade nominando i
 posti rimasti indietro.
 
-## 12. Le funzioni che compongono gli indirizzi non hanno test
+## 12. Le funzioni che compongono gli indirizzi non hanno test — **fatto**
 
-**Priorità media.** `apps/web/src/lib/api.ts` sono 472 righe senza un test.
-Dentro ci stanno `chartParameters`, `jyotishaParameters`, `skyParameters`,
-`transitParameters`, `passageParameters` ed `electionParameters`: funzioni pure,
-senza rete, che prendono la nascita e le opzioni e decidono che cosa finisce
-nella query.
+`apps/web/src/lib/api.test.ts` e `apps/web/src/lib/server/birth.test.ts`, in
+tutto settantaquattro prove.
 
-Da loro dipende una proprietà che la pagina del tema dichiara per iscritto —
-`apps/web/src/routes/+page.svelte:47` — e cioè che il collegamento da copiare
-ricalcoli lo stesso tema che si sta guardando: «un indirizzo condiviso che
+La proprietà che la pagina del tema dichiara per iscritto —
+`apps/web/src/routes/+page.svelte:47`, «un indirizzo condiviso che
 ricalcolasse un tema diverso da quello a schermo sarebbe il peggiore dei
-difetti, perché non si vede». È una proprietà tabellare, di quelle che un test
-di venti righe blinda per sempre, e oggi regge sull'attenzione di chi tocca il
-file.
+difetti, perché non si vede» — non è provata guardando i nomi dei parametri,
+che sarebbe copiarli una seconda volta. L'indirizzo composto da
+`chartParameters` viene **dato da rileggere a `lib/server/birth.ts`**, cioè al
+codice vero delle rotte, e si confronta quel che ne esce con la nascita di
+partenza. Un nome cambiato da una parte sola cade lì, in tutt'e due i versi:
+verificato rinominando `locationId` nel client (dodici prove rosse) e
+`houseSystem` nella rotta (sedici).
 
-Stessa lacuna in `apps/web/src/lib/server/birth.ts`, dove `readBirth` e
-`readChartOptions` validano gli input di ogni rotta: i vicini di cartella —
-`moment.ts`, `place.ts`, `range.ts`, `errors.ts` — i test ce li hanno tutti.
+Nello stesso giro passano i nove sistemi di case e i sei ayanamsa che il modulo
+propone, presi da `house-systems.ts` e `zodiacs.ts` e fatti accettare alla
+rotta. **Non chiude il punto 11**: lega due delle quattro copie fra loro, non
+al motore, e un settimo ayanamsa aggiunto in `core` continuerebbe a non far
+cadere niente.
 
-Verifica: cambiare il nome di un parametro in `chartParameters` senza toccare la
-rotta, e vedere cadere il test invece del sito.
+### Quello che non si sapeva da qui
+
+`api.ts` non era senza test: undici prove su `chartParameters`,
+`transitParameters`, `skyParameters` e `skyCalendarParameters` vivevano in
+`moment.test.ts`, dove erano arrivate al seguito di `MomentInput` e di
+`shiftDate`. È la ragione per cui la lacuna sembrava totale ed era invece
+parziale — e anche la ragione per cui conveniva toglierle di lì: un test che
+sta nel file del modulo sbagliato non lo trova chi cerca, e in un repo dove
+ogni modulo ha il suo `.test.ts` accanto è l'assenza a fare da indice. Ora
+`moment.test.ts` prova `moment.ts` e basta.
+
+Il dataset GeoNames è sostituito da due località — Napoli e Tokyo, che servono
+anche a provare che i due luoghi di una richiesta di transiti non si scambino.
+`getLocation` è l'unica cosa che `server/place.ts` gli chiede, e nessuna prova
+deve dipendere da un database da 215 MB che potrebbe non essere stato
+importato.
 
 ## 13. Due semplificazioni piccole
 
