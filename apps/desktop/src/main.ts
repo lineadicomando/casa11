@@ -12,6 +12,7 @@
  */
 import { app, BrowserWindow, dialog, shell, utilityProcess } from 'electron';
 import type { UtilityProcess } from 'electron';
+import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { createServer } from 'node:net';
@@ -25,6 +26,13 @@ import { fileURLToPath } from 'node:url';
  * desktop non dipende da quel pacchetto e non deve cominciare adesso.
  */
 const NOME = 'dodicisegni';
+
+// Prima di ogni `getPath`, che di qui in giù non aspetta: `userData` si ricava
+// dal nome dell'applicazione, e senza questa riga quel nome è quello del
+// pacchetto, scope compreso — una chiocciola e una cartella in mezzo al
+// percorso, `~/.config/@dodicisegni/desktop`. È la stessa ragione per cui
+// `electron-builder.yml` fissa `executableName` invece di lasciarlo derivare.
+app.setName(NOME);
 
 const appRoot = fileURLToPath(new URL('..', import.meta.url));
 const repoRoot = join(appRoot, '..', '..');
@@ -113,6 +121,18 @@ async function attendiServer(url: string, processo: UtilityProcess): Promise<voi
  * Scarica il dataset GeoNames riusando lo script del pacchetto `geo`,
  * mostrandone l'avanzamento riga per riga in una finestra dedicata.
  * Chiudere la finestra interrompe l'importazione.
+ *
+ * Non passa da `utilityProcess` come il server, e la ragione è che qui il
+ * figlio deve **finire**. Un `utilityProcess` non esce quando il suo event
+ * loop si svuota — il canale col processo padre lo tiene vivo — e lo script di
+ * `geo` finisce senza chiamare `process.exit`, che da riga di comando è giusto:
+ * aggiungerlo là troncherebbe il riepilogo finale, perché su una pipe
+ * `console.log` scrive in modo asincrono. Il risultato era una finestra di
+ * avanzamento che restava aperta sull'ultima riga a importazione conclusa.
+ * `ELECTRON_RUN_AS_NODE` dà invece al figlio la semantica di Node vera: esce
+ * da solo, col suo codice d'uscita e tutto il suo output. Il binario resta
+ * quello di Electron, quindi l'ABI non cambia e il modulo nativo di SQLite si
+ * carica come prima.
  */
 async function importaDatabase(): Promise<void> {
   const splash = new BrowserWindow({
@@ -125,14 +145,14 @@ async function importaDatabase(): Promise<void> {
   await splash.loadFile(join(appRoot, 'splash.html'));
 
   await mkdir(dirname(databasePath), { recursive: true });
-  const processo = utilityProcess.fork(importScript, [], {
+  const processo = spawn(process.execPath, [importScript], {
     env: {
       ...process.env,
+      ELECTRON_RUN_AS_NODE: '1',
       GEONAMES_DB_PATH: databasePath,
       GEONAMES_CACHE_DIR: join(app.getPath('userData'), 'geonames-cache'),
     },
-    stdio: 'pipe',
-    serviceName: 'geo-import',
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
   splash.on('closed', () => processo.kill());
 
@@ -143,7 +163,10 @@ async function importaDatabase(): Promise<void> {
     if (flusso) createInterface({ input: flusso }).on('line', scrivi);
   }
 
-  const codice = await new Promise<number>((esce) => processo.once('exit', esce));
+  // `null` quando il processo muore di segnale, cioè quando la finestra chiusa
+  // l'ha interrotto: vale come «non è arrivata in fondo», al pari di un codice
+  // diverso da zero.
+  const codice = await new Promise<number | null>((esce) => processo.once('exit', esce));
   splash.destroy();
   if (codice !== 0) {
     throw new Error("L'importazione non è andata a buon fine; si può riprovare al prossimo avvio.");
