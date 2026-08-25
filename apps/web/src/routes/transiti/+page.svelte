@@ -246,7 +246,7 @@
 
 <Meta
   titolo="Transiti"
-  descrizione="Dove sono i pianeti in un dato momento e che aspetti formano con un tema di nascita."
+  descrizione="Con un tema di nascita: quali pianeti lo stanno toccando in un dato momento, e con quale aspetto."
 />
 
 <!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
@@ -262,7 +262,7 @@
   <p>
     Accanto al quadro c'è il calendario dei passaggi, con l'ora esatta in cui
     ogni aspetto si perfeziona. Le orbite qui sono più strette che nel tema
-    natale —
+    natale:
     <a href="/metodo#aspetti">perché i transiti vogliono orbite strette</a>.
   </p>
 </div>
@@ -398,7 +398,7 @@
           Il momento in cui ogni aspetto diventa esatto, e la finestra in cui resta
           entro l'orbita. Un pianeta lento che retrograda torna sullo stesso punto
           due o tre volte: sono lo stesso periodo, non fatti distinti. La Luna è
-          esclusa — da sola perfezionerebbe qualche migliaio di aspetti all'anno.
+          esclusa: da sola perfezionerebbe qualche migliaio di aspetti all'anno.
         </p>
       {:else}
         <button type="button" class="secondario" onclick={loadPassages} disabled={loadingPassages}>

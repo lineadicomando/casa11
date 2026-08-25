@@ -181,14 +181,15 @@
 
 <div class="cappello">
   <p>
-    La stessa nascita letta secondo il Jyotisha, l'astrologia indiana: il
-    quadro delle dodici case, il nakshatra della Luna, le carte divisionali,
-    le drishti e le dasha vimshottari.
+    Il tema di nascita letto secondo il Jyotisha, l'astrologia indiana: il
+    quadro delle dodici case, il nakshatra della Luna (la ventisettesima parte
+    di cielo in cui cade), le carte divisionali, le drishti e le dasha
+    vimshottari, la catena di periodi che scandisce gli anni.
   </p>
   <p>
     Le posizioni non coincidono con quelle del tema occidentale, e non è un
     errore: si contano da un'origine diversa, e oggi fra i due zodiaci corrono
-    più di ventiquattro gradi —
+    più di ventiquattro gradi:
     <a href="/metodo#zodiaco">da dove viene la differenza</a>.
   </p>
 </div>
@@ -271,12 +272,12 @@
           <div role="radiogroup" aria-labelledby="stile-quadro" class="scelte">
             <label class="interruttore">
               <input type="radio" bind:group={stile} value="sud" />
-              <span>Sud — segni fissi</span>
+              <span>Sud (segni fissi)</span>
             </label>
             {#if conLagna}
               <label class="interruttore">
                 <input type="radio" bind:group={stile} value="nord" />
-                <span>Nord — case fisse</span>
+                <span>Nord (case fisse)</span>
               </label>
             {/if}
           </div>

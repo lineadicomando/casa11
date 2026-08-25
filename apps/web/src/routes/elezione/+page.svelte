@@ -306,12 +306,12 @@
 
 <div class="cappello">
   <p>
-    Scegliere il momento invece di leggerlo. Per un luogo e per ogni giorno:
-    le ore planetarie col pianeta che regge ciascuna, il grado che sorge, i
-    tratti in cui la Luna è vuota di corso.
+    L'astrologia elettiva sceglie il momento invece di leggerlo. Per un luogo e
+    per ogni giorno: le ore planetarie col pianeta che regge ciascuna, il grado
+    che sorge, i tratti in cui la Luna è vuota di corso.
   </p>
   <p>
-    Le ore non durano sessanta minuti, e il giorno comincia all'alba —
+    Le ore non durano sessanta minuti, e il giorno comincia all'alba:
     <a href="/metodo#elezione">come si contano le ore planetarie</a>. Quale
     ora sia propizia il sito non lo dice: consegna il calendario.
   </p>

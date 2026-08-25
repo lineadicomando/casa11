@@ -213,7 +213,7 @@
 
 <Meta
   titolo="Cielo"
-  descrizione="Dove sono i pianeti in un dato momento e che aspetti formano fra loro."
+  descrizione="Senza data di nascita: dove sono i pianeti in un dato momento e che aspetti formano fra loro."
 />
 
 <!-- Il titolo lo dice già il menù, che segna la sezione in cui ci si trova.
@@ -227,8 +227,8 @@
     modalità. Il luogo è facoltativo, e serve solo per le case.
   </p>
   <p>
-    Sotto, in ordine di tempo: gli ingressi nei segni, le stazioni — i giorni
-    in cui un pianeta si ferma e cambia verso — e gli istanti in cui due corpi
+    Il calendario elenca, in ordine di tempo: gli ingressi nei segni, le stazioni (i giorni
+    in cui un pianeta si ferma e cambia verso) e gli istanti in cui due corpi
     formano un aspetto esatto.
     <a href="/metodo#effemeridi">Da dove vengono queste posizioni</a>.
   </p>
@@ -291,7 +291,7 @@
         <LegendaElementi />
         <StrumentiDisegno svg={disegno} {evidenza} nome={['cielo', placeLabel, sky.input.date]} />
         <p class="suggerimento istruzione">
-          Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti.
+          Scegli un corpo, qui o nelle tabelle, per isolarne gli aspetti.
         </p>
       </div>
 
@@ -327,8 +327,8 @@
         <p class="suggerimento">
           Il momento in cui due corpi formano un aspetto esatto, e quello in cui un corpo
           cambia segno o inverte il moto. Qui il luogo non conta: un incontro fra due
-          pianeti avviene alla stessa ora ovunque lo si guardi. La Luna è esclusa — da
-          sola cambierebbe segno ogni due giorni e mezzo.
+          pianeti avviene alla stessa ora ovunque lo si guardi. La Luna è esclusa:
+          da sola cambierebbe segno ogni due giorni e mezzo.
         </p>
       {:else}
         <button

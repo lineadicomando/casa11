@@ -194,8 +194,9 @@
     cadono e che aspetti formano fra loro. Servono data, ora e luogo.
   </p>
   <p>
-    Senza l'ora si calcola lo stesso: restano i segni e gli aspetti, cadono le
-    case e gli assi. Il sistema con cui dividerle si sceglie fra nove —
+    Senza l'ora di nascita si calcola lo stesso: restano i segni e gli aspetti,
+    cadono le case e gli assi, Ascendente e Medio Cielo compresi. Il sistema con
+    cui dividerle si sceglie fra nove:
     <a href="/metodo#case">come si dividono le case</a>.
   </p>
 </div>
@@ -274,7 +275,7 @@
         />
         {#if chart.aspects.length > 0}
           <p class="suggerimento istruzione">
-            Scegli un corpo — qui o nelle tabelle — per isolarne gli aspetti. Resta
+            Scegli un corpo, qui o nelle tabelle, per isolarne gli aspetti. Resta
             scelto finché non lo si sceglie di nuovo.
           </p>
         {/if}
