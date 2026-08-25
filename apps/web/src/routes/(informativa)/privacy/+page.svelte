@@ -53,7 +53,7 @@
   relativa ai dati personali, compreso l'esercizio dei diritti descritti più
   avanti, il recapito è
   {#if REPOSITORY_URL}
-    <a href={REPOSITORY_URL}>il repository pubblico del progetto</a>.
+    <a href={REPOSITORY_URL} target="_blank" rel="noopener">il repository pubblico del progetto</a>.
   {:else}
     il repository pubblico del progetto.
   {/if}
@@ -271,7 +271,7 @@
 
 <p>
   Hai inoltre diritto di proporre reclamo al
-  <a href="https://www.garanteprivacy.it/">Garante per la protezione dei dati personali</a>.
+  <a href="https://www.garanteprivacy.it/" target="_blank" rel="noopener">Garante per la protezione dei dati personali</a>.
 </p>
 
 <h2>Modifiche</h2>

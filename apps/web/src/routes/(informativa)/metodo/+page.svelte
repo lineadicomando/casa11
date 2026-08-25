@@ -70,7 +70,7 @@
 <h2 id="effemeridi">Le effemeridi</h2>
 
 <p>
-  Le posizioni vengono da <a href="https://www.astro.com/swisseph/">Swiss
+  Le posizioni vengono da <a href="https://www.astro.com/swisseph/" target="_blank" rel="noopener">Swiss
   Ephemeris</a>, che è lo standard di fatto anche dei programmi commerciali.
   Quando i suoi file di dati non sono installati il motore ripiega sulle
   effemeridi analitiche di Moshier: il sito resta utilizzabile, la precisione

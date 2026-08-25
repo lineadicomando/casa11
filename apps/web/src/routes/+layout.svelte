@@ -87,15 +87,28 @@
       personale e in nessun caso sostituisce il parere di professionisti per
       questioni mediche, legali, finanziarie o altro.
     </p>
+    <!-- Ogni collegamento che esce dal sito porta `target="_blank"`, qui e
+         nelle due informative. Sul web è una comodità; dentro Electron è
+         quello che tiene la finestra dov'è, perché la navigazione di primo
+         livello caricherebbe il sito remoto nel Chromium impacchettato, senza
+         barra e senza modo di tornare indietro. Non è l'unico rimedio — il
+         processo principale ha il suo, che vale anche quando questa riga viene
+         dimenticata — ma è quello che si vede da qui.
+
+         `rel="noopener"` toglie `window.opener` alla pagina che si apre. Il
+         referrer invece non è un problema da risolvere: la politica
+         predefinita dei browser è `strict-origin-when-cross-origin`, che fuori
+         origine manda l'origine e non il percorso, e negli indirizzi di questo
+         sito è il percorso a portare data e luogo di nascita. -->
     <p>
-      Dati astronomici <a href="https://www.astro.com/swisseph/">Swiss Ephemeris</a> ·
-      località <a href="https://www.geonames.org/">GeoNames</a> (CC BY 4.0)
+      Dati astronomici <a href="https://www.astro.com/swisseph/" target="_blank" rel="noopener">Swiss Ephemeris</a> ·
+      località <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a> (CC BY 4.0)
     </p>
     <p>
       <a href="/metodo">Metodo</a> ·
       <a href="/privacy">Privacy e cookie</a> ·
       {#if REPOSITORY_URL}
-        <a href={REPOSITORY_URL}>codice sorgente</a>
+        <a href={REPOSITORY_URL} target="_blank" rel="noopener">codice sorgente</a>
       {:else}
         codice sorgente
       {/if}
