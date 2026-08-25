@@ -13,7 +13,7 @@
  * girando, e l'informativa dichiara titolare del trattamento chi gestisce
  * l'istanza, non chi ha scritto il programma.
  */
-export const REPOSITORY_URL = 'https://github.com/lineadicomando/casa11';
+export const REPOSITORY_URL = 'https://github.com/lineadicomando/dodicisegni';
 
 /**
  * Come il sito si chiama, per esteso e in breve.

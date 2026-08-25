@@ -9,8 +9,8 @@ non ritrovarla una seconda volta e ricominciare da capo.
 
 ## 1. Il nome: da undicesimacasa a dodicisegni — **fatto**
 
-I tre passi sono chiusi. Resta fuori il solo `REPOSITORY_URL`, che dipende da
-un rinomino su GitHub e sta al **punto 10**.
+I tre passi sono chiusi, e con il **punto 10** è chiuso anche `REPOSITORY_URL`,
+l'unico che dipendeva da un rinomino su GitHub.
 
 Il progetto prende il nome `dodicisegni`, sul dominio `dodicisegni.it`; `12segni.it` è il dominio di servizio, già registrato. Nel
 marchio il numero è in cifre — «12» sopra «segni» — perché «XII» si legge
@@ -608,36 +608,22 @@ Va deciso, e non è ovvio:
   confronti che non possono essere veri — e vanno guardate una per una prima di
   accenderle tutte.
 
-## 10. Il rinomino su GitHub, e i due riferimenti che lascia indietro
+## 10. Il rinomino su GitHub, e i due riferimenti che lascia indietro — **fatto**
 
-**Bassa priorità**, e l'unica voce del cambio di nome che non si chiude
-scrivendo codice: il primo passo è un'azione sull'interfaccia di GitHub, che
-nessuno può fare da dentro il repo. Sta qui, e non dentro il punto 1, proprio
-per questo — non è un passo rimasto indietro, è un lavoro d'altra natura.
+Il repository è `lineadicomando/dodicisegni`, e i due riferimenti che il
+rinomino lasciava indietro sono aggiornati: `REPOSITORY_URL` in
+`apps/web/src/lib/project.ts:16` e il remote della copia locale.
 
-Il repository oggi è `lineadicomando/casa11`.
+L'ordine obbligato è stato rispettato — prima il rinomino su GitHub, poi la
+costante — e per la ragione che lo rendeva obbligato: `REPOSITORY_URL` è
+insieme il recapito che l'informativa privacy dichiara e l'offerta del sorgente
+che l'AGPL articolo 13 impone, quindi un collegamento rotto lì non è un refuso
+ma una violazione di licenza. Cambiarla prima avrebbe rotto l'indirizzo per il
+tempo che passava in mezzo.
 
-**L'ordine è obbligato: prima si rinomina su GitHub, poi si cambia la
-costante** — mai il contrario, e neanche insieme. `REPOSITORY_URL` in
-`apps/web/src/lib/project.ts:16` è insieme il recapito che l'informativa
-privacy dichiara e l'offerta del sorgente che l'AGPL articolo 13 impone: un
-collegamento rotto lì non è un refuso ma una violazione di licenza. Cambiarla
-prima del rinomino rompe l'indirizzo per il tempo che passa in mezzo.
-
-Il costo di aspettare è piccolo, ed è la ragione della bassa priorità. Nei due
-posti dove il collegamento compare — il piè di pagina e l'informativa — il
-testo dice «codice sorgente» e «il repository pubblico del progetto», quindi il
-nome vecchio sta nell'indirizzo e non sulla pagina. Si vede passandoci sopra,
-non leggendo.
-
-**Da chiudere prima di mettere il sito in rete.** Fino ad allora l'indirizzo
-funziona e nessuno lo legge.
-
-Dopo il rinomino resta indietro anche il **remote della copia locale**, che
-oggi è `https://github.com/lineadicomando/casa11.git`. Non urge e non ha un
-ordine da rispettare: GitHub redirige i remote vecchi, quindi non si rompe
-niente. Sta qui solo perché è l'unica cosa, oltre a `REPOSITORY_URL`, che quel
-rinomino lasci indietro sulla macchina.
+Verificato che l'indirizzo nuovo risponda **200 diretto e non per redirezione**,
+prima di scriverlo: GitHub redirige il nome vecchio, quindi un 200 raggiunto
+saltando non avrebbe distinto un rinomino avvenuto da uno solo annunciato.
 
 ## 11. Gli elenchi che vivono in quattro posti
 
