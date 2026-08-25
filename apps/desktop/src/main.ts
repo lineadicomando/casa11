@@ -64,6 +64,8 @@ let server: UtilityProcess | null = null;
 let finestra: BrowserWindow | null = null;
 let serverUrl: string | null = null;
 let chiusuraVoluta = false;
+/** Vero da quando la finestra vera è stata aperta la prima volta. */
+let avviato = false;
 
 function portaLibera(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -265,6 +267,7 @@ function creaFinestra(url: string): void {
   });
 
   void finestra.loadURL(url);
+  avviato = true;
 }
 
 async function avvia(): Promise<void> {
@@ -306,6 +309,12 @@ if (!app.requestSingleInstanceLock()) {
     }
   });
   app.on('window-all-closed', () => {
+    // Prima che la finestra vera esista le finestre a schermo sono zero due
+    // volte: all'avvio, e nell'istante in cui la finestra dell'importazione si
+    // chiude. Senza questa guardia l'applicazione si chiuderebbe proprio lì, a
+    // importazione riuscita, e chi la usa dovrebbe riavviarla — che è come si
+    // comportava finché quella finestra non si chiudeva da sola.
+    if (!avviato) return;
     if (process.platform !== 'darwin') app.quit();
   });
   app.on('activate', () => {

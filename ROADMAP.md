@@ -818,6 +818,21 @@ i moduli presi dall'AppImage impacchettata: dodici secondi riusando la cache
 dei sorgenti, codice d'uscita `0`, log completo fino a «Fatto.», database di 90
 MB costruito.
 
+### La seconda metà, che si vedeva solo dopo la prima
+
+Chiusa la finestra dell'importazione, l'applicazione si chiudeva con lei:
+`window-all-closed` scatta nell'istante in cui quella sparisce, e la finestra
+vera non esiste ancora — il server sta ancora salendo. Il rimedio è una guardia
+su `avviato` nell'ascoltatore, che lascia passare la chiusura solo da quando la
+finestra vera è stata aperta la prima volta.
+
+Era lo stesso difetto visto dall'altro capo, e finché la splash non si chiudeva
+da sola non si poteva vedere: chi la chiudeva a mano faceva scattare quella
+stessa riga, ed è la ragione per cui l'importazione sembrava chiedere un
+riavvio. Provato in isolamento — una finestra distrutta, una seconda aperta un
+secondo e mezzo dopo — con la guardia e senza: senza, l'applicazione muore
+prima della seconda.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:
