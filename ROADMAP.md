@@ -133,41 +133,37 @@ questi ha più un vincolo di compatibilità: quello che resta è scegliere bene.
   breve sotto l'icona, dove sette caratteri sono il tetto. Nella prosa il nome
   è uno solo.
 
-## 2. Il guardiano della navigazione nell'app desktop
+## 2. Il guardiano della navigazione nell'app desktop — **fatto**
 
-**Da fare per primo fra i punti che toccano il comportamento, e comunque
-indipendentemente dal punto 3.**
+Entrambi i rimedi, che erano due allo stesso inciampo a due livelli diversi.
 
-`creaFinestra` in `apps/desktop/src/main.ts` installa `setWindowOpenHandler`:
-nega ogni `window.open` e gira gli `http(s)` al browser di sistema. Copre una
-strada sola. La navigazione di primo livello non passa di lì, e i link esterni
-dell'interfaccia non hanno `target="_blank"`:
+Nel processo principale, `creaFinestra` ora installa anche un gestore di
+`will-navigate` accanto a `setWindowOpenHandler`, che copriva il solo
+`window.open`: confronta l'**origine** della destinazione con quella del server
+interno — l'origine e non l'indirizzo, perché la porta del loopback è
+sorteggiata a ogni avvio — e quando differisce annulla e passa a
+`shell.openExternal`, per i soli `http(s)`.
 
-- `apps/web/src/routes/+layout.svelte`, righe 59-60 — `astro.com`, `geonames.org`
-- `apps/web/src/routes/(informativa)/privacy/+page.svelte`, riga 254 — `garanteprivacy.it`
+Sull'interfaccia, i link che escono dal sito prendono `target="_blank"` e
+`rel="noopener"`. Erano **sei e non tre**: la conta di questa voce dimenticava
+i due su `REPOSITORY_URL` — il piè di pagina e l'informativa, cioè l'offerta del
+sorgente che impone l'AGPL articolo 13 — e quello di Swiss Ephemeris in
+`/metodo`. Il referrer non ha richiesto niente: la politica predefinita dei
+browser è `strict-origin-when-cross-origin`, che fuori origine manda l'origine
+e non il percorso, ed è il percorso a portare data e luogo di nascita.
 
-In un browser è il comportamento giusto. Dentro Electron, cliccarne uno porta la
-finestra fuori da localhost e carica un sito remoto nel Chromium impacchettato.
-Il danno è doppio: contenuto di terzi dentro un motore che non si aggiorna con
-la stessa fretta di un browser, e — con `autoHideMenuBar: true` e nessun comando
-di navigazione nella finestra — nessun modo di tornare indietro se non
-riavviando l'applicazione.
+**Attenzione se si rimette mano qui**: la verifica che questa voce prescriveva
+— cliccare «Swiss Ephemeris» nel piè di pagina — adesso **non prova più il
+guardiano**, perché con `target="_blank"` quel click passa dal gestore delle
+finestre nuove. Per toccare `will-navigate` serve una navigazione di primo
+livello, cioè un `location.href` verso un'altra origine.
 
-Il rimedio è un gestore di `will-navigate` sul `webContents` della finestra, che
-confronta l'origine della destinazione con quella del server interno e, se
-differisce, annulla e passa a `shell.openExternal`. **L'origine, non l'URL**: il
-server interno sta su una porta libera del loopback, sorteggiata a ogni avvio,
-e `serverUrl` cambia da una sessione all'altra.
-
-Vale la pena decidere nello stesso passaggio se i link esterni debbano prendere
-`target="_blank"` anche sul web. Sono due rimedi allo stesso inciampo a due
-livelli diversi, e quello nel processo principale è l'unico che tiene anche
-quando l'interfaccia cambia.
-
-Verifica: nessun test la copre e non è automatizzabile a costo ragionevole.
-Serve `npm run build && npm start -w @undicesimacasa/desktop`, cliccare
-«Swiss Ephemeris» nel piè di pagina, e vedere che si apre il browser di sistema
-mentre la finestra resta dov'è.
+Verificata così, e non a mano: Electron avviato con
+`--remote-debugging-port`, la finestra pilotata via CDP con `location.href`
+verso un indirizzo esterno, e `xdg-open` sostituito da uno stub che registra
+quello che gli arriva. La finestra è rimasta sull'origine interna, lo stub ha
+ricevuto l'indirizzo esterno, e la navigazione interna verso `/metodo` è
+passata. Resta comunque fuori dai test: vuole un display e un binario Electron.
 
 ## 3. Electron da 38 a 43
 
