@@ -522,6 +522,64 @@ Due cose invece vanno fatte comunque:
   pagina più forte del sito, e uno `slogan` nei dati strutturati — è piccolo,
   isolato e va per conto suo.
 
+## 9. Il codice morto non lo vede nessuno
+
+**Priorità media.** Il progetto non ha alcuna configurazione di lint o di
+formattazione — nessun ESLint, nessun Prettier, nessun Biome, nessun oxlint, e
+in `package.json` nessuno script che li chiami. E in `tsconfig.base.json` non
+sono impostati né `noUnusedLocals` né `noUnusedParameters`, che è la parte che
+costa meno e che ha già lasciato passare qualcosa.
+
+Non è un'ipotesi: due difetti reali sono entrati e nessuno se n'è accorto.
+`api/chart/wheel/+server.ts` importava `ruotaSvg` e `ruotaPng` senza usarli, e
+il secondo apriva una seconda porta su `ruota/png` — il punto d'ingresso col
+modulo nativo che deve entrare solo da `lib/server`, cioè una regola di
+`CLAUDE.md` aggirata da un import dimenticato. Quello è corretto; l'altro no.
+Nessuno dei due lo vedono `typecheck` né i test, che girano verdi lo stesso.
+
+### Il primo passo costa quasi niente
+
+`noUnusedLocals` e `noUnusedParameters` in `tsconfig.base.json`. Non è una
+dipendenza nuova, quindi non apre la questione di licenza che l'AGPL impone a
+ogni aggiunta, e oggi **manca un solo posto** perché l'albero passi:
+
+```
+packages/core/src/election.ts(290,3): 'context' is declared but its value is never read.
+```
+
+`findVoidsOfCourse` riceve un `EphemerisContext` e non lo tocca. **Non è un
+difetto di correttezza, ed è già stato verificato**: `ElectionOptions` non ha
+né `zodiac` né `ayanamsa`, e le righe 92-93 dello stesso file dichiarano
+l'elezione tropicale per scelta — «il vuoto di corso siderale non è una tecnica
+di nessuno». Il parametro è peso morto, e va tolto dalla firma insieme
+all'argomento che `election.ts:120` gli passa.
+
+Il modo di rifare il conto senza installare niente, workspace per workspace:
+
+```sh
+npx tsc -p packages/core/tsconfig.json --noEmit --noUnusedLocals --noUnusedParameters
+```
+
+### Il linter vero è una decisione a parte
+
+Va deciso, e non è ovvio:
+
+- **Quale strumento**, e con quale licenza — ogni dipendenza nuova deve essere
+  compatibile con l'AGPL-3.0-or-later.
+- **Se la formattazione entri o no.** Qui la cautela è concreta: i commenti di
+  questo repo sono prosa italiana mandata a capo a mano, spesso su misura del
+  ragionamento che portano. Un formattatore che li riflua non rompe niente e
+  peggiora tutto, e il diff che ne esce non si rilegge. Il lint delle regole e
+  la formattazione del testo sono due decisioni, e conviene prendere solo la
+  prima.
+- **Che cosa copre i `.svelte`.** `svelte-check` gira già su `apps/web` e dà
+  zero avvisi, ma legge il `tsconfig` dell'app: senza i due flag lì, gli import
+  morti nei `.ts` di quell'app non li ha visti nessuno. Coprire i `.svelte`
+  vuole comunque qualcosa in più.
+
+Verifica del primo passo: i due flag accesi, `npm run typecheck` verde su tutti
+i workspace, e un import inutile aggiunto apposta che lo fa cadere.
+
 ## Esaminato, e lasciato stare
 
 **`cookie@0.6.0` sotto SvelteKit** — `npm audit` conta tre vulnerabilità basse:
